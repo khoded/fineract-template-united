@@ -16,16 +16,14 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-rootProject.name='fineract'
-include ':module:dummy:core'
-include ':module:dummy:service'
-include ':module:dummy:starter'
-include ':custom:foo:service'
-include ':fineract-provider'
-include ':fineract-war'
-include ':integration-tests'
-include ':twofactor-tests'
-include ':oauth2-tests'
-include ':fineract-client'
-include ':fineract-doc'
-include 'karate-tests'
+package org.apache.fineract;
+
+import com.intuit.karate.junit5.Karate;
+
+public interface BaseKarate {
+
+    default Karate karate(String s) {
+        return new Karate().path(s).relativeTo(getClass());
+    }
+
+}
