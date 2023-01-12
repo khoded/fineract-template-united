@@ -7,9 +7,12 @@ Feature: Savings Creation Steps
   @ignore
   @create
   Scenario: Create savings accounts
+    #create savings product step
     * def savingsProduct = call read('classpath:features/portfolio/products/savingsproduct.feature@fetchdefaultproduct')
+    #create client step
     * def result = call read('classpath:features/portfolio/clients/clientcreation.feature@create')
     Given configure ssl = true
+    #now create savings here
     Given path 'savingsaccounts'
     And header Accept = 'application/json'
     And header Authorization = authToken
@@ -55,3 +58,37 @@ Feature: Savings Creation Steps
     Then status 200
     Then match $ contains { resourceId: '#(savingsId)' }
     Then def activeSavingsId = response.resourceId
+
+
+  #add parameters savingsId, command(withdraw/deposit), transactionDate and transactionAmount
+  @ignore
+  @transaction
+  Scenario: Savings transaction
+    Given configure ssl = true
+    * def transactionDate = transactionDate
+    * def transactionAmount = transactionAmount
+    * def command = command
+    * def savingsData = read('classpath:templates/savings.json')
+    Given path 'savingsaccounts',savingsId,'transactions'
+    And params { command : '#(command)' }
+    And header Accept = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request savingsData.transaction
+    When method POST
+    Then status 200
+    Then match $ contains { savingsId: '#(savingsId)' }
+    Then def activeSavingsId = response.savingsId
+
+  @ignore
+  @findsavingsbyid
+  Scenario: Get savings account by id
+    Given configure ssl = true
+    Given path 'savingsaccounts',savingsId
+    And header Accept = 'application/json'
+    And header Content-Type = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    When method GET
+    Then status 200
+    * def savingsAccount = response

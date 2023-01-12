@@ -26,5 +26,12 @@
     "activatedOnDate":"#(df.format(calendar.getTime()))",
     "locale":"en",
     "dateFormat":"#(format)"
+  },
+  "transaction": {
+    "transactionDate":"#(transactionDate)",
+    "transactionAmount":"#(transactionAmount)",
+    "paymentTypeId":1,
+    "locale":"en",
+    "dateFormat":"#(format)"
   }
 }
