@@ -16,5 +16,15 @@
     "monthDayFormat": "dd MMM",
     "charges": [],
     "clientId": "#(clientId)"
+  },
+  "approve": {
+    "approvedOnDate":"#(df.format(calendar.getTime()))",
+    "locale":"en",
+    "dateFormat":"#(format)"
+  },
+  "activate": {
+    "activatedOnDate":"#(df.format(calendar.getTime()))",
+    "locale":"en",
+    "dateFormat":"#(format)"
   }
 }
