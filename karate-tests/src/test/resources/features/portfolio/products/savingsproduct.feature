@@ -21,6 +21,6 @@ Feature: Test savings product apis
 
   @fetchdefaultproduct
   Scenario: Fetch or Create Default Saving Product
-    * def savingsProduct = call read('classpath:features/portfolio/products/defaultmodules.feature@listsavings')
+    * def savingsProduct = call read('classpath:features/portfolio/products/productsteps.feature@listsavings')
     * def result = call createIfNotExists savingsProduct.res
     * def savingsProductId = result.id

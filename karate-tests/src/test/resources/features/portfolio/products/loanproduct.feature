@@ -21,6 +21,6 @@ Feature: Test savings product apis
 
   @fetchdefaultproduct
   Scenario: Fetch or Create Default loan Product
-    * def loanProduct = call read('classpath:features/portfolio/products/defaultmodules.feature@listloanproducts')
+    * def loanProduct = call read('classpath:features/portfolio/products/productsteps.feature@listloanproducts')
     * def result = call createIfNotExists loanProduct.res
     * def loanProductId = result.id
