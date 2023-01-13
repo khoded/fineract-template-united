@@ -8,7 +8,7 @@ Feature: Test savings product apis
       function(x) {
           karate.log(x);
           if (x.length === 0) {
-            var result = karate.call('classpath:features/portfolio/products/defaultmodules.feature@createsavings');
+            var result = karate.call('classpath:features/portfolio/products/productsteps.feature@createsavings');
             var savingsResponse = result.savingsResponse;
             savingsResponse.id = savingsResponse.resourceId;
             return savingsResponse;

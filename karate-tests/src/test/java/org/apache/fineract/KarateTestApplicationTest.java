@@ -20,15 +20,25 @@ package org.apache.fineract;
 
 import com.intuit.karate.junit5.Karate;
 
+import java.util.Optional;
 
 class KarateTestApplicationTest implements BaseKarate {
 
     @Karate.Test
     Karate runAll() {
-        System.setProperty("server.port", Integer.toString(8443));
+
+        Optional<String> port = Optional.ofNullable(System.getenv("FINERACT_SERVER_PORT"));
+        Optional<String> testuser = Optional.ofNullable(System.getenv("FINERACT_TEST_USER"));
+        Optional<String> testpass = Optional.ofNullable(System.getenv("FINERACT_TEST_PASS"));
+        Optional<String> tenantId = Optional.ofNullable(System.getenv("FINERACT_TEST_TENANT"));
+
+        System.setProperty("server.port", port.orElse("8443"));
+        System.setProperty("testuser", testuser.orElse("mifos"));
+        System.setProperty("testpass", testpass.orElse("password"));
+        System.setProperty("tenantId", tenantId.orElse("default"));
+
         Karate karate =  new Karate().path("classpath:features/");
-        karate.outputHtmlReport(false);
-        karate.outputCucumberJson(true);
+        karate.outputHtmlReport(true);
         return karate;
     }
 

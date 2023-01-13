@@ -25,12 +25,12 @@ function fn() {
 	karate.log('server is running on port:', port);
 
 	var config = { // base config JSON
-		username : 'mifos',
-		password : 'password',
-		tenantId : 'default'
+		username : karate.properties['testuser'],
+		password : karate.properties['testpass'],
+		tenantId : karate.properties['tenantId']
 	};
 
-	config.baseUrl = "https://localhost:8443/fineract-provider/api/v1/";
+	config.baseUrl = "https://localhost:"+port+"/fineract-provider/api/v1/";
 
 	var Faker = Java.type('com.github.javafaker.Faker');
     config.faker = new Faker();
