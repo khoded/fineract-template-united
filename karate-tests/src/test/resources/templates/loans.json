@@ -21,13 +21,13 @@
     "locale": "en",
     "dateFormat": "#(format)",
     "loanType": "individual",
-    "expectedDisbursementDate": "#(df.format(calendar.getTime()))",
-    "submittedOnDate": "#(df.format(calendar.getTime()))"
+    "expectedDisbursementDate": "#(submittedOnDate)",
+    "submittedOnDate": "#(submittedOnDate)"
   },
   "approve": {
-    "approvedOnDate": "#(df.format(calendar.getTime()))",
+    "approvedOnDate": "#(approvalDate)",
     "approvedLoanAmount": "#(loanAmount)",
-    "expectedDisbursementDate": "#(df.format(calendar.getTime()))",
+    "expectedDisbursementDate": "#(approvalDate)",
     "disbursementData": [],
     "locale": "en",
     "dateFormat": "#(format)"
@@ -35,7 +35,14 @@
   "disburse": {
     "paymentTypeId": 1,
     "transactionAmount": "#(loanAmount)",
-    "actualDisbursementDate": "#(df.format(calendar.getTime()))",
+    "actualDisbursementDate": "#(disbursementDate)",
+    "locale": "en",
+    "dateFormat": "#(format)"
+  },
+  "transaction": {
+    "transactionDate": "#(repaymentDate)",
+    "paymentTypeId": 1,
+    "transactionAmount": "#(repaymentAmount)",
     "locale": "en",
     "dateFormat": "#(format)"
   }

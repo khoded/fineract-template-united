@@ -10,8 +10,8 @@
     "active": true,
     "locale": "en",
     "dateFormat": "#(format)",
-    "activationDate": "#(df.format(calendar.getTime()))",
-    "submittedOnDate": "#(df.format(calendar.getTime()))",
+    "activationDate": "#(clientCreationDate)",
+    "submittedOnDate": "#(clientCreationDate)",
     "dateOfBirth": "#(df.format(faker.date().birthday()))"
   },
   "updateClientPayload": {

@@ -44,5 +44,7 @@ function fn() {
     var Calendar = Java.type('java.util.Calendar');
     config.calendar = Calendar.getInstance();
 
+    config.TimeUnit = Java.type('java.util.concurrent.TimeUnit');
+
 	return config;
 }

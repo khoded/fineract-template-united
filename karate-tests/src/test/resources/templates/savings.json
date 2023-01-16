@@ -10,7 +10,7 @@
     "interestPostingPeriodType": 4,
     "interestCalculationType": 1,
     "interestCalculationDaysInYearType": 365,
-    "submittedOnDate": "#(df.format(calendar.getTime()))",
+    "submittedOnDate": "#(submittedOnDate)",
     "locale": "en",
     "dateFormat": "#(format)",
     "monthDayFormat": "dd MMM",
@@ -18,12 +18,12 @@
     "clientId": "#(clientId)"
   },
   "approve": {
-    "approvedOnDate":"#(df.format(calendar.getTime()))",
+    "approvedOnDate":"#(approvalDate)",
     "locale":"en",
     "dateFormat":"#(format)"
   },
   "activate": {
-    "activatedOnDate":"#(df.format(calendar.getTime()))",
+    "activatedOnDate":"#(activationDate)",
     "locale":"en",
     "dateFormat":"#(format)"
   },

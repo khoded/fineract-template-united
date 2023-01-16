@@ -4,13 +4,15 @@ Feature: Savings Creation Steps
     * callonce read('classpath:features/base.feature')
     * url baseUrl
 
+
+  # set parameter submittedOnDate, clientCreationDate
   @ignore
   @create
   Scenario: Create savings accounts
     #create savings product step
     * def savingsProduct = call read('classpath:features/portfolio/products/savingsproduct.feature@fetchdefaultproduct')
-    #create client step
-    * def result = call read('classpath:features/portfolio/clients/clientcreation.feature@create')
+    #create client step with clientCreationDate
+    * def result = call read('classpath:features/portfolio/clients/clientsteps.feature@create') { clientCreationDate : '#(clientCreationDate)' }
     Given configure ssl = true
     #now create savings here
     Given path 'savingsaccounts'
