@@ -16,24 +16,19 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.loanaccount.service;
+package org.apache.fineract.portfolio.loanaccount.data;
 
-import java.util.Map;
-import org.apache.fineract.infrastructure.jobs.exception.JobExecutionException;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import lombok.Data;
 
-public interface LoanSchedularService {
+@Data
+@Entity
+public class LoanOverdueReminderSettingsData {
 
-    void applyChargeForOverdueLoans() throws JobExecutionException;
+    @Id
+    private Long id;
+    private Integer days;
+    private String batch;
 
-    void recalculateInterest() throws JobExecutionException;
-
-    void recalculateInterest(@SuppressWarnings("unused") Map<String, String> jobParameters);
-
-    void postLoanRepaymentReminder() throws JobExecutionException;
-
-    void processLoanRepaymentReminder() throws JobExecutionException;
-
-    void postLoanOverdueReminder() throws JobExecutionException;
-
-    void processLoanOverdueReminder() throws JobExecutionException;
 }

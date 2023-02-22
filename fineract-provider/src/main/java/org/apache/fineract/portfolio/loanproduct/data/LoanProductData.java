@@ -1182,7 +1182,7 @@ public class LoanProductData implements Serializable {
                 getInterestRecalculationRestOnDayType(), compoundingCalendarData, getRecalculationCompoundingFrequencyType(),
                 getRecalculationCompoundingFrequencyInterval(), getInterestRecalculationCompoundingNthDayType(),
                 getInterestRecalculationCompoundingWeekDayType(), getInterestRecalculationCompoundingOnDayType(),
-                isCompoundingToBePostedAsTransaction(), allowCompoundingOnEod(),isAdvancePaymentInterestForExactDaysInPeriod());
+                isCompoundingToBePostedAsTransaction(), allowCompoundingOnEod(), isAdvancePaymentInterestForExactDaysInPeriod());
     }
 
     private EnumOptionData getRescheduleStrategyType() {

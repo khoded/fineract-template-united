@@ -433,7 +433,8 @@ public class LoanProductReadPlatformServiceImpl implements LoanProductReadPlatfo
                         rescheduleStrategyType, restFrequencyType, restFrequencyInterval, restFrequencyNthDayEnum, restFrequencyWeekDayEnum,
                         restFrequencyOnDay, compoundingFrequencyType, compoundingInterval, compoundingFrequencyNthDayEnum,
                         compoundingFrequencyWeekDayEnum, compoundingFrequencyOnDay, isArrearsBasedOnOriginalSchedule,
-                        isCompoundingToBePostedAsTransaction, preCloseInterestCalculationStrategy, allowCompoundingOnEod,advancePaymentInterestForExactDaysInPeriod);
+                        isCompoundingToBePostedAsTransaction, preCloseInterestCalculationStrategy, allowCompoundingOnEod,
+                        advancePaymentInterestForExactDaysInPeriod);
             }
 
             final boolean amortization = rs.getBoolean("amortizationBoolean");
