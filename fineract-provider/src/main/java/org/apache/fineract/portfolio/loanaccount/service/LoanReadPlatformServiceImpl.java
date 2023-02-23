@@ -2382,7 +2382,6 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
     public List<LoanOverdueReminderData> findLoanOverdueReminderData(Integer numberOfDaysToDueDate) {
         final LoanOverdueReminderDataMapper mapper = new LoanOverdueReminderDataMapper(sqlGenerator);
         String sql = "select " + mapper.schema(numberOfDaysToDueDate);
-        System.out.println("LoanOver-Reminder ::>> " + sql);
         List<LoanOverdueReminderData> overdueReminderData = this.jdbcTemplate.query(sql, mapper);
         return overdueReminderData;
     }
@@ -2474,8 +2473,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     " FROM m_loan_repayment_schedule sch   INNER JOIN m_loan l on sch.loan_id = l.id  LEFT JOIN  m_client mc on l.client_id = mc.id  LEFT JOIN m_loan_arrears_aging aging on l.id = aging.loan_id  ");
             sqlBuilder.append(
                     " LEFT JOIN  m_group grp on l.group_id = grp.id   INNER JOIN m_product_loan mpl on l.product_id = mpl.id where  ");
-            sqlBuilder.append(" sch.duedate <= ");
-            sqlBuilder.append(sqlGenerator.addDate(" now() ", numberOfDaysToDueDate.toString()));
+            sqlBuilder.append(" sch.duedate = ");
+            sqlBuilder.append(sqlGenerator.addDate(sqlGenerator.currentBusinessDate(), numberOfDaysToDueDate.toString()));
             sqlBuilder.append(
                     " and sch.completed_derived = false   and sch.obligations_met_on_date is null   and l.loan_status_id = 300 ORDER BY l.id ,sch.duedate,sch.installment ASC ");
 
@@ -2670,8 +2669,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     " FROM m_loan_repayment_schedule sch   INNER JOIN m_loan l on sch.loan_id = l.id  LEFT JOIN  m_client mc on l.client_id = mc.id  LEFT JOIN m_loan_arrears_aging aging on l.id = aging.loan_id  ");
             sqlBuilder.append(
                     " LEFT JOIN  m_group grp on l.group_id = grp.id   INNER JOIN m_product_loan mpl on l.product_id = mpl.id where  ");
-            sqlBuilder.append(" sch.duedate <= ");
-            sqlBuilder.append(sqlGenerator.addDate(" now() ", numberOfDaysToDueDate.toString()));
+            sqlBuilder.append(" sch.duedate < ");
+            sqlBuilder.append(sqlGenerator.addDate(sqlGenerator.currentBusinessDate(), numberOfDaysToDueDate.toString()));
             sqlBuilder.append(
                     " and sch.completed_derived = false   and sch.obligations_met_on_date is null   and l.loan_status_id = 300 ORDER BY l.id ,sch.duedate,sch.installment ASC ");
 

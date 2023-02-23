@@ -131,6 +131,7 @@ public class LoanArrearsAgingServiceImpl implements LoanArrearsAgingService {
 
         List<String> insertStatements = updateLoanArrearsAgeingDetailsWithOriginalSchedule();
         insertStatements.add(0, updateSqlBuilder.toString());
+        System.out.println("Arrears Report : >>  " + updateSqlBuilder.toString());
         final int[] results = this.jdbcTemplate.batchUpdate(insertStatements.toArray(new String[0]));
         int result = 0;
         for (int i : results) {
