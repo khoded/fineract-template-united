@@ -223,7 +223,7 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
         sqlBuilder.append("SELECT ");
         sqlBuilder.append(this.depositAccountForMaturityRowMapper.schema());
         sqlBuilder.append(" WHERE da.deposit_type_enum in (?, ?) and da.status_enum = ?");
-
+        System.out.println("JOB ::>> "+ sqlBuilder.toString());
         return this.jdbcTemplate.query(sqlBuilder.toString(), this.depositAccountForMaturityRowMapper,
                 new Object[] { DepositAccountType.FIXED_DEPOSIT.getValue(), DepositAccountType.RECURRING_DEPOSIT.getValue(),
                         SavingsAccountStatusType.ACTIVE.getValue() });
@@ -1545,7 +1545,6 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
         } else {
             sqlBuilder.append(" AND tr.transaction_type_enum in (?,?) ");
         }
-        sqlBuilder.append(" order by tr.transaction_date DESC, tr.created_date DESC, tr.id DESC ");
         try {
             return this.jdbcTemplate.queryForObject(sqlBuilder.toString(), Long.class,
                     new Object[] { savingsId, depositAccountType.getValue(),

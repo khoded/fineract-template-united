@@ -1558,6 +1558,8 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                 }
             }
         } else if (depositAccountType.isRecurringDeposit()) {
+            //do logic here
+
             ((RecurringDepositAccount) account).updateMaturityStatus(isSavingsInterestPostingAtCurrentPeriodEnd,
                     financialYearBeginningMonth, postReversals);
         }
