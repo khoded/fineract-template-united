@@ -220,4 +220,5 @@ public class SavingsApiConstants {
     public static final String totalLiquidationAllowed = "totalLiquidationAllowed";
 
     public static final String allowManuallyEnterInterestRateParamName = "allowManuallyEnterInterestRate";
+    public static final String ADD_PENALTY_ON_MISSED_TARGET_SAVINGS = "addPenaltyOnMissedTargetSavings";
 }
