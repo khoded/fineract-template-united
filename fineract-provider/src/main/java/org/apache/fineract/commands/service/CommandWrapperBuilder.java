@@ -3511,6 +3511,33 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder addSavingsProductFloatingInterestRate(final long savingsProductId) {
+        this.actionName = "CREATE";
+        this.entityName = "SAVINGSPRODUCTFLOATINGINTERESTRATE";
+        this.href = "/savingsproducts/" + savingsProductId + "/floatinginterestrates";
+        this.productId = savingsProductId;
+        return this;
+    }
+
+    public CommandWrapperBuilder updateSavingsProductFloatingInterestRate(final Long savingsProductfloatingInterestRateId,
+            final Long savingsProductId) {
+        this.actionName = "UPDATE";
+        this.entityName = "SAVINGSPRODUCTFLOATINGINTERESTRATE";
+        this.href = "/savingsproducts/" + savingsProductId + "/floatinginterestrates" + savingsProductfloatingInterestRateId;
+        this.productId = savingsProductId;
+        this.entityId = savingsProductfloatingInterestRateId;
+        return this;
+    }
+
+    public CommandWrapperBuilder deleteSavingsProductFloatingInterestRate(final Long savingsProductfloatingInterestRateId,
+            final Long savingsProductId) {
+        this.actionName = "DELETE";
+        this.entityName = "SAVINGSPRODUCTFLOATINGINTERESTRATE";
+        this.href = "/savingsproducts/" + savingsProductId + "/floatinginterestrates" + savingsProductfloatingInterestRateId;
+        this.entityId = savingsProductfloatingInterestRateId;
+        return this;
+    }
+
     public CommandWrapperBuilder savingsAccountAccrualInterestPosting(final Long accountId) {
         this.actionName = "POSTACCRUALINTEREST";
         this.entityName = "SAVINGSACCOUNT";
