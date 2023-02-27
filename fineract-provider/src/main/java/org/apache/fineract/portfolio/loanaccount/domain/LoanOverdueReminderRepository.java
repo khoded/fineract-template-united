@@ -16,24 +16,17 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.loanaccount.service;
+package org.apache.fineract.portfolio.loanaccount.domain;
 
-import java.util.Map;
-import org.apache.fineract.infrastructure.jobs.exception.JobExecutionException;
+import java.util.List;
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
-public interface LoanSchedularService {
+public interface LoanOverdueReminderRepository
+        extends JpaRepository<LoanOverdueReminder, Long>, JpaSpecificationExecutor<LoanOverdueReminder> {
 
-    void applyChargeForOverdueLoans() throws JobExecutionException;
-
-    void recalculateInterest() throws JobExecutionException;
-
-    void recalculateInterest(@SuppressWarnings("unused") Map<String, String> jobParameters);
-
-    void postLoanRepaymentReminder() throws JobExecutionException;
-
-    void processLoanRepaymentReminder() throws JobExecutionException;
-
-    void postLoanOverdueReminder() throws JobExecutionException;
-
-    void processLoanOverdueReminder() throws JobExecutionException;
+    @Query("SELECT r FROM LoanOverdueReminder r WHERE r.batchId = :batchId")
+    List<LoanOverdueReminder> getLoanOverdueReminderByBatchId(@Param("batchId") String batchId);
 }

@@ -21,6 +21,7 @@ package org.apache.fineract.portfolio.loanaccount.data;
 import java.math.BigDecimal;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanOverdueReminder;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentReminder;
 
 @Data
@@ -80,4 +81,30 @@ public class LoanMessageRepaymentReminderData {
         this.lastModifiedDate = repaymentReminder.getLastModifiedDate().get().toString();
     }
 
+    public LoanMessageRepaymentReminderData(LoanOverdueReminder loanOverdueReminder) {
+        this.id = loanOverdueReminder.getId();
+        this.loanId = loanOverdueReminder.getLoanId();
+        this.clientId = loanOverdueReminder.getClientId();
+        this.groupId = loanOverdueReminder.getGroupId();
+        this.loanProductId = loanOverdueReminder.getLoanProductId();
+        this.loanScheduleId = loanOverdueReminder.getLoanScheduleId();
+        this.dueDate = loanOverdueReminder.getDueDate().toString();
+        this.installmentNumber = loanOverdueReminder.getInstallmentNumber();
+        this.principalAmountOutStanding = loanOverdueReminder.getPrincipalAmountOutStanding();
+        this.interestAmountOutStanding = loanOverdueReminder.getInterestAmountOutStanding();
+        this.feesChargeAmountOutStanding = loanOverdueReminder.getFeesChargeAmountOutStanding();
+        this.penaltyChargeAmountOutStanding = loanOverdueReminder.getPenaltyChargeAmountOutStanding();
+        this.totalAmountOutStanding = loanOverdueReminder.getTotalAmountOutStanding();
+        this.loanRepaymentReminderSettingsId = loanOverdueReminder.getLoanRepaymentReminderSettingsId();
+        this.productName = loanOverdueReminder.getProductName();
+        this.clientName = loanOverdueReminder.getClientName();
+        this.groupName = loanOverdueReminder.getGroupName();
+        this.totalOverdueAmount = loanOverdueReminder.getTotalOverdueAmount();
+        this.messageStatus = loanOverdueReminder.getMessageStatus();
+        this.batchId = loanOverdueReminder.getBatchId();
+        this.createdBy = loanOverdueReminder.getCreatedBy().get();
+        this.createdDate = loanOverdueReminder.getCreatedDate().get().toString();
+        this.lastModifiedBy = loanOverdueReminder.getLastModifiedBy().get();
+        this.lastModifiedDate = loanOverdueReminder.getLastModifiedDate().get().toString();
+    }
 }
