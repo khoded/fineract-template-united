@@ -90,6 +90,7 @@ import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.Money;
 import org.apache.fineract.portfolio.charge.domain.Charge;
 import org.apache.fineract.portfolio.interestratechart.domain.InterestRateChart;
+import org.apache.fineract.portfolio.savings.SavingsApiConstants;
 import org.apache.fineract.portfolio.savings.SavingsCompoundingInterestPeriodType;
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationDaysInYearType;
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationType;
@@ -686,6 +687,13 @@ public class SavingsProduct extends AbstractPersistableCustom {
             final Long newValue = command.longValueOfParameterNamed(numberOfDebitTransactionsParamName);
             actualChanges.put(numberOfDebitTransactionsParamName, newValue);
             this.numOfDebitTransaction = newValue;
+        }
+        if (command.isChangeInBooleanParameterNamed(SavingsApiConstants.ADD_PENALTY_ON_MISSED_TARGET_SAVINGS,
+                this.addPenaltyOnMissedTargetSavings)) {
+            final boolean newValue = command
+                    .booleanPrimitiveValueOfParameterNamed(SavingsApiConstants.ADD_PENALTY_ON_MISSED_TARGET_SAVINGS);
+            actualChanges.put(SavingsApiConstants.ADD_PENALTY_ON_MISSED_TARGET_SAVINGS, newValue);
+            this.addPenaltyOnMissedTargetSavings = newValue;
         }
 
         validateLockinDetails();
