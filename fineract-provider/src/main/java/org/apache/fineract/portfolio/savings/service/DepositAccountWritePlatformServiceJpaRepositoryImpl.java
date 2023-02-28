@@ -135,6 +135,8 @@ import org.apache.fineract.portfolio.savings.domain.RecurringDepositAccount;
 import org.apache.fineract.portfolio.savings.domain.RecurringDepositProduct;
 import org.apache.fineract.portfolio.savings.domain.RecurringDepositProductRepository;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccount;
+import org.apache.fineract.portfolio.savings.domain.RecurringMissedTargetData;
+import org.apache.fineract.portfolio.savings.domain.RecurringMissedTargetRepository;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountCharge;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountChargeRepositoryWrapper;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountRepository;
@@ -207,6 +209,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
 
     private final SavingsAccountWritePlatformService savingsAccountWritePlatformService;
     private final ChargeSlabRepository chargeSlabRepository;
+    private final RecurringMissedTargetRepository recurringMissedTargetRepository;
 
     @Autowired
     public DepositAccountWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context,
@@ -233,7 +236,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
             final SavingsAccountChargeRepositoryWrapper savingsAccountChargeRepositoryWrapper, final FromJsonHelper fromJsonHelper,
             AccountingProcessorHelper helper, RecurringDepositProductRepository recurringDepositProductRepository,
             SavingsAccountWritePlatformService savingsAccountWritePlatformService, SavingsAccountRepository savingsAccountRepository,
-            ChargeSlabRepository chargeSlabRepository) {
+            ChargeSlabRepository chargeSlabRepository,RecurringMissedTargetRepository recurringMissedTargetRepository) {
 
         this.context = context;
         this.savingAccountRepositoryWrapper = savingAccountRepositoryWrapper;
@@ -268,6 +271,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         this.savingsAccountWritePlatformService = savingsAccountWritePlatformService;
         this.savingsAccountRepository = savingsAccountRepository;
         this.chargeSlabRepository = chargeSlabRepository;
+        this.recurringMissedTargetRepository = recurringMissedTargetRepository;
     }
 
     @Transactional
@@ -1558,10 +1562,20 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                 }
             }
         } else if (depositAccountType.isRecurringDeposit()) {
-            // do logic here
 
             ((RecurringDepositAccount) account).updateMaturityStatus(isSavingsInterestPostingAtCurrentPeriodEnd,
                     financialYearBeginningMonth, postReversals);
+
+            // do logic here
+            //check the interest Transaction
+            //create a charge obj and post it on a Recurring deposit account
+
+            RecurringMissedTargetData recurringMissedTargetData = recurringMissedTargetRepository.findRecurringDepositAccountWithMissedTarget(account.getId());
+            if(recurringMissedTargetData != null){
+                LOG.error(" Target Data :: "+recurringMissedTargetData);
+            }
+            LOG.error("  :-No Data-: ");
+
         }
         this.savingAccountRepositoryWrapper.saveAndFlush(account);
         postJournalEntries(account, existingTransactionIds, existingReversedTransactionIds);
