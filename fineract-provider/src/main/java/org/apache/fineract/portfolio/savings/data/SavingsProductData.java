@@ -658,4 +658,7 @@ public final class SavingsProductData implements Serializable {
         return AccountingRuleType.ACCRUAL_PERIODIC.getValue().toString().equals(this.accountingRule.getValue());
     }
 
+    public Collection<SavingsProductFloatingInterestRateData> getFloatingInterestRates() {
+        return floatingInterestRates;
+    }
 }
