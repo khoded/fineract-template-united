@@ -842,6 +842,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             sqlBuilder.append("sa.last_interest_calculation_date as lastInterestCalculationDate, ");
             sqlBuilder.append("sa.interest_posted_till_date as interestPostedTillDate, ");
             sqlBuilder.append("sa.total_savings_amount_on_hold as onHoldAmount, ");
+            sqlBuilder.append("sa.use_floating_interest_rate as useFloatingInterestRate, ");
             sqlBuilder.append("sa.withdrawal_fee_for_transfer as withdrawalFeeForTransfers, ");
             sqlBuilder.append("tg.id as taxGroupId, tg.name as taxGroupName, ");
             sqlBuilder.append("(select COALESCE(max(sat.transaction_date),sa.activatedon_date) ");
@@ -1100,8 +1101,9 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             final Long numOfDebitTransaction = JdbcSupport.getLong(rs, "numOfDebitTransaction");
             final LocalDate vaultTargetDate = JdbcSupport.getLocalDate(rs, "vaultTargetDate");
             final BigDecimal vaultTargetAmount = JdbcSupport.getBigDecimalDefaultToNullIfZero(rs, "vaultTargetAmount");
+            final boolean useFloatingInterestRate = rs.getBoolean("useFloatingInterestRate");
 
-            return SavingsAccountData.instance(id, accountNo, depositType, externalId, groupId, groupName, clientId, clientName, productId,
+            SavingsAccountData savingsAccountData =  SavingsAccountData.instance(id, accountNo, depositType, externalId, groupId, groupName, clientId, clientName, productId,
                     productName, fieldOfficerId, fieldOfficerName, status, subStatus, reasonForBlock, timeline, currency,
                     nominalAnnualInterestRate, interestCompoundingPeriodType, interestPostingPeriodType, interestCalculationType,
                     interestCalculationDaysInYearType, minRequiredOpeningBalance, lockinPeriodFrequency, lockinPeriodFrequencyType,
@@ -1110,6 +1112,8 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
                     minOverdraftForInterestCalculation, withHoldTax, taxGroupData, lastActiveTransactionDate, isDormancyTrackingActive,
                     daysToInactive, daysToDormancy, daysToEscheat, onHoldAmount, numOfCreditTransaction, numOfDebitTransaction,
                     blockNarration, vaultTargetDate, vaultTargetAmount, accountType, lockedInUntilDate);
+            savingsAccountData.setUseFloatingInterestRate(useFloatingInterestRate);
+            return savingsAccountData;
         }
     }
 

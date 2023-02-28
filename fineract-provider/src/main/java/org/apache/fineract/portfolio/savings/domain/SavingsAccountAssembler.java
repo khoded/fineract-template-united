@@ -18,6 +18,11 @@
  */
 package org.apache.fineract.portfolio.savings.domain;
 
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
+import java.util.HashSet;
+import static org.apache.fineract.portfolio.interestratechart.InterestRateChartApiConstants.endDateParamName;
+import static org.apache.fineract.portfolio.interestratechart.InterestRateChartApiConstants.fromDateParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.SAVINGS_ACCOUNT_RESOURCE_NAME;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.VAULT_TARGET_AMOUNT;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.VAULT_TARGET_DATE;
@@ -27,6 +32,8 @@ import static org.apache.fineract.portfolio.savings.SavingsApiConstants.clientId
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.enforceMinRequiredBalanceParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.externalIdParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.fieldOfficerIdParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.floatingInterestRateValueParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.floatingInterestRatesParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.groupIdParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.interestCalculationDaysInYearTypeParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.interestCalculationTypeParamName;
@@ -44,6 +51,7 @@ import static org.apache.fineract.portfolio.savings.SavingsApiConstants.nominalA
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.overdraftLimitParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.productIdParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.submittedOnDateParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.useFloatingInterestRateParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.withHoldTaxParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.withdrawalFeeForTransfersParamName;
 
@@ -194,6 +202,11 @@ public class SavingsAccountAssembler {
             interestRate = product.nominalAnnualInterestRate();
         }
 
+        boolean useFloatingInterestRate = false;
+        if (command.parameterExists(useFloatingInterestRateParamName)) {
+            useFloatingInterestRate = command.booleanPrimitiveValueOfParameterNamed(useFloatingInterestRateParamName);
+        }
+
         SavingsCompoundingInterestPeriodType interestCompoundingPeriodType = null;
         final Integer interestPeriodTypeValue = command.integerValueOfParameterNamed(interestCompoundingPeriodTypeParamName);
         if (interestPeriodTypeValue != null) {
@@ -340,6 +353,7 @@ public class SavingsAccountAssembler {
                 nominalAnnualInterestRateOverdraft, minOverdraftForInterestCalculation, withHoldTax);
         account.setHelpers(this.savingsAccountTransactionSummaryWrapper, this.savingsHelper);
         account.setVaultTribeDetails(vaultTargetAmount, vaultTargetDate);
+        account.setUseFloatingInterestRate(useFloatingInterestRate);
         account.validateNewApplicationState(DateUtils.getBusinessLocalDate(), SAVINGS_ACCOUNT_RESOURCE_NAME);
 
         account.validateAccountValuesWithProduct();
@@ -623,5 +637,36 @@ public class SavingsAccountAssembler {
 
     public List<SavingsAccount> findSavingAccountByClientId(Long clientId) {
         return this.savingsAccountRepository.findSavingAccountByClientId(clientId);
+    }
+
+    public Set<SavingsAccountFloatingInterestRate> assembleListOfFloatingInterestRates(final JsonCommand command,
+                                                                                       SavingsAccount savingsAccount) {
+        final Set<SavingsAccountFloatingInterestRate> floatingInterestRates = new HashSet<>();
+        if (command.parameterExists(floatingInterestRatesParamName)) {
+            final JsonArray floatingInterestRatesArray = command.arrayOfParameterNamed(floatingInterestRatesParamName);
+            if (floatingInterestRatesArray != null) {
+                for (int i = 0; i < floatingInterestRatesArray.size(); i++) {
+                    final JsonObject floatingInterestRateElement = floatingInterestRatesArray.get(i).getAsJsonObject();
+                    SavingsAccountFloatingInterestRate floatingInterestRate = assembleSavingsAccountFloatingInterestRateFrom(
+                            floatingInterestRateElement, savingsAccount);
+                    floatingInterestRates.add(floatingInterestRate);
+                }
+            }
+        }
+        return floatingInterestRates;
+    }
+
+    public SavingsAccountFloatingInterestRate assembleSavingsAccountFloatingInterestRateFrom(final JsonElement element,
+                                                                                             SavingsAccount savingsAccount) {
+
+        final LocalDate fromDate = this.fromApiJsonHelper.extractLocalDateNamed(fromDateParamName, element);
+        final LocalDate toDate = this.fromApiJsonHelper.extractLocalDateNamed(endDateParamName, element);
+        final BigDecimal floatingInterestRate = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(floatingInterestRateValueParamName,
+                element);
+
+        final SavingsAccountFloatingInterestRate savingsAccountFloatingInterestRate = SavingsAccountFloatingInterestRate.createNew(fromDate,
+                toDate, floatingInterestRate, savingsAccount);
+
+        return savingsAccountFloatingInterestRate;
     }
 }

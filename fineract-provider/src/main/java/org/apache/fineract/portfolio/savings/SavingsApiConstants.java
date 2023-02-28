@@ -186,6 +186,7 @@ public class SavingsApiConstants {
     public static final String charges = "charges";
     public static final String linkedAccount = "linkedAccount";
     public static final String blockNarrations = "blockNarrationOptions";
+    public static final String floatingInterestRates = "floatingInterestRates";
 
     // Savings on hold transaction
     public static final String onHoldTransactionTypeParamName = "transactionType";

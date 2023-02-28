@@ -392,6 +392,12 @@ public class SavingsAccount extends AbstractPersistableCustom {
     @Column(name = "is_unlocked")
     private boolean unlocked;
 
+    @Column(name = "use_floating_interest_rate")
+    private Boolean useFloatingInterestRate;
+
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "savingsAccount", orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<SavingsAccountFloatingInterestRate> savingsAccountFloatingInterestRates = new HashSet<>();
+
     protected SavingsAccount() {
         //
     }
@@ -5112,5 +5118,13 @@ public class SavingsAccount extends AbstractPersistableCustom {
 
     public LocalDate getUnlockDate() {
         return unlockDate;
+    }
+
+    public Boolean getUseFloatingInterestRate() {
+        return useFloatingInterestRate;
+    }
+
+    public void setUseFloatingInterestRate(Boolean useFloatingInterestRate) {
+        this.useFloatingInterestRate = useFloatingInterestRate;
     }
 }

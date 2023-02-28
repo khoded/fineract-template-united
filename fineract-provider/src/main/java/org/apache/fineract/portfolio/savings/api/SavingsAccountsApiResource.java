@@ -70,8 +70,10 @@ import org.apache.fineract.portfolio.savings.SavingsApiConstants;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountBlockNarrationHistoryData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountChargeData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountData;
+import org.apache.fineract.portfolio.savings.data.SavingsAccountFloatingInterestRateData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountTransactionData;
 import org.apache.fineract.portfolio.savings.service.SavingsAccountChargeReadPlatformService;
+import org.apache.fineract.portfolio.savings.service.SavingsAccountFloatingInterestRateReadPlatformService;
 import org.apache.fineract.portfolio.savings.service.SavingsAccountReadPlatformService;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
 import org.glassfish.jersey.media.multipart.FormDataParam;
@@ -95,6 +97,7 @@ public class SavingsAccountsApiResource {
     private final BulkImportWorkbookService bulkImportWorkbookService;
     private final BulkImportWorkbookPopulatorService bulkImportWorkbookPopulatorService;
     private final CodeValueReadPlatformService codeValueReadPlatformService;
+    private final SavingsAccountFloatingInterestRateReadPlatformService savingsAccountFloatingInterestRateReadPlatformService;
 
     @Autowired
     public SavingsAccountsApiResource(final SavingsAccountReadPlatformService savingsAccountReadPlatformService,
@@ -104,7 +107,8 @@ public class SavingsAccountsApiResource {
             final SavingsAccountChargeReadPlatformService savingsAccountChargeReadPlatformService,
             final BulkImportWorkbookService bulkImportWorkbookService,
             final BulkImportWorkbookPopulatorService bulkImportWorkbookPopulatorService,
-            final CodeValueReadPlatformService codeValueReadPlatformService) {
+            final CodeValueReadPlatformService codeValueReadPlatformService,
+            final SavingsAccountFloatingInterestRateReadPlatformService savingsAccountFloatingInterestRateReadPlatformService) {
         this.savingsAccountReadPlatformService = savingsAccountReadPlatformService;
         this.context = context;
         this.toApiJsonSerializer = toApiJsonSerializer;
@@ -114,6 +118,7 @@ public class SavingsAccountsApiResource {
         this.bulkImportWorkbookService = bulkImportWorkbookService;
         this.bulkImportWorkbookPopulatorService = bulkImportWorkbookPopulatorService;
         this.codeValueReadPlatformService = codeValueReadPlatformService;
+        this.savingsAccountFloatingInterestRateReadPlatformService = savingsAccountFloatingInterestRateReadPlatformService;
     }
 
     @GET
@@ -240,6 +245,7 @@ public class SavingsAccountsApiResource {
         Collection<SavingsAccountChargeData> charges = null;
         Collection<CodeValueData> blockNarrationsOptions = null;
         Collection<SavingsAccountBlockNarrationHistoryData> blockNarrationHistoryData = null;
+        Collection<SavingsAccountFloatingInterestRateData> floatingInterestRates = null;
         Long transactionSize = null;
 
         final Set<String> associationParameters = ApiParameterHelper.extractAssociationsForResponseIfProvided(uriInfo.getQueryParameters());
@@ -247,7 +253,7 @@ public class SavingsAccountsApiResource {
 
             if (associationParameters.contains("all")) {
                 associationParameters.addAll(
-                        Arrays.asList(SavingsApiConstants.transactions, SavingsApiConstants.charges, SavingsApiConstants.blockNarrations));
+                        Arrays.asList(SavingsApiConstants.transactions, SavingsApiConstants.charges, SavingsApiConstants.blockNarrations, SavingsApiConstants.floatingInterestRates));
             }
 
             if (associationParameters.contains(SavingsApiConstants.transactions)) {
@@ -287,6 +293,11 @@ public class SavingsAccountsApiResource {
                 blockNarrationHistoryData = this.savingsAccountReadPlatformService.retrieveSavingsAccountBlockNarrationHistory(accountId);
 
             }
+
+            if (associationParameters.contains(SavingsApiConstants.floatingInterestRates)) {
+                mandatoryResponseParameters.add(SavingsApiConstants.floatingInterestRates);
+                floatingInterestRates = this.savingsAccountFloatingInterestRateReadPlatformService.getSavingsAccountFloatingInterestRateForSavingsAccount(accountId);
+            }
         }
 
         SavingsAccountData templateData = null;
@@ -298,6 +309,7 @@ public class SavingsAccountsApiResource {
 
         SavingsAccountData savingsAccountData = SavingsAccountData.withTemplateOptions(savingsAccount, templateData, transactions, charges,
                 blockNarrationsOptions, blockNarrationHistoryData);
+        savingsAccountData.setFloatingInterestRates(floatingInterestRates);
         savingsAccountData.setTransactionSize(transactionSize);
         return savingsAccountData;
     }
