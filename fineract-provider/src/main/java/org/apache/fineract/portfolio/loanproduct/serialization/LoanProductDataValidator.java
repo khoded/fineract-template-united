@@ -607,7 +607,9 @@ public final class LoanProductDataValidator {
             baseDataValidator.reset().parameter(LoanProductAccountingParams.OVERPAYMENT.getValue()).value(overpaymentAccountId).notNull()
                     .integerGreaterThanZero();
 
-            this.depositProductDataValidator.validateChartsData(element, baseDataValidator);
+            if (this.fromApiJsonHelper.parameterExists("charts", element)) {
+                this.depositProductDataValidator.validateChartsData(element, baseDataValidator);
+            }
 
             validatePaymentChannelFundSourceMappings(baseDataValidator, element);
             validateChargeToIncomeAccountMappings(baseDataValidator, element);
@@ -1524,8 +1526,9 @@ public final class LoanProductDataValidator {
             baseDataValidator.reset().parameter(LoanProductConstants.LOAN_TERM_INCLUDES_TOPPED_UP_LOAN_TERM)
                     .value(loanTermIncludesToppedUpLoanTerm).validateForBooleanValue();
         }
-
-        this.depositProductDataValidator.validateChartsData(element, baseDataValidator);
+        if (this.fromApiJsonHelper.parameterExists("charts", element)) {
+            this.depositProductDataValidator.validateChartsData(element, baseDataValidator);
+        }
 
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }
