@@ -236,6 +236,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
                     final SavingsAccount savingsForUpdate = this.savingAccountRepositoryWrapper
                             .findOneWithNotFoundDetection(depositAccount.id());
                     savingsForUpdate.setWithHoldTax(Boolean.FALSE);
+                    savingsForUpdate.setTaxGroup(null);
                     this.savingAccountRepositoryWrapper.save(savingsForUpdate);
                 }
 

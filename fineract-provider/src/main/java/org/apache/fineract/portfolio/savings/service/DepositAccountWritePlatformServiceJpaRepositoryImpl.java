@@ -1567,6 +1567,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
 
             RecurringMissedTargetData recurringMissedTargetData = this.savingsAccountReadPlatformService
                     .findRecurringDepositAccountWithMissedTarget(account.getId());
+
             if (recurringMissedTargetData != null
                     && recurringMissedTargetData.getDepositTillDate().compareTo(recurringMissedTargetData.getPrincipalAmount()) < 0
                     && recurringMissedTargetData.getTotalInterest().compareTo(BigDecimal.ZERO) > 0) {

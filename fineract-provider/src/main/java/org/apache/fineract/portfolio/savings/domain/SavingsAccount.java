@@ -4042,6 +4042,10 @@ public class SavingsAccount extends AbstractPersistableCustom {
         return this.taxGroup;
     }
 
+    public void setTaxGroup(TaxGroup taxGroup) {
+        this.taxGroup = taxGroup;
+    }
+
     public boolean withHoldTax() {
         return this.withHoldTax;
     }
