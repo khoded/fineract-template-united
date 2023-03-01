@@ -16,28 +16,39 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-package org.apache.fineract.portfolio.savings.domain;
+package org.apache.fineract.portfolio.savings.data;
 
+import java.math.BigDecimal;
+import java.time.LocalDate;
+import javax.persistence.Entity;
+import javax.persistence.Id;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import javax.persistence.Entity;
-import javax.persistence.Id;
-import java.math.BigDecimal;
 @Entity
 @Data
 @NoArgsConstructor
 public class RecurringMissedTargetData {
+
     @Id
-    private Integer id;
+    private Integer savingsId;
     private String accountNo;
     private Integer statusEnum;
-    private BigDecimal totalDepositDerived;
-    private BigDecimal totalInterestEarnedDerived;
-    private BigDecimal totalInterestPostedDerived;
-    private BigDecimal recommendedDepositAmount;
-    private BigDecimal totalOverdueAmount;
+    private BigDecimal depositTillDate;
+    private BigDecimal totalInterest;
+    private BigDecimal principalAmount;
+    private LocalDate maturityDate;
     private Boolean addPenaltyOnMissedTargetSavings;
 
-
+    public RecurringMissedTargetData(Integer savingsId, String accountNo, Integer statusEnum, BigDecimal depositTillDate,
+            BigDecimal totalInterest, BigDecimal principalAmount, LocalDate maturityDate, Boolean addPenaltyOnMissedTargetSavings) {
+        this.savingsId = savingsId;
+        this.accountNo = accountNo;
+        this.statusEnum = statusEnum;
+        this.depositTillDate = depositTillDate;
+        this.totalInterest = totalInterest;
+        this.principalAmount = principalAmount;
+        this.maturityDate = maturityDate;
+        this.addPenaltyOnMissedTargetSavings = addPenaltyOnMissedTargetSavings;
+    }
 }

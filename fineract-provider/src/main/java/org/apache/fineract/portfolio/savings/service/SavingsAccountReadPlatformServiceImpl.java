@@ -68,6 +68,7 @@ import org.apache.fineract.portfolio.savings.SavingsInterestCalculationDaysInYea
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationType;
 import org.apache.fineract.portfolio.savings.SavingsPeriodFrequencyType;
 import org.apache.fineract.portfolio.savings.SavingsPostingInterestPeriodType;
+import org.apache.fineract.portfolio.savings.data.RecurringMissedTargetData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountApplicationTimelineData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountBlockNarrationHistoryData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountChargeData;
@@ -111,6 +112,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
 
     // mappers
     private final SavingsAccountTransactionTemplateMapper transactionTemplateMapper;
+    private final RecurringMissedTargetTemplateMapper recurringMissedTargetTemplateMapper;
     private final SavingsAccountTransactionsMapper transactionsMapper;
     private final SavingsAccountTransactionsForBatchMapper savingsAccountTransactionsForBatchMapper;
     private final SavingAccountMapper savingAccountMapper;
@@ -156,6 +158,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         this.savingAccountAssembler = savingAccountAssembler;
         this.codeValueReadPlatformService = codeValueReadPlatformService;
         this.savingsAccountBlockNarrationHistoryMapper = new SavingsAccountBlockNarrationHistoryMapper();
+        this.recurringMissedTargetTemplateMapper = new RecurringMissedTargetTemplateMapper();
 
     }
 
@@ -1959,6 +1962,55 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
     public List<Long> retrieveActiveOverdraftSavingAccounts() {
         String sql = "select id from m_savings_account where status_enum = 300 and (allow_overdraft = true or account_balance_derived <= 0) and deposit_type_enum != 200";
         return this.jdbcTemplate.queryForList(sql, Long.class);
+    }
+
+    @Override
+    public RecurringMissedTargetData findRecurringDepositAccountWithMissedTarget(Long savingsAccountId) {
+
+        final String sql = "select " + this.recurringMissedTargetTemplateMapper.schema();
+
+        return this.jdbcTemplate.queryForObject(sql, this.recurringMissedTargetTemplateMapper, new Object[] { savingsAccountId });
+    }
+
+    private static final class RecurringMissedTargetTemplateMapper implements RowMapper<RecurringMissedTargetData> {
+
+        private final String schemaSql;
+
+        RecurringMissedTargetTemplateMapper() {
+            final StringBuilder sqlBuilder = new StringBuilder(400);
+            sqlBuilder.append(" sa.id AS id, sa.account_no AS accountNo,sa.status_enum AS statusEnum, sa.total_deposits_derived ");
+            sqlBuilder.append(
+                    " AS  depositTillDate ,sa.total_interest_posted_derived AS totalInterest , cl.deposit_amount AS principalAmount, ");
+            sqlBuilder.append(
+                    " cl.maturity_date AS maturityDate, sp.add_penalty_on_missed_target_savings AS addPenaltyOnMissedTargetSavings ");
+            sqlBuilder.append(" FROM m_savings_account sa ");
+            sqlBuilder.append(" INNER JOIN m_deposit_account_term_and_preclosure cl  ON sa.id = cl.savings_account_id ");
+            sqlBuilder.append(" INNER JOIN m_savings_product sp ON sa.product_id = sp.id ");
+            sqlBuilder.append(" WHERE sa.id = ? AND sa.status_enum = 300 AND ");
+            sqlBuilder.append(" sp.add_penalty_on_missed_target_savings = true ");
+
+            this.schemaSql = sqlBuilder.toString();
+        }
+
+        public String schema() {
+            return this.schemaSql;
+        }
+
+        @Override
+        public RecurringMissedTargetData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
+
+            final Integer savingsId = JdbcSupport.getInteger(rs, "id");
+            final String accountNo = rs.getString("accountNo");
+            final Integer statusEnum = JdbcSupport.getInteger(rs, "statusEnum");
+            final BigDecimal depositTillDate = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "depositTillDate");
+            final BigDecimal totalInterest = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "totalInterest");
+            final BigDecimal principalAmount = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "principalAmount");
+            final LocalDate maturityDate = JdbcSupport.getLocalDate(rs, "maturityDate");
+            final boolean addPenaltyOnMissedTargetSavings = rs.getBoolean("addPenaltyOnMissedTargetSavings");
+
+            return new RecurringMissedTargetData(savingsId, accountNo, statusEnum, depositTillDate, totalInterest, principalAmount,
+                    maturityDate, addPenaltyOnMissedTargetSavings);
+        }
     }
 
 }

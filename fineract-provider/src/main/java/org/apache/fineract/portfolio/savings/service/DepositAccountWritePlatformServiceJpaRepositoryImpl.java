@@ -120,6 +120,7 @@ import org.apache.fineract.portfolio.savings.SavingsApiConstants;
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationDaysInYearType;
 import org.apache.fineract.portfolio.savings.SavingsPeriodFrequencyType;
 import org.apache.fineract.portfolio.savings.data.DepositAccountTransactionDataValidator;
+import org.apache.fineract.portfolio.savings.data.RecurringMissedTargetData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountChargeDataValidator;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountTransactionDTO;
 import org.apache.fineract.portfolio.savings.domain.DepositAccountAssembler;
@@ -135,8 +136,6 @@ import org.apache.fineract.portfolio.savings.domain.RecurringDepositAccount;
 import org.apache.fineract.portfolio.savings.domain.RecurringDepositProduct;
 import org.apache.fineract.portfolio.savings.domain.RecurringDepositProductRepository;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccount;
-import org.apache.fineract.portfolio.savings.domain.RecurringMissedTargetData;
-import org.apache.fineract.portfolio.savings.domain.RecurringMissedTargetRepository;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountCharge;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountChargeRepositoryWrapper;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountRepository;
@@ -209,7 +208,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
 
     private final SavingsAccountWritePlatformService savingsAccountWritePlatformService;
     private final ChargeSlabRepository chargeSlabRepository;
-    private final RecurringMissedTargetRepository recurringMissedTargetRepository;
+    private final SavingsAccountReadPlatformService savingsAccountReadPlatformService;
 
     @Autowired
     public DepositAccountWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context,
@@ -236,7 +235,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
             final SavingsAccountChargeRepositoryWrapper savingsAccountChargeRepositoryWrapper, final FromJsonHelper fromJsonHelper,
             AccountingProcessorHelper helper, RecurringDepositProductRepository recurringDepositProductRepository,
             SavingsAccountWritePlatformService savingsAccountWritePlatformService, SavingsAccountRepository savingsAccountRepository,
-            ChargeSlabRepository chargeSlabRepository,RecurringMissedTargetRepository recurringMissedTargetRepository) {
+            ChargeSlabRepository chargeSlabRepository, SavingsAccountReadPlatformService savingsAccountReadPlatformService) {
 
         this.context = context;
         this.savingAccountRepositoryWrapper = savingAccountRepositoryWrapper;
@@ -271,7 +270,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         this.savingsAccountWritePlatformService = savingsAccountWritePlatformService;
         this.savingsAccountRepository = savingsAccountRepository;
         this.chargeSlabRepository = chargeSlabRepository;
-        this.recurringMissedTargetRepository = recurringMissedTargetRepository;
+        this.savingsAccountReadPlatformService = savingsAccountReadPlatformService;
     }
 
     @Transactional
@@ -1566,15 +1565,18 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
             ((RecurringDepositAccount) account).updateMaturityStatus(isSavingsInterestPostingAtCurrentPeriodEnd,
                     financialYearBeginningMonth, postReversals);
 
-            // do logic here
-            //check the interest Transaction
-            //create a charge obj and post it on a Recurring deposit account
+            RecurringMissedTargetData recurringMissedTargetData = this.savingsAccountReadPlatformService
+                    .findRecurringDepositAccountWithMissedTarget(account.getId());
+            if (recurringMissedTargetData != null
+                    && recurringMissedTargetData.getDepositTillDate().compareTo(recurringMissedTargetData.getPrincipalAmount()) < 0
+                    && recurringMissedTargetData.getTotalInterest().compareTo(BigDecimal.ZERO) > 0) {
+                // do logic here
+                // get the charge off the Product and apply it on this account
+                // the charge amount should override the interest posted.
+                // Lastly if the charge is not found on the product, then revoke this operation
 
-            RecurringMissedTargetData recurringMissedTargetData = recurringMissedTargetRepository.findRecurringDepositAccountWithMissedTarget(account.getId());
-            if(recurringMissedTargetData != null){
-                LOG.error(" Target Data :: "+recurringMissedTargetData);
+                LOG.error(" Target Data :: " + recurringMissedTargetData);
             }
-            LOG.error("  :-No Data-: ");
 
         }
         this.savingAccountRepositoryWrapper.saveAndFlush(account);
