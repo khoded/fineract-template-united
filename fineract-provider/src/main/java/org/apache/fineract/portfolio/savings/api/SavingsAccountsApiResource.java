@@ -310,6 +310,7 @@ public class SavingsAccountsApiResource {
         SavingsAccountData savingsAccountData = SavingsAccountData.withTemplateOptions(savingsAccount, templateData, transactions, charges,
                 blockNarrationsOptions, blockNarrationHistoryData);
         savingsAccountData.setFloatingInterestRates(floatingInterestRates);
+        savingsAccountData.setUseFloatingInterestRate(savingsAccount.getUseFloatingInterestRate());
         savingsAccountData.setTransactionSize(transactionSize);
         return savingsAccountData;
     }
