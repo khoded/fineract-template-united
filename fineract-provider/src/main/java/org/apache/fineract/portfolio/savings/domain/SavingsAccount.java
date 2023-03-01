@@ -2028,6 +2028,12 @@ public class SavingsAccount extends AbstractPersistableCustom {
             this.accountNumber = StringUtils.defaultIfEmpty(newValue, null);
         }
 
+        if (command.isChangeInBooleanParameterNamed(SavingsApiConstants.useFloatingInterestRateParamName, this.useFloatingInterestRate)) {
+            final boolean newValue = command.booleanPrimitiveValueOfParameterNamed(SavingsApiConstants.useFloatingInterestRateParamName);
+            actualChanges.put(SavingsApiConstants.useFloatingInterestRateParamName, newValue);
+            this.useFloatingInterestRate = newValue;
+        }
+
         if (command.isChangeInStringParameterNamed(SavingsApiConstants.externalIdParamName, this.externalId)) {
             final String newValue = command.stringValueOfParameterNamed(SavingsApiConstants.externalIdParamName);
             actualChanges.put(SavingsApiConstants.externalIdParamName, newValue);
