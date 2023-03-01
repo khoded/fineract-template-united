@@ -278,12 +278,13 @@ public class SavingsAccountsApiResource {
             }
 
             if (associationParameters.contains(SavingsApiConstants.charges)) {
-                mandatoryResponseParameters.add(SavingsApiConstants.charges);
+                mandatoryResponseParameters.addAll(Arrays.asList(SavingsApiConstants.charges, SavingsApiConstants.floatingInterestRates));
                 final Collection<SavingsAccountChargeData> currentCharges = this.savingsAccountChargeReadPlatformService
                         .retrieveSavingsAccountCharges(accountId, chargeStatus);
                 if (!CollectionUtils.isEmpty(currentCharges)) {
                     charges = currentCharges;
                 }
+                floatingInterestRates = this.savingsAccountFloatingInterestRateReadPlatformService.getSavingsAccountFloatingInterestRateForSavingsAccount(accountId);
             }
 
             if (associationParameters.contains(SavingsApiConstants.blockNarrations)) {
