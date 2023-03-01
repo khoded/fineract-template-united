@@ -107,50 +107,8 @@
     </changeSet>
     <changeSet author="hitesh@fiter.io" id="m_savings_product_floating_interest_rate_fk_id">
         <addForeignKeyConstraint baseColumnNames="savings_product_id" baseTableName="m_savings_product_floating_interest_rate"
-             constraintName="FK1_m_savings_product_floating_interest_rate_m_savings_product" deferrable="false" initiallyDeferred="false"
-             onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="id"
-             referencedTableName="m_savings_product" validate="true"/>
-    </changeSet>
-
-    <!-- Savings Account Floating Interest Rate -->
-    <changeSet id="create_m_savings_account_floating_interest_rate" author="hitesh@fiter.io">
-        <preConditions onFail="MARK_RAN">
-            <not>
-                <tableExists tableName="m_savings_account_floating_interest_rate"/>
-            </not>
-        </preConditions>
-        <createTable tableName="m_savings_account_floating_interest_rate">
-            <column autoIncrement="true" name="id" type="BIGINT">
-                <constraints nullable="false" primaryKey="true"/>
-            </column>
-            <column name="savings_account_id" type="BIGINT">
-                <constraints nullable="false"/>
-            </column>
-            <column name="from_date" type="date">
-                <constraints nullable="false"/>
-            </column>
-            <column defaultValueComputed="NULL" name="end_date" type="date"/>
-            <column name="floating_interest_rate" type="DECIMAL(19, 6)">
-                <constraints nullable="false"/>
-            </column>
-            <column defaultValueComputed="NULL" name="createdby_id" type="BIGINT"/>
-            <column defaultValueComputed="NULL" name="created_date" type="datetime"/>
-            <column defaultValueComputed="NULL" name="lastmodifiedby_id" type="BIGINT"/>
-            <column defaultValueComputed="NULL" name="lastmodified_date" type="datetime"/>
-        </createTable>
-    </changeSet>
-    <changeSet author="hitesh@fiter.io" id="m_savings_account_floating_interest_rate_fk_id">
-        <addForeignKeyConstraint baseColumnNames="savings_account_id" baseTableName="m_savings_account_floating_interest_rate"
-                                 constraintName="FK1_m_savings_account_floating_interest_rate_m_savings_account" deferrable="false" initiallyDeferred="false"
+                                 constraintName="FK1_m_savings_product_floating_interest_rate_m_savings_product" deferrable="false" initiallyDeferred="false"
                                  onDelete="RESTRICT" onUpdate="RESTRICT" referencedColumnNames="id"
-                                 referencedTableName="m_savings_account" validate="true"/>
+                                 referencedTableName="m_savings_product" validate="true"/>
     </changeSet>
-    <changeSet author="hitesh@fiter.io" id="flag_to_use_floating_interest_rate">
-        <addColumn tableName="m_savings_account">
-            <column defaultValueBoolean="false" name="use_floating_interest_rate" type="boolean">
-                <constraints nullable="false"/>
-            </column>
-        </addColumn>
-    </changeSet>
-
 </databaseChangeLog>
