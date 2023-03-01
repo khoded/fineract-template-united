@@ -72,12 +72,14 @@ import org.apache.fineract.portfolio.savings.data.SavingsAccountApplicationTimel
 import org.apache.fineract.portfolio.savings.data.SavingsAccountBlockNarrationHistoryData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountChargeData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountData;
+import org.apache.fineract.portfolio.savings.data.SavingsAccountFloatingInterestRateData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountStatusEnumData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountSubStatusEnumData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountSummaryData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountTransactionData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountTransactionEnumData;
 import org.apache.fineract.portfolio.savings.data.SavingsProductData;
+import org.apache.fineract.portfolio.savings.data.SavingsProductFloatingInterestRateData;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountAssembler;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountChargesPaidByData;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountStatusType;
@@ -126,6 +128,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
     private final CodeValueReadPlatformService codeValueReadPlatformService;
 
     private final SavingsAccountBlockNarrationHistoryMapper savingsAccountBlockNarrationHistoryMapper;
+    private final SavingsProductFloatingInterestRateReadPlatformService savingsProductFloatingInterestRateReadPlatformService;
 
     @Autowired
     public SavingsAccountReadPlatformServiceImpl(final PlatformSecurityContext context, final JdbcTemplate jdbcTemplate,
@@ -135,7 +138,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             final ChargeReadPlatformService chargeReadPlatformService,
             final EntityDatatableChecksReadService entityDatatableChecksReadService, final ColumnValidator columnValidator,
             final SavingsAccountAssembler savingAccountAssembler, PaginationHelper paginationHelper,
-            DatabaseSpecificSQLGenerator sqlGenerator, final CodeValueReadPlatformService codeValueReadPlatformService) {
+            DatabaseSpecificSQLGenerator sqlGenerator, final CodeValueReadPlatformService codeValueReadPlatformService, final SavingsProductFloatingInterestRateReadPlatformService savingsProductFloatingInterestRateReadPlatformService) {
         this.context = context;
         this.jdbcTemplate = jdbcTemplate;
         this.clientReadPlatformService = clientReadPlatformService;
@@ -156,7 +159,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
         this.savingAccountAssembler = savingAccountAssembler;
         this.codeValueReadPlatformService = codeValueReadPlatformService;
         this.savingsAccountBlockNarrationHistoryMapper = new SavingsAccountBlockNarrationHistoryMapper();
-
+        this.savingsProductFloatingInterestRateReadPlatformService = savingsProductFloatingInterestRateReadPlatformService;
     }
 
     @Override
@@ -1183,6 +1186,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
 
             final String sql = "select " + mapper.schema() + " where sp.id = ?";
             template = this.jdbcTemplate.queryForObject(sql, mapper, new Object[] { productId }); // NOSONAR
+            boolean useFloatingInterestRateFromProduct = template.getUseFloatingInterestRate();
 
             final Collection<EnumOptionData> interestCompoundingPeriodTypeOptions = this.dropdownReadPlatformService
                     .retrieveCompoundingInterestPeriodTypeOptions();
@@ -1205,6 +1209,11 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             final Collection<ChargeData> productCharges = this.chargeReadPlatformService.retrieveSavingsProductCharges(productId);
             // update charges from Product charges
             final Collection<SavingsAccountChargeData> charges = fromChargesToSavingsCharges(productCharges);
+
+            // retrieve floating interest rates from saving product
+            final Collection<SavingsProductFloatingInterestRateData> productFloatingInterestRates = this.savingsProductFloatingInterestRateReadPlatformService.getSavingsProductFloatingInterestRateForSavingsProduct(productId);
+            final Collection<SavingsAccountFloatingInterestRateData> accountFloatingInterestRates = fromSavingsProductFloatingInterestRatesToSavingsAccountFloatingInterestRates(productFloatingInterestRates);
+
 
             final boolean feeChargesOnly = false;
             final Collection<ChargeData> chargeOptions = this.chargeReadPlatformService
@@ -1240,6 +1249,8 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
                     interestCompoundingPeriodTypeOptions, interestPostingPeriodTypeOptions, interestCalculationTypeOptions,
                     interestCalculationDaysInYearTypeOptions, lockinPeriodFrequencyTypeOptions, withdrawalFeeTypeOptions, transactions,
                     charges, chargeOptions, null, null);
+            template.setFloatingInterestRates(accountFloatingInterestRates);
+            template.setUseFloatingInterestRate(useFloatingInterestRateFromProduct);
         } else {
 
             String clientName = null;
@@ -1289,6 +1300,15 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             savingsCharges.add(savingsCharge);
         }
         return savingsCharges;
+    }
+
+    private Collection<SavingsAccountFloatingInterestRateData> fromSavingsProductFloatingInterestRatesToSavingsAccountFloatingInterestRates(final Collection<SavingsProductFloatingInterestRateData> productFloatingInterestRates) {
+        final Collection<SavingsAccountFloatingInterestRateData> savingsAccountFloatingInterestRates = new ArrayList<>();
+        for (final SavingsProductFloatingInterestRateData productData : productFloatingInterestRates) {
+            final SavingsAccountFloatingInterestRateData savingsAccountFloatingInterestRateData = productData.toSavingsAccountFloatingInterestRateData();
+            savingsAccountFloatingInterestRates.add(savingsAccountFloatingInterestRateData);
+        }
+        return savingsAccountFloatingInterestRates;
     }
 
     @Override
@@ -1592,6 +1612,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             sqlBuilder.append("sp.min_required_balance as minRequiredBalance, ");
             sqlBuilder.append("sp.enforce_min_required_balance as enforceMinRequiredBalance, ");
             sqlBuilder.append("sp.max_allowed_lien_limit as maxAllowedLienLimit, ");
+            sqlBuilder.append("sp.use_floating_interest_rate as useFloatingInterestRate, ");
             sqlBuilder.append("sp.is_lien_allowed as lienAllowed ");
             sqlBuilder.append("from m_savings_product sp ");
             sqlBuilder.append("join m_currency curr on curr.code = sp.currency_code ");
@@ -1718,9 +1739,12 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             final Long numOfCreditTransaction = JdbcSupport.getLong(rs, "numOfCreditTransaction");
             final Long numOfDebitTransaction = JdbcSupport.getLong(rs, "numOfDebitTransaction");
 
+            final boolean useFloatingInterestRate = rs.getBoolean("useFloatingInterestRate");
+
             final SavingsAccountApplicationTimelineData timeline = SavingsAccountApplicationTimelineData.templateDefault();
             final EnumOptionData depositType = null;
-            return SavingsAccountData.instance(null, null, depositType, null, groupId, groupName, clientId, clientName, productId,
+
+            SavingsAccountData savingsAccountData = SavingsAccountData.instance(null, null, depositType, null, groupId, groupName, clientId, clientName, productId,
                     productName, fieldOfficerId, fieldOfficerName, status, subStatus, reasonForBlock, timeline, currency,
                     nominalAnnualIterestRate, interestCompoundingPeriodType, interestPostingPeriodType, interestCalculationType,
                     interestCalculationDaysInYearType, minRequiredOpeningBalance, lockinPeriodFrequency, lockinPeriodFrequencyType,
@@ -1729,6 +1753,8 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
                     minOverdraftForInterestCalculation, withHoldTax, taxGroupData, lastActiveTransactionDate, isDormancyTrackingActive,
                     daysToInactive, daysToDormancy, daysToEscheat, savingsAmountOnHold, numOfCreditTransaction, numOfDebitTransaction, null,
                     null, null, null, null);
+            savingsAccountData.setUseFloatingInterestRate(useFloatingInterestRate);
+            return savingsAccountData;
         }
     }
 

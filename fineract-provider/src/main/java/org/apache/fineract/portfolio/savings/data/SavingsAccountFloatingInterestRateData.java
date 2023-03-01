@@ -40,6 +40,10 @@ public class SavingsAccountFloatingInterestRateData implements Serializable {
 
     private BigDecimal floatingInterestRate;
 
+    private String locale = "";
+
+    private String dateFormat = "";
+
     public SavingsAccountFloatingInterestRateData(Long id, Long savingsAccountId, LocalDate fromDate, LocalDate endDate,
                                                   BigDecimal floatingInterestRate) {
         this.id = id;
@@ -85,4 +89,13 @@ public class SavingsAccountFloatingInterestRateData implements Serializable {
     public void setFloatingInterestRate(BigDecimal floatingInterestRate) {
         this.floatingInterestRate = floatingInterestRate;
     }
+
+    public static SavingsAccountFloatingInterestRateData instanceWithProductDateForTemplate(LocalDate fromDate, LocalDate endDate, BigDecimal floatingInterestRate){
+
+        SavingsAccountFloatingInterestRateData savingsAccountFloatingInterestRateData = new SavingsAccountFloatingInterestRateData(null, null, fromDate, endDate, floatingInterestRate);
+        savingsAccountFloatingInterestRateData.dateFormat =  "dd MMMM yyyy";
+        savingsAccountFloatingInterestRateData.locale = "en";
+        return savingsAccountFloatingInterestRateData;
+    }
+
 }
