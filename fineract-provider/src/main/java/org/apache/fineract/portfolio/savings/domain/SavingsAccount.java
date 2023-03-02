@@ -4060,8 +4060,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
         SavingsAccountTransaction withholdTransaction = findTransactionFor(interestPostingUpToDate, withholdTransactions);
         final BigDecimal totalInterestPosted = this.savingsAccountTransactionSummaryWrapper.calculateTotalInterestPosted(this.currency,
                 this.transactions);
-        // Add logic to ignore this check if Target on RD is missed .
-        if (withholdTransaction == null && this.withHoldTax()) {// TODO
+        if (withholdTransaction == null && this.withHoldTax()) {
             boolean isWithholdTaxAdded = createWithHoldTransaction(totalInterestPosted, interestPostingUpToDate, backdatedTxnsAllowedTill);
             recalucateDailyBalance = recalucateDailyBalance || isWithholdTaxAdded;
         } else {

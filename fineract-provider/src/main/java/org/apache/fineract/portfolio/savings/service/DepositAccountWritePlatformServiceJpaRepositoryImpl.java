@@ -1474,7 +1474,6 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
     @Override
     public void applyChargeDue(final Long savingsAccountChargeId, final Long accountId,
             @SuppressWarnings("unused") final DepositAccountType depositAccountType) {
-        // always use current date as transaction date for batch job
         final LocalDate transactionDate = DateUtils.getBusinessLocalDate();
         final SavingsAccountCharge savingsAccountCharge = this.savingsAccountChargeRepository
                 .findOneWithNotFoundDetection(savingsAccountChargeId, accountId);
@@ -1629,14 +1628,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                     .findFirst();
 
             if (optionalChargeData.isPresent()) {
-                // do logic here
-                // get the charge off the Product and apply it on this account
-                // the charge amount should override the interest posted.
-                // Lastly if the charge is not found on the product, then revoke this operation
                 ChargeData charge = optionalChargeData.get();
-                LOG.error(" Total  Interest Amount  :: " + totalInterestAmount);
-                LOG.info(" Charge Worked !!! :: " + charge.getName());
-                // Apply charge here ...... Final Logic
 
                 Charge chargeToApply = this.chargeRepository.findOneWithNotFoundDetection(charge.getId().longValue());
 
@@ -1657,11 +1649,6 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                         "Expected a charge of ChargeTimeType [specified due date ] and ChargeCalculationType [ flat ]  on this product [ID : %s] but it's not supplied",
                         recurringMissedTargetData.getProductId());
             }
-
-            LOG.error(" Target Data :: " + recurringMissedTargetData);
-        } else {
-            LOG.error(" Obj Data preview but failed to detect charges :: " + recurringMissedTargetData);
-            LOG.error(" No sure what happened . . . .  !!!!! ");
         }
     }
 
