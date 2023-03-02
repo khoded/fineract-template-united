@@ -39,9 +39,11 @@ public class RecurringMissedTargetData {
     private BigDecimal principalAmount;
     private LocalDate maturityDate;
     private Boolean addPenaltyOnMissedTargetSavings;
+    private Long productId;
 
     public RecurringMissedTargetData(Integer savingsId, String accountNo, Integer statusEnum, BigDecimal depositTillDate,
-            BigDecimal totalInterest, BigDecimal principalAmount, LocalDate maturityDate, Boolean addPenaltyOnMissedTargetSavings) {
+            BigDecimal totalInterest, BigDecimal principalAmount, LocalDate maturityDate, Boolean addPenaltyOnMissedTargetSavings,
+            Long productId) {
         this.savingsId = savingsId;
         this.accountNo = accountNo;
         this.statusEnum = statusEnum;
@@ -50,5 +52,6 @@ public class RecurringMissedTargetData {
         this.principalAmount = principalAmount;
         this.maturityDate = maturityDate;
         this.addPenaltyOnMissedTargetSavings = addPenaltyOnMissedTargetSavings;
+        this.productId = productId;
     }
 }

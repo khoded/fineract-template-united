@@ -47,11 +47,9 @@ import org.apache.fineract.infrastructure.jobs.service.JobExecuter;
 import org.apache.fineract.infrastructure.jobs.service.JobName;
 import org.apache.fineract.infrastructure.jobs.service.JobRegisterService;
 import org.apache.fineract.infrastructure.jobs.service.JobRunner;
-import org.apache.fineract.portfolio.savings.DepositAccountType;
 import org.apache.fineract.portfolio.savings.DepositAccountUtils;
 import org.apache.fineract.portfolio.savings.data.DepositAccountData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountAnnualFeeData;
-import org.apache.fineract.portfolio.savings.domain.SavingsAccount;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountRepositoryWrapper;
 import org.apache.fineract.portfolio.savings.service.DepositAccountReadPlatformService;
 import org.apache.fineract.portfolio.savings.service.DepositAccountWritePlatformService;
@@ -231,17 +229,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
 
         for (final DepositAccountData depositAccount : depositAccounts) {
             try {
-                if (depositAccount.getDepositTillDate().compareTo(depositAccount.getPrincipalAmount()) < 0) {
-                    // disable withholding tax
-                    final SavingsAccount savingsForUpdate = this.savingAccountRepositoryWrapper
-                            .findOneWithNotFoundDetection(depositAccount.id());
-                    savingsForUpdate.setWithHoldTax(Boolean.FALSE);
-                    savingsForUpdate.setTaxGroup(null);
-                    this.savingAccountRepositoryWrapper.save(savingsForUpdate);
-                }
-
-                final DepositAccountType depositAccountType = DepositAccountType.fromInt(depositAccount.depositType().getId().intValue());
-                this.depositAccountWritePlatformService.updateMaturityDetails(depositAccount.id(), depositAccountType);
+                this.depositAccountWritePlatformService.updateMaturityDetails(depositAccount);
             } catch (final PlatformApiDataValidationException e) {
                 final List<ApiParameterError> errors = e.getErrors();
                 for (final ApiParameterError error : errors) {

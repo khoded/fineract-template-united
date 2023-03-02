@@ -1982,7 +1982,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             sqlBuilder.append(
                     " AS  depositTillDate ,sa.total_interest_posted_derived AS totalInterest , cl.deposit_amount AS principalAmount, ");
             sqlBuilder.append(
-                    " cl.maturity_date AS maturityDate, sp.add_penalty_on_missed_target_savings AS addPenaltyOnMissedTargetSavings ");
+                    " cl.maturity_date AS maturityDate, sp.add_penalty_on_missed_target_savings AS addPenaltyOnMissedTargetSavings ,sp.id   AS productId ");
             sqlBuilder.append(" FROM m_savings_account sa ");
             sqlBuilder.append(" INNER JOIN m_deposit_account_term_and_preclosure cl  ON sa.id = cl.savings_account_id ");
             sqlBuilder.append(" INNER JOIN m_savings_product sp ON sa.product_id = sp.id ");
@@ -2007,9 +2007,10 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             final BigDecimal principalAmount = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "principalAmount");
             final LocalDate maturityDate = JdbcSupport.getLocalDate(rs, "maturityDate");
             final boolean addPenaltyOnMissedTargetSavings = rs.getBoolean("addPenaltyOnMissedTargetSavings");
+            final Long productId = JdbcSupport.getLong(rs, "productId");
 
             return new RecurringMissedTargetData(savingsId, accountNo, statusEnum, depositTillDate, totalInterest, principalAmount,
-                    maturityDate, addPenaltyOnMissedTargetSavings);
+                    maturityDate, addPenaltyOnMissedTargetSavings, productId);
         }
     }
 

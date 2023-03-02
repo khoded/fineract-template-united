@@ -48,9 +48,11 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.accounting.journalentry.service.AccountingProcessorHelper;
 import org.apache.fineract.accounting.journalentry.service.JournalEntryWritePlatformService;
@@ -61,6 +63,7 @@ import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResultBuilder;
 import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
+import org.apache.fineract.infrastructure.core.exception.GeneralPlatformDomainRuleException;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.apache.fineract.infrastructure.core.exception.PlatformServiceUnavailableException;
@@ -97,12 +100,15 @@ import org.apache.fineract.portfolio.calendar.domain.CalendarInstance;
 import org.apache.fineract.portfolio.calendar.domain.CalendarInstanceRepository;
 import org.apache.fineract.portfolio.calendar.domain.CalendarType;
 import org.apache.fineract.portfolio.calendar.service.CalendarUtils;
+import org.apache.fineract.portfolio.charge.data.ChargeData;
 import org.apache.fineract.portfolio.charge.domain.Charge;
+import org.apache.fineract.portfolio.charge.domain.ChargeAppliesTo;
 import org.apache.fineract.portfolio.charge.domain.ChargeCalculationType;
 import org.apache.fineract.portfolio.charge.domain.ChargeRepositoryWrapper;
 import org.apache.fineract.portfolio.charge.domain.ChargeSlab;
 import org.apache.fineract.portfolio.charge.domain.ChargeSlabRepository;
 import org.apache.fineract.portfolio.charge.domain.ChargeTimeType;
+import org.apache.fineract.portfolio.charge.service.ChargeReadPlatformService;
 import org.apache.fineract.portfolio.client.domain.Client;
 import org.apache.fineract.portfolio.client.exception.ClientNotActiveException;
 import org.apache.fineract.portfolio.common.domain.PeriodFrequencyType;
@@ -119,6 +125,7 @@ import org.apache.fineract.portfolio.savings.SavingsAccountTransactionType;
 import org.apache.fineract.portfolio.savings.SavingsApiConstants;
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationDaysInYearType;
 import org.apache.fineract.portfolio.savings.SavingsPeriodFrequencyType;
+import org.apache.fineract.portfolio.savings.data.DepositAccountData;
 import org.apache.fineract.portfolio.savings.data.DepositAccountTransactionDataValidator;
 import org.apache.fineract.portfolio.savings.data.RecurringMissedTargetData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountChargeDataValidator;
@@ -209,6 +216,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
     private final SavingsAccountWritePlatformService savingsAccountWritePlatformService;
     private final ChargeSlabRepository chargeSlabRepository;
     private final SavingsAccountReadPlatformService savingsAccountReadPlatformService;
+    private final ChargeReadPlatformService chargeReadPlatformService;
 
     @Autowired
     public DepositAccountWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context,
@@ -235,7 +243,8 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
             final SavingsAccountChargeRepositoryWrapper savingsAccountChargeRepositoryWrapper, final FromJsonHelper fromJsonHelper,
             AccountingProcessorHelper helper, RecurringDepositProductRepository recurringDepositProductRepository,
             SavingsAccountWritePlatformService savingsAccountWritePlatformService, SavingsAccountRepository savingsAccountRepository,
-            ChargeSlabRepository chargeSlabRepository, SavingsAccountReadPlatformService savingsAccountReadPlatformService) {
+            ChargeSlabRepository chargeSlabRepository, SavingsAccountReadPlatformService savingsAccountReadPlatformService,
+            ChargeReadPlatformService chargeReadPlatformService) {
 
         this.context = context;
         this.savingAccountRepositoryWrapper = savingAccountRepositoryWrapper;
@@ -271,6 +280,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
         this.savingsAccountRepository = savingsAccountRepository;
         this.chargeSlabRepository = chargeSlabRepository;
         this.savingsAccountReadPlatformService = savingsAccountReadPlatformService;
+        this.chargeReadPlatformService = chargeReadPlatformService;
     }
 
     @Transactional
@@ -1522,13 +1532,16 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
 
     @Transactional
     @Override
-    public void updateMaturityDetails(Long depositAccountId, DepositAccountType depositAccountType) {
+    public void updateMaturityDetails(DepositAccountData depositAccount) {
+
+        final DepositAccountType depositAccountType = DepositAccountType.fromInt(depositAccount.depositType().getId().intValue());
+        disableWithHoldingTaxFromRecurringDepositAccountWhenTargetSavingsIsMissed(depositAccount);
 
         final boolean isSavingsInterestPostingAtCurrentPeriodEnd = this.configurationDomainService
                 .isSavingsInterestPostingAtCurrentPeriodEnd();
         final Integer financialYearBeginningMonth = this.configurationDomainService.retrieveFinancialYearBeginningMonth();
         final boolean postReversals = false;
-        final SavingsAccount account = this.depositAccountAssembler.assembleFrom(depositAccountId, depositAccountType);
+        final SavingsAccount account = this.depositAccountAssembler.assembleFrom(depositAccount.id(), depositAccountType);
         final Set<Long> existingTransactionIds = new HashSet<>();
         final Set<Long> existingReversedTransactionIds = new HashSet<>();
         updateExistingTransactionsDetails(account, existingTransactionIds, existingReversedTransactionIds);
@@ -1565,23 +1578,79 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
             ((RecurringDepositAccount) account).updateMaturityStatus(isSavingsInterestPostingAtCurrentPeriodEnd,
                     financialYearBeginningMonth, postReversals);
 
-            RecurringMissedTargetData recurringMissedTargetData = this.savingsAccountReadPlatformService
-                    .findRecurringDepositAccountWithMissedTarget(account.getId());
-
-            if (recurringMissedTargetData != null
-                    && recurringMissedTargetData.getDepositTillDate().compareTo(recurringMissedTargetData.getPrincipalAmount()) < 0
-                    && recurringMissedTargetData.getTotalInterest().compareTo(BigDecimal.ZERO) > 0) {
-                // do logic here
-                // get the charge off the Product and apply it on this account
-                // the charge amount should override the interest posted.
-                // Lastly if the charge is not found on the product, then revoke this operation
-
-                LOG.error(" Target Data :: " + recurringMissedTargetData);
-            }
+            applyChargeOnRecurringDepositAccountWhenSavingsTargetIsMissed(account);
 
         }
         this.savingAccountRepositoryWrapper.saveAndFlush(account);
         postJournalEntries(account, existingTransactionIds, existingReversedTransactionIds);
+    }
+
+    @Transactional
+    private void disableWithHoldingTaxFromRecurringDepositAccountWhenTargetSavingsIsMissed(DepositAccountData depositAccount) {
+        if (depositAccount.getDepositTillDate().compareTo(depositAccount.getPrincipalAmount()) < 0
+                && DepositAccountType.fromInt(depositAccount.depositType().getId().intValue()).isRecurringDeposit()) {
+            // disable withholding tax
+            final SavingsAccount savingsForUpdate = this.savingAccountRepositoryWrapper.findOneWithNotFoundDetection(depositAccount.id());
+            savingsForUpdate.setWithHoldTax(Boolean.FALSE);
+            savingsForUpdate.setTaxGroup(null);
+            this.savingAccountRepositoryWrapper.save(savingsForUpdate);
+        }
+    }
+
+    @Transactional
+    private void applyChargeOnRecurringDepositAccountWhenSavingsTargetIsMissed(SavingsAccount account) {
+        RecurringMissedTargetData recurringMissedTargetData = this.savingsAccountReadPlatformService
+                .findRecurringDepositAccountWithMissedTarget(account.getId());
+
+        List<SavingsAccountTransaction> transactions = account.getTransactions();
+
+        BigDecimal totalInterestAmount = transactions.stream()
+                .filter(transaction -> !transaction.isReversed()
+                        && transaction.getTypeOf().equals(SavingsAccountTransactionType.INTEREST_POSTING.getValue()))
+                .map(SavingsAccountTransaction::getAmount).reduce(BigDecimal.ZERO, BigDecimal::add);
+
+        if (recurringMissedTargetData != null
+                && recurringMissedTargetData.getDepositTillDate().compareTo(recurringMissedTargetData.getPrincipalAmount()) < 0
+                && totalInterestAmount.compareTo(BigDecimal.ZERO) > 0) {
+
+            final Collection<ChargeData> charges = this.chargeReadPlatformService
+                    .retrieveSavingsProductCharges(recurringMissedTargetData.getProductId().longValue());
+            if (CollectionUtils.isEmpty(charges)) {
+                throw new GeneralPlatformDomainRuleException(
+                        "This.operation.requires.a.specified.due.charge.of.type.flat.on.this.product.but.it's not.supplied",
+                        String.format(
+                                "Expected a charge of ChargeTimeType [specified due date ] and ChargeCalculationType [ flat ]  on this product [ID : %s] but it's not supplied",
+                                recurringMissedTargetData.getProductId()));
+            }
+
+            Optional<ChargeData> optionalChargeData = charges.stream()
+                    .filter(chargeData -> chargeData.getChargeCalculationType().getCode().equals(ChargeCalculationType.FLAT.getCode())
+                            && chargeData.getChargeAppliesTo().getCode().equals(ChargeAppliesTo.SAVINGS.getCode())
+                            && !chargeData.isPenalty() && chargeData.isActive()
+                            && chargeData.getChargeTimeType().getCode().equals(ChargeTimeType.SPECIFIED_DUE_DATE.getCode()))
+                    .findFirst();
+
+            if (optionalChargeData.isPresent()) {
+                // do logic here
+                // get the charge off the Product and apply it on this account
+                // the charge amount should override the interest posted.
+                // Lastly if the charge is not found on the product, then revoke this operation
+                ChargeData charge = optionalChargeData.get();
+                LOG.error(" Total  Interest Amount  :: " + totalInterestAmount);
+                LOG.info(" Charge Worked !!! :: " + charge.getName());
+                // Apply charge here ...... Final Logic
+            } else {
+                throw new GeneralPlatformDomainRuleException(
+                        "This.operation.requires.a.specified.due.charge.of.type.flat.on.this.product.but.it's not.supplied",
+                        "Expected a charge of ChargeTimeType [specified due date ] and ChargeCalculationType [ flat ]  on this product [ID : %s] but it's not supplied",
+                        recurringMissedTargetData.getProductId());
+            }
+
+            LOG.error(" Target Data :: " + recurringMissedTargetData);
+        } else {
+            LOG.error(" Obj Data preview but failed to detect charges :: " + recurringMissedTargetData);
+            LOG.error(" No sure what happened . . . .  !!!!! ");
+        }
     }
 
     private void updateExistingTransactionsDetails(SavingsAccount account, Set<Long> existingTransactionIds,
