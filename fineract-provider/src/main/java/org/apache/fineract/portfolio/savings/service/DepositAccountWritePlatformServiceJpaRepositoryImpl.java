@@ -1480,10 +1480,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                 .findOneWithNotFoundDetection(savingsAccountChargeId, accountId);
 
         final DateTimeFormatter fmt = DateTimeFormatter.ofPattern("dd MM yyyy");
-
-        while (transactionDate.isAfter(savingsAccountCharge.getDueLocalDate())) {
-            payCharge(savingsAccountCharge, transactionDate, savingsAccountCharge.amoutOutstanding(), fmt);
-        }
+        payCharge(savingsAccountCharge, transactionDate, savingsAccountCharge.amoutOutstanding(), fmt);
     }
 
     @Transactional
@@ -1579,6 +1576,7 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                     financialYearBeginningMonth, postReversals);
 
             applyChargeOnRecurringDepositAccountWhenSavingsTargetIsMissed(account);
+            account.setStatus(800);
 
         }
         this.savingAccountRepositoryWrapper.saveAndFlush(account);
@@ -1639,6 +1637,20 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
                 LOG.error(" Total  Interest Amount  :: " + totalInterestAmount);
                 LOG.info(" Charge Worked !!! :: " + charge.getName());
                 // Apply charge here ...... Final Logic
+
+                Charge chargeToApply = this.chargeRepository.findOneWithNotFoundDetection(charge.getId().longValue());
+
+                SavingsAccountChargeReq savingsAccountChargeReq = new SavingsAccountChargeReq();
+                savingsAccountChargeReq.setAmount(totalInterestAmount);
+                savingsAccountChargeReq.setDueDate(DateUtils.getBusinessLocalDate());
+                SavingsAccountCharge savingsAccountCharge = SavingsAccountCharge.createNew(account, chargeToApply, savingsAccountChargeReq);
+                account.addCharge(DateUtils.getDefaultFormatter(), savingsAccountCharge, chargeToApply);
+                account.setStatus(300);
+                this.savingsAccountChargeRepositoryWrapper.save(savingsAccountCharge);
+                this.savingAccountRepositoryWrapper.saveAndFlush(account);
+
+                applyChargeDue(savingsAccountCharge.getId(), account.getId(), DepositAccountType.RECURRING_DEPOSIT);
+
             } else {
                 throw new GeneralPlatformDomainRuleException(
                         "This.operation.requires.a.specified.due.charge.of.type.flat.on.this.product.but.it's not.supplied",
