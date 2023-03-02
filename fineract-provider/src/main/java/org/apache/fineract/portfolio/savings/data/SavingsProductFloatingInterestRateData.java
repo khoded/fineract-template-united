@@ -87,8 +87,8 @@ public class SavingsProductFloatingInterestRateData implements Serializable {
     }
 
     public SavingsAccountFloatingInterestRateData toSavingsAccountFloatingInterestRateData() {
-        SavingsAccountFloatingInterestRateData savingsAccountFloatingInterestRateData = SavingsAccountFloatingInterestRateData.instanceWithProductDateForTemplate(
-                this.fromDate, this.endDate, this.floatingInterestRate);
-        return  savingsAccountFloatingInterestRateData;
+        SavingsAccountFloatingInterestRateData savingsAccountFloatingInterestRateData = SavingsAccountFloatingInterestRateData
+                .instanceWithProductDateForTemplate(this.fromDate, this.endDate, this.floatingInterestRate);
+        return savingsAccountFloatingInterestRateData;
     }
 }

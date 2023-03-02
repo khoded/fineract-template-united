@@ -46,7 +46,7 @@ public class SavingsAccountFloatingInterestRate extends AbstractAuditableCustom 
     private BigDecimal floatingInterestRate;
 
     public SavingsAccountFloatingInterestRate(SavingsAccount savingsAccount, LocalDate fromDate, LocalDate endDate,
-                                              BigDecimal floatingInterestRate) {
+            BigDecimal floatingInterestRate) {
         this.savingsAccount = savingsAccount;
         this.fromDate = fromDate;
         this.endDate = endDate;
@@ -90,7 +90,7 @@ public class SavingsAccountFloatingInterestRate extends AbstractAuditableCustom 
     }
 
     public static SavingsAccountFloatingInterestRate createNew(LocalDate fromDate, LocalDate toDate, BigDecimal floatingInterestRate,
-                                                               SavingsAccount savingsAccount) {
+            SavingsAccount savingsAccount) {
         return new SavingsAccountFloatingInterestRate(savingsAccount, fromDate, toDate, floatingInterestRate);
     }
 

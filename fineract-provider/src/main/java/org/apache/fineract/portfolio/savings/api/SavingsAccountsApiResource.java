@@ -252,8 +252,8 @@ public class SavingsAccountsApiResource {
         if (!associationParameters.isEmpty()) {
 
             if (associationParameters.contains("all")) {
-                associationParameters.addAll(
-                        Arrays.asList(SavingsApiConstants.transactions, SavingsApiConstants.charges, SavingsApiConstants.blockNarrations, SavingsApiConstants.floatingInterestRates));
+                associationParameters.addAll(Arrays.asList(SavingsApiConstants.transactions, SavingsApiConstants.charges,
+                        SavingsApiConstants.blockNarrations, SavingsApiConstants.floatingInterestRates));
             }
 
             if (associationParameters.contains(SavingsApiConstants.transactions)) {
@@ -284,7 +284,8 @@ public class SavingsAccountsApiResource {
                 if (!CollectionUtils.isEmpty(currentCharges)) {
                     charges = currentCharges;
                 }
-                floatingInterestRates = this.savingsAccountFloatingInterestRateReadPlatformService.getSavingsAccountFloatingInterestRateForSavingsAccount(accountId);
+                floatingInterestRates = this.savingsAccountFloatingInterestRateReadPlatformService
+                        .getSavingsAccountFloatingInterestRateForSavingsAccount(accountId);
             }
 
             if (associationParameters.contains(SavingsApiConstants.blockNarrations)) {
@@ -297,7 +298,8 @@ public class SavingsAccountsApiResource {
 
             if (associationParameters.contains(SavingsApiConstants.floatingInterestRates)) {
                 mandatoryResponseParameters.add(SavingsApiConstants.floatingInterestRates);
-                floatingInterestRates = this.savingsAccountFloatingInterestRateReadPlatformService.getSavingsAccountFloatingInterestRateForSavingsAccount(accountId);
+                floatingInterestRates = this.savingsAccountFloatingInterestRateReadPlatformService
+                        .getSavingsAccountFloatingInterestRateForSavingsAccount(accountId);
             }
         }
 

@@ -18,9 +18,6 @@
  */
 package org.apache.fineract.portfolio.savings.domain;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import java.util.HashSet;
 import static org.apache.fineract.portfolio.interestratechart.InterestRateChartApiConstants.endDateParamName;
 import static org.apache.fineract.portfolio.interestratechart.InterestRateChartApiConstants.fromDateParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.SAVINGS_ACCOUNT_RESOURCE_NAME;
@@ -55,11 +52,14 @@ import static org.apache.fineract.portfolio.savings.SavingsApiConstants.useFloat
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.withHoldTaxParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.withdrawalFeeForTransfersParamName;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
@@ -640,7 +640,7 @@ public class SavingsAccountAssembler {
     }
 
     public Set<SavingsAccountFloatingInterestRate> assembleListOfFloatingInterestRates(final JsonCommand command,
-                                                                                       SavingsAccount savingsAccount) {
+            SavingsAccount savingsAccount) {
         final Set<SavingsAccountFloatingInterestRate> floatingInterestRates = new HashSet<>();
         if (command.parameterExists(floatingInterestRatesParamName)) {
             final JsonArray floatingInterestRatesArray = command.arrayOfParameterNamed(floatingInterestRatesParamName);
@@ -657,7 +657,7 @@ public class SavingsAccountAssembler {
     }
 
     public SavingsAccountFloatingInterestRate assembleSavingsAccountFloatingInterestRateFrom(final JsonElement element,
-                                                                                             SavingsAccount savingsAccount) {
+            SavingsAccount savingsAccount) {
 
         final LocalDate fromDate = this.fromApiJsonHelper.extractLocalDateNamed(fromDateParamName, element);
         final LocalDate toDate = this.fromApiJsonHelper.extractLocalDateNamed(endDateParamName, element);

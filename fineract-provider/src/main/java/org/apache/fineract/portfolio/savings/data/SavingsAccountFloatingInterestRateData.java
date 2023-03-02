@@ -45,7 +45,7 @@ public class SavingsAccountFloatingInterestRateData implements Serializable {
     private String dateFormat = "";
 
     public SavingsAccountFloatingInterestRateData(Long id, Long savingsAccountId, LocalDate fromDate, LocalDate endDate,
-                                                  BigDecimal floatingInterestRate) {
+            BigDecimal floatingInterestRate) {
         this.id = id;
         this.savingsAccountId = savingsAccountId;
         this.fromDate = fromDate;
@@ -54,7 +54,7 @@ public class SavingsAccountFloatingInterestRateData implements Serializable {
     }
 
     public static SavingsAccountFloatingInterestRateData instance(Long id, Long savingsAccountId, LocalDate fromDate, LocalDate endDate,
-                                                                  BigDecimal floatingInterestRate) {
+            BigDecimal floatingInterestRate) {
         return new SavingsAccountFloatingInterestRateData(id, savingsAccountId, fromDate, endDate, floatingInterestRate);
     }
 
@@ -90,10 +90,12 @@ public class SavingsAccountFloatingInterestRateData implements Serializable {
         this.floatingInterestRate = floatingInterestRate;
     }
 
-    public static SavingsAccountFloatingInterestRateData instanceWithProductDateForTemplate(LocalDate fromDate, LocalDate endDate, BigDecimal floatingInterestRate){
+    public static SavingsAccountFloatingInterestRateData instanceWithProductDateForTemplate(LocalDate fromDate, LocalDate endDate,
+            BigDecimal floatingInterestRate) {
 
-        SavingsAccountFloatingInterestRateData savingsAccountFloatingInterestRateData = new SavingsAccountFloatingInterestRateData(null, null, fromDate, endDate, floatingInterestRate);
-        savingsAccountFloatingInterestRateData.dateFormat =  "dd MMMM yyyy";
+        SavingsAccountFloatingInterestRateData savingsAccountFloatingInterestRateData = new SavingsAccountFloatingInterestRateData(null,
+                null, fromDate, endDate, floatingInterestRate);
+        savingsAccountFloatingInterestRateData.dateFormat = "dd MMMM yyyy";
         savingsAccountFloatingInterestRateData.locale = "en";
         return savingsAccountFloatingInterestRateData;
     }
