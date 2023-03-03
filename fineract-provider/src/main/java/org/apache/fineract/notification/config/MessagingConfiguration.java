@@ -57,13 +57,13 @@ public class MessagingConfiguration {
         ActiveMQConnectionFactory amqConnectionFactory = new ActiveMQConnectionFactory(); // NOSONAR
         amqConnectionFactory.setTrustAllPackages(true);
         try {
-            amqConnectionFactory.setBrokerURL(this.env.getProperty("fineract.activemq.blockerUrl"));
-            amqConnectionFactory.setUserName(this.env.getProperty("fineract.activemq.blockerUsername"));
-            amqConnectionFactory.setPassword(this.env.getProperty("fineract.activemq.blockerPassword"));
+            amqConnectionFactory.setBrokerURL(this.env.getProperty("fineract.activemq.brokerUrl"));
+            amqConnectionFactory.setUserName(this.env.getProperty("fineract.activemq.brokerUsername"));
+            amqConnectionFactory.setPassword(this.env.getProperty("fineract.activemq.brokerPassword"));
         } catch (Exception e) {
-            amqConnectionFactory.setBrokerURL(this.env.getProperty("fineract.activemq.blockerUrl"));
-            amqConnectionFactory.setUserName(this.env.getProperty("fineract.activemq.blockerUsername"));
-            amqConnectionFactory.setPassword(this.env.getProperty("fineract.activemq.blockerPassword"));
+            amqConnectionFactory.setBrokerURL(this.env.getProperty("fineract.activemq.brokerUrl"));
+            amqConnectionFactory.setUserName(this.env.getProperty("fineract.activemq.brokerUsername"));
+            amqConnectionFactory.setPassword(this.env.getProperty("fineract.activemq.brokerPassword"));
         }
         return amqConnectionFactory;
     }
