@@ -51,16 +51,19 @@ public class MessagingConfiguration {
         return LoggerFactory.getLogger(MessagingConfiguration.class);
     }
 
-    private static final String DEFAULT_BROKER_URL = "tcp://localhost:61616";
 
     @Bean
     public ActiveMQConnectionFactory amqConnectionFactory() {
         ActiveMQConnectionFactory amqConnectionFactory = new ActiveMQConnectionFactory(); // NOSONAR
         amqConnectionFactory.setTrustAllPackages(true);
         try {
-            amqConnectionFactory.setBrokerURL(DEFAULT_BROKER_URL);
+            amqConnectionFactory.setBrokerURL(this.env.getProperty("fineract.activemq.blockerUrl"));
+            amqConnectionFactory.setUserName(this.env.getProperty("fineract.activemq.blockerUsername"));
+            amqConnectionFactory.setPassword(this.env.getProperty("fineract.activemq.blockerUsername"));
         } catch (Exception e) {
-            amqConnectionFactory.setBrokerURL(this.env.getProperty("brokerUrl"));
+            amqConnectionFactory.setBrokerURL(this.env.getProperty("fineract.activemq.blockerUrl"));
+            amqConnectionFactory.setUserName(this.env.getProperty("fineract.activemq.blockerUsername"));
+            amqConnectionFactory.setPassword(this.env.getProperty("fineract.activemq.blockerUsername"));
         }
         return amqConnectionFactory;
     }
