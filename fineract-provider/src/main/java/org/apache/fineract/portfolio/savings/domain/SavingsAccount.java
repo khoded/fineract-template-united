@@ -348,7 +348,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
 
     public transient ConfigurationDomainService configurationDomainService;
 
-    @OneToMany(cascade = CascadeType.ALL, mappedBy = "savingsAccount", orphanRemoval = true, fetch = FetchType.LAZY)
+    @OneToMany(cascade = CascadeType.ALL, mappedBy = "savingsAccount", orphanRemoval = true, fetch = FetchType.EAGER)
     private Set<SavingsAccountBlockNarrationHistory> savingsAccountBlockNarrationHistory = new HashSet<>();
 
     @ManyToOne
@@ -1262,7 +1262,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
                     interestCalculationType, interestRateAsFraction, daysInYearType.getValue(), upToInterestCalculationDate,
                     interestPostTransactions, isInterestTransfer, minBalanceForInterestCalculation,
                     isSavingsInterestPostingAtCurrentPeriodEnd, overdraftInterestRateAsFraction, minOverdraftForInterestCalculation,
-                    isUserPosting, financialYearBeginningMonth, includePostingAndWithHoldTax);
+                    isUserPosting, financialYearBeginningMonth, includePostingAndWithHoldTax, false, null , mc);
 
             periodStartingBalance = postingPeriod.closingBalance();
             allPostingPeriods.add(postingPeriod);
@@ -1302,6 +1302,28 @@ public class SavingsAccount extends AbstractPersistableCustom {
     protected BigDecimal getEffectiveInterestRateAsFraction(final MathContext mc, final LocalDate upToInterestCalculationDate) {
         return this.nominalAnnualInterestRate.divide(BigDecimal.valueOf(100L), mc);
     }
+
+    /*@SuppressWarnings("unused")
+    private BigDecimal getEffectiveInterestRateAsFraction(final MathContext mc, final LocalDate upToInterestCalculationDate, final LocalDate targetDate) {
+        if(this.useFloatingInterestRate){
+            if(!CollectionUtils.isEmpty(this.savingsAccountFloatingInterestRates)){
+                TreeSet<SavingsAccountFloatingInterestRate> sortedSavingsAccountFloatingInterestRates = new TreeSet(this.savingsAccountFloatingInterestRates);
+                for ( SavingsAccountFloatingInterestRate currentElement : sortedSavingsAccountFloatingInterestRates) {
+                    if(currentElement.getEndDate() == null){
+                        SavingsAccountFloatingInterestRate nextElement = sortedSavingsAccountFloatingInterestRates.higher(currentElement);
+                        currentElement.setEndDate(nextElement.getFromDate().minusDays(1));
+                    }
+                }
+                for ( SavingsAccountFloatingInterestRate savingsAccountFloatingInterestRate : sortedSavingsAccountFloatingInterestRates) {
+                    if(savingsAccountFloatingInterestRate.isApplicableFloatingInterestRateForDate(targetDate)){
+                        BigDecimal selectedFloatingInterestRate = savingsAccountFloatingInterestRate.getFloatingInterestRate();
+                        return selectedFloatingInterestRate.divide(BigDecimal.valueOf(100L), mc);
+                    }
+                }
+            }
+        }
+        return this.nominalAnnualInterestRate.divide(BigDecimal.valueOf(100L), mc);
+    }*/
 
     protected List<SavingsAccountTransaction> retreiveOrderedNonInterestPostingTransactions() {
         final List<SavingsAccountTransaction> listOfTransactionsSorted = retreiveListOfTransactions();
@@ -4650,7 +4672,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
                     compoundingPeriodType, savingsInterestCalculationType, interestRateAsFraction, daysInYearType.getValue(),
                     interestPostingUpToDate, interestPostTransactions, isInterestTransfer, minBalForInterestCalculation,
                     isSavingsInterestPostingAtCurrentPeriodEnd, overdraftInterestRateAsFraction, minOdForInterestCalculation, isUserPosting,
-                    financialYearBeginningMonth, includePostingAndWithHoldTax);
+                    financialYearBeginningMonth, includePostingAndWithHoldTax, this.useFloatingInterestRate, this.savingsAccountFloatingInterestRates , mc);
 
             periodStartingBalance = postingPeriod.closingBalance();
             allPostingPeriods.add(postingPeriod);
