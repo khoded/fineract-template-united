@@ -225,4 +225,5 @@ public class SavingsApiConstants {
     public static final String useFloatingInterestRateParamName = "useFloatingInterestRate";
     public static final String floatingInterestRatesParamName = "floatingInterestRates";
     public static final String floatingInterestRateValueParamName = "floatingInterestRateValue";
+    public static final String ADD_PENALTY_ON_MISSED_TARGET_SAVINGS = "addPenaltyOnMissedTargetSavings";
 }
