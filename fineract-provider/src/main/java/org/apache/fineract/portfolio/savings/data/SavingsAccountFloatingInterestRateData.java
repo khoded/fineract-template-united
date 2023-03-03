@@ -23,7 +23,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 
-public class SavingsProductFloatingInterestRateData implements Serializable {
+public class SavingsAccountFloatingInterestRateData implements Serializable {
 
     /**
      *
@@ -32,7 +32,7 @@ public class SavingsProductFloatingInterestRateData implements Serializable {
 
     private final Long id;
 
-    private final Long savingsProductId;
+    private final Long savingsAccountId;
 
     private LocalDate fromDate;
 
@@ -40,26 +40,30 @@ public class SavingsProductFloatingInterestRateData implements Serializable {
 
     private BigDecimal floatingInterestRate;
 
-    public SavingsProductFloatingInterestRateData(Long id, Long savingsProductId, LocalDate fromDate, LocalDate endDate,
+    private String locale = "";
+
+    private String dateFormat = "";
+
+    public SavingsAccountFloatingInterestRateData(Long id, Long savingsAccountId, LocalDate fromDate, LocalDate endDate,
             BigDecimal floatingInterestRate) {
         this.id = id;
-        this.savingsProductId = savingsProductId;
+        this.savingsAccountId = savingsAccountId;
         this.fromDate = fromDate;
         this.endDate = endDate;
         this.floatingInterestRate = floatingInterestRate;
     }
 
-    public static SavingsProductFloatingInterestRateData instance(Long id, Long savingsProductId, LocalDate fromDate, LocalDate endDate,
+    public static SavingsAccountFloatingInterestRateData instance(Long id, Long savingsAccountId, LocalDate fromDate, LocalDate endDate,
             BigDecimal floatingInterestRate) {
-        return new SavingsProductFloatingInterestRateData(id, savingsProductId, fromDate, endDate, floatingInterestRate);
+        return new SavingsAccountFloatingInterestRateData(id, savingsAccountId, fromDate, endDate, floatingInterestRate);
     }
 
     public Long getId() {
         return id;
     }
 
-    public Long getSavingsProductId() {
-        return savingsProductId;
+    public Long getSavingsAccountId() {
+        return savingsAccountId;
     }
 
     public LocalDate getFromDate() {
@@ -86,9 +90,14 @@ public class SavingsProductFloatingInterestRateData implements Serializable {
         this.floatingInterestRate = floatingInterestRate;
     }
 
-    public SavingsAccountFloatingInterestRateData toSavingsAccountFloatingInterestRateData() {
-        SavingsAccountFloatingInterestRateData savingsAccountFloatingInterestRateData = SavingsAccountFloatingInterestRateData
-                .instanceWithProductDateForTemplate(this.fromDate, this.endDate, this.floatingInterestRate);
+    public static SavingsAccountFloatingInterestRateData instanceWithProductDateForTemplate(LocalDate fromDate, LocalDate endDate,
+            BigDecimal floatingInterestRate) {
+
+        SavingsAccountFloatingInterestRateData savingsAccountFloatingInterestRateData = new SavingsAccountFloatingInterestRateData(null,
+                null, fromDate, endDate, floatingInterestRate);
+        savingsAccountFloatingInterestRateData.dateFormat = "dd MMMM yyyy";
+        savingsAccountFloatingInterestRateData.locale = "en";
         return savingsAccountFloatingInterestRateData;
     }
+
 }
