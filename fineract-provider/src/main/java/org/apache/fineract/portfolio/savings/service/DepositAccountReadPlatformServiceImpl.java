@@ -972,7 +972,7 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
             final Integer depositTypeId = JdbcSupport.getInteger(rs, "depositTypeId");
             final EnumOptionData depositType = (depositTypeId == null) ? null : SavingsEnumerations.depositType(depositTypeId);
 
-            return DepositAccountData.lookup(id, name, depositType, null, null);
+            return DepositAccountData.lookup(id, name, depositType, null, null, null);
         }
     }
 
@@ -1418,9 +1418,11 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
             sqlBuilder.append("da.id as id, ");
             sqlBuilder.append("da.account_no as accountNumber, ");
             sqlBuilder.append(
-                    "da.deposit_type_enum as depositTypeId ,dat.deposit_amount   AS principalAmount,da.total_deposits_derived  AS depositTillDate ");
+                    "da.deposit_type_enum as depositTypeId ,dat.deposit_amount   AS principalAmount,da.total_deposits_derived  AS depositTillDate, ");
+            sqlBuilder.append(" sp.add_penalty_on_missed_target_savings AS addPenaltyOnMissedTargetSavings ");
             sqlBuilder.append("FROM m_savings_account da ");
             sqlBuilder.append("inner join m_deposit_account_term_and_preclosure dat on dat.savings_account_id = da.id ");
+            sqlBuilder.append("INNER JOIN m_savings_product sp ON da.product_id = sp.id ");
             sqlBuilder.append("and dat.maturity_date is not null and dat.maturity_date <= '" + formattedToday + "' ");
 
             return sqlBuilder.toString();
@@ -1435,8 +1437,9 @@ public class DepositAccountReadPlatformServiceImpl implements DepositAccountRead
             final BigDecimal depositTillDate = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "depositTillDate");
             final BigDecimal principalAmount = JdbcSupport.getBigDecimalDefaultToZeroIfNull(rs, "principalAmount");
             final EnumOptionData depositType = (depositTypeId == null) ? null : SavingsEnumerations.depositType(depositTypeId);
+            final Boolean addPenaltyOnMissedTargetSavings = rs.getBoolean("addPenaltyOnMissedTargetSavings");
 
-            return DepositAccountData.lookup(id, name, depositType, principalAmount, depositTillDate);
+            return DepositAccountData.lookup(id, name, depositType, principalAmount, depositTillDate, addPenaltyOnMissedTargetSavings);
         }
     }
 

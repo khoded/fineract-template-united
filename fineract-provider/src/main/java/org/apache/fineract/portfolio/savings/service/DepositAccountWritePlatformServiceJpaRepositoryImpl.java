@@ -1585,8 +1585,10 @@ public class DepositAccountWritePlatformServiceJpaRepositoryImpl implements Depo
     @Transactional
     private void disableWithHoldingTaxFromRecurringDepositAccountWhenTargetSavingsIsMissed(DepositAccountData depositAccount) {
         if (depositAccount.getDepositTillDate().compareTo(depositAccount.getPrincipalAmount()) < 0
-                && DepositAccountType.fromInt(depositAccount.depositType().getId().intValue()).isRecurringDeposit()) {
-            // disable withholding tax
+                && DepositAccountType.fromInt(depositAccount.depositType().getId().intValue()).isRecurringDeposit()
+                && depositAccount.getAddPenaltyOnMissedTargetSavings()) {
+            // disable withholding tax on Recurring Deposit Account When Savings Target is not meant and It's Product is
+            // configured [addPenaltyOnMissedTargetSavings = True]
             final SavingsAccount savingsForUpdate = this.savingAccountRepositoryWrapper.findOneWithNotFoundDetection(depositAccount.id());
             savingsForUpdate.setWithHoldTax(Boolean.FALSE);
             savingsForUpdate.setTaxGroup(null);

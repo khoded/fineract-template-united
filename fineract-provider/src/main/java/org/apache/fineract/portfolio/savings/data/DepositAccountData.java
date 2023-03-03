@@ -88,6 +88,7 @@ public class DepositAccountData {
     protected BigDecimal accruedInterestCarriedForward;
     protected final BigDecimal principalAmount;
     protected final BigDecimal depositTillDate;
+    protected final Boolean addPenaltyOnMissedTargetSavings;
 
     // import fields
     private Long productId;
@@ -142,6 +143,7 @@ public class DepositAccountData {
         this.productId = productId;
         this.principalAmount = null;
         this.depositTillDate = null;
+        this.addPenaltyOnMissedTargetSavings = false;
     }
 
     public static DepositAccountData instance(final Long id, final String accountNo, final String externalId, final Long groupId,
@@ -176,11 +178,11 @@ public class DepositAccountData {
                 fieldOfficerOptions, interestCompoundingPeriodTypeOptions, interestPostingPeriodTypeOptions, interestCalculationTypeOptions,
                 interestCalculationDaysInYearTypeOptions, lockinPeriodFrequencyTypeOptions, withdrawalFeeTypeOptions, charges,
                 chargeOptions, accountChart, chartTemplate, depositType, minBalanceForInterestCalculation, withHoldTax, taxGroup, null,
-                null);
+                null, null);
     }
 
     public static DepositAccountData lookup(final Long id, final String accountNo, final EnumOptionData depositType,
-            final BigDecimal principalAmount, final BigDecimal depositTillDate) {
+            final BigDecimal principalAmount, final BigDecimal depositTillDate, final Boolean addPenaltyOnMissedTargetSavings) {
 
         final String externalId = null;
         final Long groupId = null;
@@ -229,7 +231,7 @@ public class DepositAccountData {
                 fieldOfficerOptions, interestCompoundingPeriodTypeOptions, interestPostingPeriodTypeOptions, interestCalculationTypeOptions,
                 interestCalculationDaysInYearTypeOptions, lockinPeriodFrequencyTypeOptions, withdrawalFeeTypeOptions, charges,
                 chargeOptions, accountChart, chartTemplate, depositType, minBalanceForInterestCalculation, withHoldTax, taxGroup,
-                principalAmount, depositTillDate);
+                principalAmount, depositTillDate, addPenaltyOnMissedTargetSavings);
     }
 
     protected DepositAccountData(final Long id, final String accountNo, final String externalId, final Long groupId, final String groupName,
@@ -249,7 +251,8 @@ public class DepositAccountData {
             final Collection<SavingsAccountChargeData> charges, final Collection<ChargeData> chargeOptions,
             final DepositAccountInterestRateChartData accountChart, final DepositAccountInterestRateChartData chartTemplate,
             final EnumOptionData depositType, final BigDecimal minBalanceForInterestCalculation, final boolean withHoldTax,
-            final TaxGroupData taxGroup, final BigDecimal principalAmount, final BigDecimal depositTillDate) {
+            final TaxGroupData taxGroup, final BigDecimal principalAmount, final BigDecimal depositTillDate,
+            final Boolean addPenaltyOnMissedTargetSavings) {
         this.id = id;
         this.accountNo = accountNo;
         this.externalId = externalId;
@@ -300,6 +303,7 @@ public class DepositAccountData {
         this.withHoldTax = withHoldTax;
         this.principalAmount = principalAmount;
         this.depositTillDate = depositTillDate;
+        this.addPenaltyOnMissedTargetSavings = addPenaltyOnMissedTargetSavings;
     }
 
     private SavingsAccountChargeData getWithdrawalFee() {
@@ -383,5 +387,9 @@ public class DepositAccountData {
 
     public BigDecimal getDepositTillDate() {
         return depositTillDate;
+    }
+
+    public Boolean getAddPenaltyOnMissedTargetSavings() {
+        return addPenaltyOnMissedTargetSavings;
     }
 }
