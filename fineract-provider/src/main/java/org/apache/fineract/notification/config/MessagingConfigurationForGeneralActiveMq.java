@@ -50,9 +50,12 @@ public class MessagingConfigurationForGeneralActiveMq {
         amqConnectionFactory.setTrustAllPackages(true);
         try {
             amqConnectionFactory.setBrokerURL(this.env.getProperty("fineract.activemq.blockerUrl"));
-
+            amqConnectionFactory.setUserName(this.env.getProperty("fineract.activemq.blockerUsername"));
+            amqConnectionFactory.setPassword(this.env.getProperty("fineract.activemq.blockerPassword"));
         } catch (Exception e) {
             amqConnectionFactory.setBrokerURL(this.env.getProperty("fineract.activemq.blockerUrl"));
+            amqConnectionFactory.setUserName(this.env.getProperty("fineract.activemq.blockerUsername"));
+            amqConnectionFactory.setPassword(this.env.getProperty("fineract.activemq.blockerPassword"));
         }
         return amqConnectionFactory;
     }
