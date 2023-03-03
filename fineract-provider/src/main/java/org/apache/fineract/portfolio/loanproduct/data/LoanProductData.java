@@ -1284,9 +1284,8 @@ public class LoanProductData implements Serializable {
         return isInterestRecalculationEnabled() ? this.interestRecalculationData.allowCompoundingOnEod() : null;
     }
 
-    @SuppressFBWarnings("NP_BOOLEAN_RETURN_NULL")
     public Boolean isAdvancePaymentInterestForExactDaysInPeriod() {
-        return isInterestRecalculationEnabled() ? this.interestRecalculationData.isAdvancePaymentInterestForExactDaysInPeriod() : null;
+        return isInterestRecalculationEnabled() ? this.interestRecalculationData.isAdvancePaymentInterestForExactDaysInPeriod() : Boolean.FALSE;
     }
 
     public boolean canDefineInstallmentAmount() {

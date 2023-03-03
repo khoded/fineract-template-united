@@ -46,7 +46,7 @@ public class LoanInterestRecalculationData {
     private final CalendarData compoundingCalendarData;
     private final Boolean allowCompoundingOnEod;
 
-    private final boolean advancePaymentInterestForExactDaysInPeriod;
+    private final Boolean advancePaymentInterestForExactDaysInPeriod;
 
     public LoanInterestRecalculationData(final Long id, final Long loanId, final EnumOptionData interestRecalculationCompoundingType,
             final EnumOptionData rescheduleStrategyType, final CalendarData calendarData,
