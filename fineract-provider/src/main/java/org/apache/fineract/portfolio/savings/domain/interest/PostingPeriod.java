@@ -273,14 +273,23 @@ public final class PostingPeriod {
             if(!CollectionUtils.isEmpty(savingsAccountData.getFloatingInterestRates())){
                 BigDecimal floatingInterestRateAsFraction = BigDecimal.ZERO;
                 Collection<SavingsAccountFloatingInterestRateData> savingsAccountFloatingInterestRates = savingsAccountData.getFloatingInterestRates();
-                TreeSet<SavingsAccountFloatingInterestRate> sortedSavingsAccountFloatingInterestRates = new TreeSet(savingsAccountFloatingInterestRates);
-                for ( SavingsAccountFloatingInterestRate currentElement : sortedSavingsAccountFloatingInterestRates) {
+                TreeSet<SavingsAccountFloatingInterestRateData> sortedSavingsAccountFloatingInterestRates = new TreeSet(savingsAccountFloatingInterestRates);
+
+                //set last floating rate interest rate end date as 200 years from now if not set
+                SavingsAccountFloatingInterestRateData lastElement = sortedSavingsAccountFloatingInterestRates.last();
+                if(lastElement.getEndDate() == null){
+                    LocalDate endDateFrom200YearsFromFromDate = lastElement.getFromDate().plusYears(200);
+                    lastElement.setEndDate(endDateFrom200YearsFromFromDate);
+                }
+
+                //set endDate of period with next period fromDate -1 if endDate of period is not set
+                for ( SavingsAccountFloatingInterestRateData currentElement : sortedSavingsAccountFloatingInterestRates) {
                     if(currentElement.getEndDate() == null){
-                        SavingsAccountFloatingInterestRate nextElement = sortedSavingsAccountFloatingInterestRates.higher(currentElement);
+                        SavingsAccountFloatingInterestRateData nextElement = sortedSavingsAccountFloatingInterestRates.higher(currentElement);
                         currentElement.setEndDate(nextElement.getFromDate().minusDays(1));
                     }
                 }
-                for ( SavingsAccountFloatingInterestRate savingsAccountFloatingInterestRate : sortedSavingsAccountFloatingInterestRates) {
+                for ( SavingsAccountFloatingInterestRateData savingsAccountFloatingInterestRate : sortedSavingsAccountFloatingInterestRates) {
                     if(savingsAccountFloatingInterestRate.isApplicableFloatingInterestRateForDate(periodInterval)){
                         BigDecimal selectedFloatingInterestRate = savingsAccountFloatingInterestRate.getFloatingInterestRate();
                         floatingInterestRateAsFraction = selectedFloatingInterestRate.divide(BigDecimal.valueOf(100L), mc);
@@ -334,12 +343,22 @@ public final class PostingPeriod {
                 BigDecimal floatingInterestRateAsFraction = BigDecimal.ZERO;
                 Set<SavingsAccountFloatingInterestRate> savingsAccountFloatingInterestRates = savingsAccount.getSavingsAccountFloatingInterestRates();
                 TreeSet<SavingsAccountFloatingInterestRate> sortedSavingsAccountFloatingInterestRates = new TreeSet(savingsAccountFloatingInterestRates);
+
+                //set last floating rate interest rate end date as 200 years from now if not set
+                SavingsAccountFloatingInterestRate lastElement = sortedSavingsAccountFloatingInterestRates.last();
+                if(lastElement.getEndDate() == null){
+                    LocalDate endDateFrom200YearsFromFromDate = lastElement.getFromDate().plusYears(200);
+                    lastElement.setEndDate(endDateFrom200YearsFromFromDate);
+                }
+
+                //set endDate of period with next period fromDate -1 if endDate of period is not set
                 for ( SavingsAccountFloatingInterestRate currentElement : sortedSavingsAccountFloatingInterestRates) {
                     if(currentElement.getEndDate() == null){
                         SavingsAccountFloatingInterestRate nextElement = sortedSavingsAccountFloatingInterestRates.higher(currentElement);
                         currentElement.setEndDate(nextElement.getFromDate().minusDays(1));
                     }
                 }
+
                 for ( SavingsAccountFloatingInterestRate savingsAccountFloatingInterestRate : sortedSavingsAccountFloatingInterestRates) {
                     if(savingsAccountFloatingInterestRate.isApplicableFloatingInterestRateForDate(periodInterval)){
                         BigDecimal selectedFloatingInterestRate = savingsAccountFloatingInterestRate.getFloatingInterestRate();
