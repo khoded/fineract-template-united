@@ -1303,28 +1303,6 @@ public class SavingsAccount extends AbstractPersistableCustom {
         return this.nominalAnnualInterestRate.divide(BigDecimal.valueOf(100L), mc);
     }
 
-    /*@SuppressWarnings("unused")
-    private BigDecimal getEffectiveInterestRateAsFraction(final MathContext mc, final LocalDate upToInterestCalculationDate, final LocalDate targetDate) {
-        if(this.useFloatingInterestRate){
-            if(!CollectionUtils.isEmpty(this.savingsAccountFloatingInterestRates)){
-                TreeSet<SavingsAccountFloatingInterestRate> sortedSavingsAccountFloatingInterestRates = new TreeSet(this.savingsAccountFloatingInterestRates);
-                for ( SavingsAccountFloatingInterestRate currentElement : sortedSavingsAccountFloatingInterestRates) {
-                    if(currentElement.getEndDate() == null){
-                        SavingsAccountFloatingInterestRate nextElement = sortedSavingsAccountFloatingInterestRates.higher(currentElement);
-                        currentElement.setEndDate(nextElement.getFromDate().minusDays(1));
-                    }
-                }
-                for ( SavingsAccountFloatingInterestRate savingsAccountFloatingInterestRate : sortedSavingsAccountFloatingInterestRates) {
-                    if(savingsAccountFloatingInterestRate.isApplicableFloatingInterestRateForDate(targetDate)){
-                        BigDecimal selectedFloatingInterestRate = savingsAccountFloatingInterestRate.getFloatingInterestRate();
-                        return selectedFloatingInterestRate.divide(BigDecimal.valueOf(100L), mc);
-                    }
-                }
-            }
-        }
-        return this.nominalAnnualInterestRate.divide(BigDecimal.valueOf(100L), mc);
-    }*/
-
     protected List<SavingsAccountTransaction> retreiveOrderedNonInterestPostingTransactions() {
         final List<SavingsAccountTransaction> listOfTransactionsSorted = retreiveListOfTransactions();
 

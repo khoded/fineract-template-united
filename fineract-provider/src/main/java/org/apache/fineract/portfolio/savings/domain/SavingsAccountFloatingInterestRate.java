@@ -26,9 +26,9 @@ import javax.persistence.Entity;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.Table;
+import javax.validation.constraints.NotNull;
 import org.apache.fineract.infrastructure.core.domain.AbstractAuditableCustom;
 import org.apache.fineract.infrastructure.core.domain.LocalDateInterval;
-import org.jetbrains.annotations.NotNull;
 
 @Entity
 @Table(name = "m_savings_account_floating_interest_rate")

@@ -245,73 +245,6 @@ public final class PostingPeriod {
                           final SavingsInterestCalculationType interestCalculationType, BigDecimal interestRateAsFraction, final long daysInYear,
                           final List<CompoundingPeriod> compoundingPeriods, boolean interestTransfered, final Money minBalanceForInterestCalculation,
                           final boolean isSavingsInterestPostingAtCurrentPeriodEnd, final BigDecimal overdraftInterestRateAsFraction,
-                          final Money minOverdraftForInterestCalculation, boolean isUserPosting, Integer financialYearBeginningMonth, SavingsAccountData savingsAccountData, final MathContext mc) {
-        this.periodInterval = periodInterval;
-        this.currency = currency;
-        this.openingBalance = openingBalance;
-        this.closingBalance = closingBalance;
-        this.interestCompoundingType = interestCompoundingType;
-        this.interestCalculationType = interestCalculationType;
-
-        this.daysInYear = daysInYear;
-        this.compoundingPeriods = compoundingPeriods;
-        if (isSavingsInterestPostingAtCurrentPeriodEnd) {
-            this.dateOfPostingTransaction = periodInterval.endDate();
-        } else {
-            this.dateOfPostingTransaction = periodInterval.endDate().plusDays(1);
-        }
-        this.interestTransfered = interestTransfered;
-        this.minBalanceForInterestCalculation = minBalanceForInterestCalculation;
-        this.overdraftInterestRateAsFraction = overdraftInterestRateAsFraction;
-        this.minOverdraftForInterestCalculation = minOverdraftForInterestCalculation;
-        this.isUserPosting = isUserPosting;
-        this.financialYearBeginningMonth = financialYearBeginningMonth;
-
-        this.interestRateAsFraction = interestRateAsFraction;
-        // finding out floating interest rate if applicable
-        if(Boolean.TRUE.equals(savingsAccountData.getUseFloatingInterestRate())){
-            if(!CollectionUtils.isEmpty(savingsAccountData.getFloatingInterestRates())){
-                BigDecimal floatingInterestRateAsFraction = BigDecimal.ZERO;
-                Collection<SavingsAccountFloatingInterestRateData> savingsAccountFloatingInterestRates = savingsAccountData.getFloatingInterestRates();
-                TreeSet<SavingsAccountFloatingInterestRateData> sortedSavingsAccountFloatingInterestRates = new TreeSet(savingsAccountFloatingInterestRates);
-
-                //set last floating rate interest rate end date as 200 years from now if not set
-                SavingsAccountFloatingInterestRateData lastElement = sortedSavingsAccountFloatingInterestRates.last();
-                if(lastElement.getEndDate() == null){
-                    LocalDate endDateFrom200YearsFromFromDate = lastElement.getFromDate().plusYears(200);
-                    lastElement.setEndDate(endDateFrom200YearsFromFromDate);
-                }
-
-                //set endDate of period with next period fromDate -1 if endDate of period is not set
-                for ( SavingsAccountFloatingInterestRateData currentElement : sortedSavingsAccountFloatingInterestRates) {
-                    if(currentElement.getEndDate() == null){
-                        SavingsAccountFloatingInterestRateData nextElement = sortedSavingsAccountFloatingInterestRates.higher(currentElement);
-                        currentElement.setEndDate(nextElement.getFromDate().minusDays(1));
-                    }
-                }
-                for ( SavingsAccountFloatingInterestRateData savingsAccountFloatingInterestRate : sortedSavingsAccountFloatingInterestRates) {
-                    if(savingsAccountFloatingInterestRate.isApplicableFloatingInterestRateForDate(periodInterval)){
-                        BigDecimal selectedFloatingInterestRate = savingsAccountFloatingInterestRate.getFloatingInterestRate();
-                        floatingInterestRateAsFraction = selectedFloatingInterestRate.divide(BigDecimal.valueOf(100L), mc);
-                    }
-                }
-
-                //this conditions should be always true if floating interest is used
-                //else it means floating interest rates are not defined correctly
-                if(floatingInterestRateAsFraction.compareTo(BigDecimal.ZERO) > 0){
-                    this.interestRateAsFraction = floatingInterestRateAsFraction;
-                }
-            }
-        }
-        //
-
-    }
-
-    private PostingPeriod(final LocalDateInterval periodInterval, final MonetaryCurrency currency, final Money openingBalance,
-                          final Money closingBalance, final SavingsCompoundingInterestPeriodType interestCompoundingType,
-                          final SavingsInterestCalculationType interestCalculationType, BigDecimal interestRateAsFraction, final long daysInYear,
-                          final List<CompoundingPeriod> compoundingPeriods, boolean interestTransfered, final Money minBalanceForInterestCalculation,
-                          final boolean isSavingsInterestPostingAtCurrentPeriodEnd, final BigDecimal overdraftInterestRateAsFraction,
                           final Money minOverdraftForInterestCalculation, boolean isUserPosting, Integer financialYearBeginningMonth, SavingsAccount savingsAccount, final MathContext mc) {
         this.periodInterval = periodInterval;
         this.currency = currency;
@@ -319,7 +252,7 @@ public final class PostingPeriod {
         this.closingBalance = closingBalance;
         this.interestCompoundingType = interestCompoundingType;
         this.interestCalculationType = interestCalculationType;
-
+        this.interestRateAsFraction = interestRateAsFraction;
         this.daysInYear = daysInYear;
         this.compoundingPeriods = compoundingPeriods;
 
@@ -335,8 +268,6 @@ public final class PostingPeriod {
         this.isUserPosting = isUserPosting;
         this.financialYearBeginningMonth = financialYearBeginningMonth;
 
-
-        this.interestRateAsFraction = interestRateAsFraction;
         // finding out floating interest rate if applicable
         if(savingsAccount.getUseFloatingInterestRate() != null && Boolean.TRUE.equals(savingsAccount.getUseFloatingInterestRate())){
             if(!CollectionUtils.isEmpty(savingsAccount.getSavingsAccountFloatingInterestRates())){// this should not be the case
@@ -368,6 +299,71 @@ public final class PostingPeriod {
 
                 // This conditions should be always true if floating interest is used
                 // else it means floating interest rates are not defined correctly
+                if(floatingInterestRateAsFraction.compareTo(BigDecimal.ZERO) > 0){
+                    this.interestRateAsFraction = floatingInterestRateAsFraction;
+                }
+            }
+        }
+        //
+    }
+
+    private PostingPeriod(final LocalDateInterval periodInterval, final MonetaryCurrency currency, final Money openingBalance,
+                          final Money closingBalance, final SavingsCompoundingInterestPeriodType interestCompoundingType,
+                          final SavingsInterestCalculationType interestCalculationType, BigDecimal interestRateAsFraction, final long daysInYear,
+                          final List<CompoundingPeriod> compoundingPeriods, boolean interestTransfered, final Money minBalanceForInterestCalculation,
+                          final boolean isSavingsInterestPostingAtCurrentPeriodEnd, final BigDecimal overdraftInterestRateAsFraction,
+                          final Money minOverdraftForInterestCalculation, boolean isUserPosting, Integer financialYearBeginningMonth, SavingsAccountData savingsAccountData, final MathContext mc) {
+        this.periodInterval = periodInterval;
+        this.currency = currency;
+        this.openingBalance = openingBalance;
+        this.closingBalance = closingBalance;
+        this.interestCompoundingType = interestCompoundingType;
+        this.interestCalculationType = interestCalculationType;
+        this.interestRateAsFraction = interestRateAsFraction;
+        this.daysInYear = daysInYear;
+        this.compoundingPeriods = compoundingPeriods;
+        if (isSavingsInterestPostingAtCurrentPeriodEnd) {
+            this.dateOfPostingTransaction = periodInterval.endDate();
+        } else {
+            this.dateOfPostingTransaction = periodInterval.endDate().plusDays(1);
+        }
+        this.interestTransfered = interestTransfered;
+        this.minBalanceForInterestCalculation = minBalanceForInterestCalculation;
+        this.overdraftInterestRateAsFraction = overdraftInterestRateAsFraction;
+        this.minOverdraftForInterestCalculation = minOverdraftForInterestCalculation;
+        this.isUserPosting = isUserPosting;
+        this.financialYearBeginningMonth = financialYearBeginningMonth;
+
+        // finding out floating interest rate if applicable
+        if(Boolean.TRUE.equals(savingsAccountData.getUseFloatingInterestRate())){
+            if(!CollectionUtils.isEmpty(savingsAccountData.getFloatingInterestRates())){
+                BigDecimal floatingInterestRateAsFraction = BigDecimal.ZERO;
+                Collection<SavingsAccountFloatingInterestRateData> savingsAccountFloatingInterestRates = savingsAccountData.getFloatingInterestRates();
+                TreeSet<SavingsAccountFloatingInterestRateData> sortedSavingsAccountFloatingInterestRates = new TreeSet(savingsAccountFloatingInterestRates);
+
+                //set last floating rate interest rate end date as 200 years from now if not set
+                SavingsAccountFloatingInterestRateData lastElement = sortedSavingsAccountFloatingInterestRates.last();
+                if(lastElement.getEndDate() == null){
+                    LocalDate endDateFrom200YearsFromFromDate = lastElement.getFromDate().plusYears(200);
+                    lastElement.setEndDate(endDateFrom200YearsFromFromDate);
+                }
+
+                //set endDate of period with next period fromDate -1 if endDate of period is not set
+                for ( SavingsAccountFloatingInterestRateData currentElement : sortedSavingsAccountFloatingInterestRates) {
+                    if(currentElement.getEndDate() == null){
+                        SavingsAccountFloatingInterestRateData nextElement = sortedSavingsAccountFloatingInterestRates.higher(currentElement);
+                        currentElement.setEndDate(nextElement.getFromDate().minusDays(1));
+                    }
+                }
+                for ( SavingsAccountFloatingInterestRateData savingsAccountFloatingInterestRate : sortedSavingsAccountFloatingInterestRates) {
+                    if(savingsAccountFloatingInterestRate.isApplicableFloatingInterestRateForDate(periodInterval)){
+                        BigDecimal selectedFloatingInterestRate = savingsAccountFloatingInterestRate.getFloatingInterestRate();
+                        floatingInterestRateAsFraction = selectedFloatingInterestRate.divide(BigDecimal.valueOf(100L), mc);
+                    }
+                }
+
+                //this conditions should be always true if floating interest is used
+                //else it means floating interest rates are not defined correctly
                 if(floatingInterestRateAsFraction.compareTo(BigDecimal.ZERO) > 0){
                     this.interestRateAsFraction = floatingInterestRateAsFraction;
                 }
@@ -746,9 +742,6 @@ public final class PostingPeriod {
 
         final List<CompoundingPeriod> compoundingPeriods = compoundingPeriodsInPostingPeriod(periodInterval, interestCompoundingPeriodType,
                 accountEndOfDayBalances, upToInterestCalculationDate, financialYearBeginningMonth);
-
-
-
 
         return new PostingPeriod(periodInterval, currency, periodStartingBalance, openingDayBalance, interestCompoundingPeriodType,
                 interestCalculationType, interestRateAsFraction, daysInYear, compoundingPeriods, interestTransfered,

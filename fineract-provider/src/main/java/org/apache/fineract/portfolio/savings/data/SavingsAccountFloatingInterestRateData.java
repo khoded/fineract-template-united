@@ -23,8 +23,8 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.Objects;
+import javax.validation.constraints.NotNull;
 import org.apache.fineract.infrastructure.core.domain.LocalDateInterval;
-import org.jetbrains.annotations.NotNull;
 
 public class SavingsAccountFloatingInterestRateData implements Serializable,Comparable<SavingsAccountFloatingInterestRateData> {
 
