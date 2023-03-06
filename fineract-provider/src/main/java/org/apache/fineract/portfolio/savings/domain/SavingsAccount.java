@@ -4650,7 +4650,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
                     compoundingPeriodType, savingsInterestCalculationType, interestRateAsFraction, daysInYearType.getValue(),
                     interestPostingUpToDate, interestPostTransactions, isInterestTransfer, minBalForInterestCalculation,
                     isSavingsInterestPostingAtCurrentPeriodEnd, overdraftInterestRateAsFraction, minOdForInterestCalculation, isUserPosting,
-                    financialYearBeginningMonth, includePostingAndWithHoldTax, this , mc);
+                    financialYearBeginningMonth, includePostingAndWithHoldTax, this, mc);
 
             periodStartingBalance = postingPeriod.closingBalance();
             allPostingPeriods.add(postingPeriod);

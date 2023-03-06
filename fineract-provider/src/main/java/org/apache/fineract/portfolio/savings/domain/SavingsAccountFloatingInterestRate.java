@@ -32,7 +32,7 @@ import org.apache.fineract.infrastructure.core.domain.LocalDateInterval;
 
 @Entity
 @Table(name = "m_savings_account_floating_interest_rate")
-public class SavingsAccountFloatingInterestRate extends AbstractAuditableCustom implements Comparable<SavingsAccountFloatingInterestRate>{
+public class SavingsAccountFloatingInterestRate extends AbstractAuditableCustom implements Comparable<SavingsAccountFloatingInterestRate> {
 
     @ManyToOne
     @JoinColumn(name = "savings_account_id")

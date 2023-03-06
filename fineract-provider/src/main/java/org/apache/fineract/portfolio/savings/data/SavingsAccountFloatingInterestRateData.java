@@ -26,7 +26,7 @@ import java.util.Objects;
 import javax.validation.constraints.NotNull;
 import org.apache.fineract.infrastructure.core.domain.LocalDateInterval;
 
-public class SavingsAccountFloatingInterestRateData implements Serializable,Comparable<SavingsAccountFloatingInterestRateData> {
+public class SavingsAccountFloatingInterestRateData implements Serializable, Comparable<SavingsAccountFloatingInterestRateData> {
 
     /**
      *
