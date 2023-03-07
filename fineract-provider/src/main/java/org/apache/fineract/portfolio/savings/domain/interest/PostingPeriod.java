@@ -303,11 +303,9 @@ public final class PostingPeriod {
                     }
                 }
 
-                // This conditions should be always true if floating interest is used
-                // else it means floating interest rates are not defined correctly
-                if (floatingInterestRateAsFraction.compareTo(BigDecimal.ZERO) > 0) {
-                    this.interestRateAsFraction = floatingInterestRateAsFraction;
-                }
+                // if floating interest is used, it should found the correct from above step
+                // else it means floating interest rates are not defined correctly, and it will 0
+                this.interestRateAsFraction = floatingInterestRateAsFraction;
             }
         }
         //
