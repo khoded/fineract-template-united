@@ -711,16 +711,10 @@ public final class LoanProductDataValidator {
                     "isBnplLoanProduct must be true when requiresEquityContribution is true");
         }
 
-        if(requiresEquityContribution && equityContributionLoanPercentage == null){
+        if(requiresEquityContribution && (equityContributionLoanPercentage == null || !(equityContributionLoanPercentage.compareTo(BigDecimal.ZERO) > 0))){
             baseDataValidator.reset().parameter(LoanProductConstants.equityContributionLoanPercentageParamName).failWithCode(
                     "ContributionLoanPercentage.cannot.be.null.when.requiresEquityContribution.is.true",
-                    "ContributionLoanPercentage cannot be null when requiresEquityContribution is true");
-        }
-
-        if(requiresEquityContribution && !(equityContributionLoanPercentage.compareTo(BigDecimal.ZERO) > 0)){
-            baseDataValidator.reset().parameter(LoanProductConstants.equityContributionLoanPercentageParamName).failWithCode(
-                    "ContributionLoanPercentage.must.be.greater.than.zero.when.requiresEquityContribution.is.true",
-                    "ContributionLoanPercentage must be greater than zero when requiresEquityContribution is true");
+                    "ContributionLoanPercentage cannot be null or zero when requiresEquityContribution is true");
         }
     }
 
