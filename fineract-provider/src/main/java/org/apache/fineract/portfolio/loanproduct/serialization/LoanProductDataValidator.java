@@ -115,7 +115,8 @@ public final class LoanProductDataValidator {
             LoanProductConstants.ALLOW_APPROVED_DISBURSED_AMOUNTS_OVER_APPLIED, LoanProductConstants.OVER_APPLIED_CALCULATION_TYPE,
             LoanProductConstants.OVER_APPLIED_NUMBER, LoanProductConstants.MAX_NUMBER_OF_LOAN_EXTENSIONS_ALLOWED,
             LoanProductConstants.LOAN_TERM_INCLUDES_TOPPED_UP_LOAN_TERM, LoanProductConstants.IS_ACCOUNT_LEVEL_ARREARS_TOLERANCE_ENABLE,
-            DepositsApiConstants.chartsParamName, LoanProductConstants.advancePaymentInterestForExactDaysInPeriodParamName));
+            DepositsApiConstants.chartsParamName, LoanProductConstants.advancePaymentInterestForExactDaysInPeriodParamName,
+            LoanProductConstants.isBnplLoanProductParamName, LoanProductConstants.requiresEquityContributionParamName, LoanProductConstants.equityContributionLoanPercentageParamName));
 
     private static final String[] supportedloanConfigurableAttributes = { LoanProductConstants.amortizationTypeParamName,
             LoanProductConstants.interestTypeParamName, LoanProductConstants.transactionProcessingStrategyIdParamName,
@@ -675,7 +676,52 @@ public final class LoanProductDataValidator {
                     .value(isAccountLevelArrearsToleranceEnable).notNull().isOneOfTheseValues(true, false);
         }
 
+        //BNPL related validations
+        Boolean isBnplLoanProduct = false;
+        if (this.fromApiJsonHelper.parameterExists(LoanProductConstants.isBnplLoanProductParamName, element)) {
+            isBnplLoanProduct = this.fromApiJsonHelper.extractBooleanNamed(LoanProductConstants.isBnplLoanProductParamName, element);
+            baseDataValidator.reset().parameter(LoanProductConstants.isBnplLoanProductParamName).value(isBnplLoanProduct).ignoreIfNull()
+                    .validateForBooleanValue();
+        }
+
+        Boolean requiresEquityContribution = false;
+        if (this.fromApiJsonHelper.parameterExists(LoanProductConstants.requiresEquityContributionParamName, element)) {
+            requiresEquityContribution = this.fromApiJsonHelper.extractBooleanNamed(LoanProductConstants.requiresEquityContributionParamName, element);
+            baseDataValidator.reset().parameter(LoanProductConstants.requiresEquityContributionParamName).value(requiresEquityContribution).ignoreIfNull()
+                    .validateForBooleanValue();
+        }
+
+        BigDecimal equityContributionLoanPercentage = null;
+        if (this.fromApiJsonHelper.parameterExists(LoanProductConstants.equityContributionLoanPercentageParamName, element)) {
+            equityContributionLoanPercentage = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(LoanProductConstants.equityContributionLoanPercentageParamName,
+                    element);
+            baseDataValidator.reset().parameter(LoanProductConstants.equityContributionLoanPercentageParamName).value(equityContributionLoanPercentage).ignoreIfNull()
+                    .zeroOrPositiveAmount();
+        }
+
+        validateBnplValues(baseDataValidator, isBnplLoanProduct, requiresEquityContribution, equityContributionLoanPercentage);
+
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
+    }
+
+    private void validateBnplValues(final DataValidatorBuilder baseDataValidator, Boolean isBnplLoanProduct, Boolean requiresEquityContribution, BigDecimal equityContributionLoanPercentage) {
+        if(!isBnplLoanProduct && requiresEquityContribution){
+            baseDataValidator.reset().parameter(LoanProductConstants.requiresEquityContributionParamName).failWithCode(
+                    "isBnplLoanProduct.must.be.true.when.requiresEquityContribution.is.true",
+                    "isBnplLoanProduct must be true when requiresEquityContribution is true");
+        }
+
+        if(requiresEquityContribution && equityContributionLoanPercentage == null){
+            baseDataValidator.reset().parameter(LoanProductConstants.equityContributionLoanPercentageParamName).failWithCode(
+                    "ContributionLoanPercentage.cannot.be.null.when.requiresEquityContribution.is.true",
+                    "ContributionLoanPercentage cannot be null when requiresEquityContribution is true");
+        }
+
+        if(requiresEquityContribution && !(equityContributionLoanPercentage.compareTo(BigDecimal.ZERO) > 0)){
+            baseDataValidator.reset().parameter(LoanProductConstants.equityContributionLoanPercentageParamName).failWithCode(
+                    "ContributionLoanPercentage.must.be.greater.than.zero.when.requiresEquityContribution.is.true",
+                    "ContributionLoanPercentage must be greater than zero when requiresEquityContribution is true");
+        }
     }
 
     private void validateVariableInstallmentSettings(final DataValidatorBuilder baseDataValidator, final JsonElement element) {
@@ -1529,6 +1575,34 @@ public final class LoanProductDataValidator {
         if (this.fromApiJsonHelper.parameterExists("charts", element)) {
             this.depositProductDataValidator.validateChartsData(element, baseDataValidator);
         }
+
+        Boolean isBnplLoanProduct = null;
+        if (this.fromApiJsonHelper.parameterExists(LoanProductConstants.isBnplLoanProductParamName, element)) {
+            isBnplLoanProduct = this.fromApiJsonHelper.extractBooleanNamed(LoanProductConstants.isBnplLoanProductParamName, element);
+            baseDataValidator.reset().parameter(LoanProductConstants.isBnplLoanProductParamName).value(isBnplLoanProduct).ignoreIfNull()
+                    .validateForBooleanValue();
+        }
+
+        Boolean requiresEquityContribution = null;
+        if (this.fromApiJsonHelper.parameterExists(LoanProductConstants.requiresEquityContributionParamName, element)) {
+            requiresEquityContribution = this.fromApiJsonHelper.extractBooleanNamed(LoanProductConstants.requiresEquityContributionParamName, element);
+            baseDataValidator.reset().parameter(LoanProductConstants.requiresEquityContributionParamName).value(requiresEquityContribution).ignoreIfNull()
+                    .validateForBooleanValue();
+        }
+
+        BigDecimal equityContributionLoanPercentage = null;
+        if (this.fromApiJsonHelper.parameterExists(LoanProductConstants.equityContributionLoanPercentageParamName, element)) {
+            equityContributionLoanPercentage = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(LoanProductConstants.equityContributionLoanPercentageParamName,
+                    element);
+            baseDataValidator.reset().parameter(LoanProductConstants.equityContributionLoanPercentageParamName).value(equityContributionLoanPercentage).ignoreIfNull()
+                    .zeroOrPositiveAmount();
+        }
+        //set with persisted value if not coming from API call
+        isBnplLoanProduct = isBnplLoanProduct == null ? loanProduct.getBnplLoanProduct() : isBnplLoanProduct;
+        requiresEquityContribution = requiresEquityContribution == null ? loanProduct.isRequiresEquityContribution() : requiresEquityContribution;
+        equityContributionLoanPercentage = equityContributionLoanPercentage == null ? loanProduct.getEquityContributionLoanPercentage() : equityContributionLoanPercentage;
+
+        validateBnplValues(baseDataValidator, isBnplLoanProduct, requiresEquityContribution, equityContributionLoanPercentage);
 
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }

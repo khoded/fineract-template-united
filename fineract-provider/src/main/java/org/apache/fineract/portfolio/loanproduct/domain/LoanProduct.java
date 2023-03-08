@@ -208,6 +208,15 @@ public class LoanProduct extends AbstractPersistableCustom {
     @JoinTable(name = "m_product_loan_interest_rate_chart", joinColumns = @JoinColumn(name = "loan_product_id"), inverseJoinColumns = @JoinColumn(name = "interest_rate_chart_id", unique = true))
     protected Set<InterestRateChart> charts;
 
+    @Column(name = "is_bnpl_loan_product")
+    private Boolean isBnplLoanProduct;
+
+    @Column(name = "requires_equity_contribution")
+    private Boolean requiresEquityContribution;
+
+    @Column(name = "equity_contribution_loan_percentage", scale = 6, precision = 19)
+    private BigDecimal equityContributionLoanPercentage;
+
     public static LoanProduct assembleFromJson(final Fund fund, final LoanTransactionProcessingStrategy loanTransactionProcessingStrategy,
             final List<Charge> productCharges, final JsonCommand command, final AprCalculator aprCalculator, FloatingRate floatingRate,
             final List<Rate> productRates) {
@@ -392,6 +401,12 @@ public class LoanProduct extends AbstractPersistableCustom {
         final boolean isAccountLevelArrearsToleranceEnable = command
                 .booleanPrimitiveValueOfParameterNamed(LoanProductConstants.IS_ACCOUNT_LEVEL_ARREARS_TOLERANCE_ENABLE);
 
+        final Boolean isBnplLoanProduct = command
+                .booleanObjectValueOfParameterNamed(LoanProductConstants.isBnplLoanProductParamName);
+        final Boolean requiresEquityContribution = command
+                .booleanObjectValueOfParameterNamed(LoanProductConstants.requiresEquityContributionParamName);
+        final BigDecimal equityContributionLoanPercentage = command.bigDecimalValueOfParameterNamed(LoanProductConstants.equityContributionLoanPercentageParamName);
+
         return new LoanProduct(fund, loanTransactionProcessingStrategy, name, shortName, description, currency, principal, minPrincipal,
                 maxPrincipal, interestRatePerPeriod, minInterestRatePerPeriod, maxInterestRatePerPeriod, interestFrequencyType,
                 annualInterestRate, interestMethod, interestCalculationPeriodMethod, allowPartialPeriodInterestCalcualtion, repaymentEvery,
@@ -408,7 +423,7 @@ public class LoanProduct extends AbstractPersistableCustom {
                 minimumGapBetweenInstallments, maximumGapBetweenInstallments, syncExpectedWithDisbursementDate, canUseForTopup,
                 isEqualAmortization, productRates, fixedPrincipalPercentagePerInstallment, disallowExpectedDisbursements,
                 allowApprovedDisbursedAmountsOverApplied, overAppliedCalculationType, overAppliedNumber, maxNumberOfLoanExtensionsAllowed,
-                loanTermIncludesToppedUpLoanTerm, isAccountLevelArrearsToleranceEnable);
+                loanTermIncludesToppedUpLoanTerm, isAccountLevelArrearsToleranceEnable, isBnplLoanProduct, requiresEquityContribution, equityContributionLoanPercentage);
 
     }
 
@@ -646,7 +661,7 @@ public class LoanProduct extends AbstractPersistableCustom {
             final List<Rate> rates, final BigDecimal fixedPrincipalPercentagePerInstallment, final boolean disallowExpectedDisbursements,
             final boolean allowApprovedDisbursedAmountsOverApplied, final String overAppliedCalculationType,
             final Integer overAppliedNumber, final Integer maxNumberOfLoanExtensionsAllowed, final boolean loanTermIncludesToppedUpLoanTerm,
-            final boolean isAccountLevelArrearsToleranceEnable) {
+            final boolean isAccountLevelArrearsToleranceEnable, Boolean isBnplLoanProduct, Boolean requiresEquityContribution, BigDecimal equityContributionLoanPercentage) {
         this.fund = fund;
         this.transactionProcessingStrategy = transactionProcessingStrategy;
         this.name = name.trim();
@@ -727,6 +742,9 @@ public class LoanProduct extends AbstractPersistableCustom {
         this.overAppliedNumber = overAppliedNumber;
         this.maxNumberOfLoanExtensionsAllowed = maxNumberOfLoanExtensionsAllowed;
         this.isAccountLevelArrearsToleranceEnable = isAccountLevelArrearsToleranceEnable;
+        this.isBnplLoanProduct = isBnplLoanProduct;
+        this.requiresEquityContribution = requiresEquityContribution;
+        this.equityContributionLoanPercentage = equityContributionLoanPercentage;
 
         if (rates != null) {
             this.rates = rates;
@@ -1248,6 +1266,27 @@ public class LoanProduct extends AbstractPersistableCustom {
             this.isAccountLevelArrearsToleranceEnable = newValue;
         }
 
+        if (command.isChangeInBooleanParameterNamed(LoanProductConstants.isBnplLoanProductParamName,
+                this.isBnplLoanProduct)) {
+            final Boolean newValue = command.booleanObjectValueOfParameterNamed(LoanProductConstants.isBnplLoanProductParamName);
+            actualChanges.put(LoanProductConstants.isBnplLoanProductParamName, newValue);
+            this.isBnplLoanProduct = newValue;
+        }
+
+        if (command.isChangeInBooleanParameterNamed(LoanProductConstants.requiresEquityContributionParamName,
+                this.requiresEquityContribution)) {
+            final Boolean newValue = command.booleanObjectValueOfParameterNamed(LoanProductConstants.requiresEquityContributionParamName);
+            actualChanges.put(LoanProductConstants.requiresEquityContributionParamName, newValue);
+            this.requiresEquityContribution = newValue;
+        }
+
+        if (command.isChangeInBigDecimalParameterNamed(LoanProductConstants.equityContributionLoanPercentageParamName,
+                this.equityContributionLoanPercentage)) {
+            final BigDecimal newValue = command.bigDecimalValueOfParameterNamed(LoanProductConstants.equityContributionLoanPercentageParamName);
+            actualChanges.put(LoanProductConstants.equityContributionLoanPercentageParamName, newValue);
+            this.equityContributionLoanPercentage = newValue;
+        }
+
         return actualChanges;
     }
 
@@ -1674,4 +1713,16 @@ public class LoanProduct extends AbstractPersistableCustom {
         existingCharts.add(newChart);
     }
 
+
+    public Boolean getBnplLoanProduct() {
+        return isBnplLoanProduct;
+    }
+
+    public boolean isRequiresEquityContribution() {
+        return requiresEquityContribution;
+    }
+
+    public BigDecimal getEquityContributionLoanPercentage() {
+        return equityContributionLoanPercentage;
+    }
 }
