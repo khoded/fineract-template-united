@@ -1718,7 +1718,7 @@ public class LoanProduct extends AbstractPersistableCustom {
         return isBnplLoanProduct;
     }
 
-    public boolean isRequiresEquityContribution() {
+    public Boolean isRequiresEquityContribution() {
         return requiresEquityContribution;
     }
 
