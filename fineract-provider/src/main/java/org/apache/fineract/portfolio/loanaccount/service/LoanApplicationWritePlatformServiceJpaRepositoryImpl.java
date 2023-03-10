@@ -599,7 +599,21 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                     this.accountAssociationsRepository.save(accountAssociations);
 
                 }
+
+                // Save linked vendor savings account information for bnpl loan
+                SavingsAccount vendorSavingsAccount;
+                AccountAssociations vendorAccountAssociations;
+                final Long vendorSavingsAccountId = command.longValueOfParameterNamed("linkVendorAccountId");
+                if (vendorSavingsAccountId != null) {
+                    vendorSavingsAccount = this.savingsAccountAssembler.assembleFrom(vendorSavingsAccountId, backdatedTxnsAllowedTill);
+                    this.fromApiJsonDeserializer.validateLinkedVendorSavingsAccountForBnplLoan(vendorSavingsAccount, savingsAccount);
+                    boolean isActive = true;
+                    vendorAccountAssociations = AccountAssociations.associateSavingsAccount(newLoanApplication, savingsAccount, vendorSavingsAccount,
+                            AccountAssociationType.BNPL_LINKED_ACCOUNT_ASSOCIATION.getValue(), isActive);
+                    this.accountAssociationsRepository.save(vendorAccountAssociations);
+                }
             }
+
             if (command.parameterExists(LoanApiConstants.datatables)) {
                 this.entityDatatableChecksWritePlatformService.saveDatatables(StatusEnum.CREATE.getCode().longValue(),
                         EntityTables.LOAN.getName(), newLoanApplication.getId(), newLoanApplication.productId(),
