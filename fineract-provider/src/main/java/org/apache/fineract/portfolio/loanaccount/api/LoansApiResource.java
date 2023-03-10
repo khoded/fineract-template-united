@@ -369,6 +369,7 @@ public class LoansApiResource {
             @QueryParam("templateType") @Parameter(description = "templateType") final String templateType,
             @DefaultValue("false") @QueryParam("staffInSelectedOfficeOnly") @Parameter(description = "staffInSelectedOfficeOnly") final boolean staffInSelectedOfficeOnly,
             @DefaultValue("false") @QueryParam("activeOnly") @Parameter(description = "activeOnly") final boolean onlyActive,
+            @QueryParam("vendorClientId") @Parameter(description = "vendorClientId") final Long vendorClientId,
             @Context final UriInfo uriInfo) {
 
         this.context.authenticatedUser().validateHasReadPermission(this.resourceNameForPermissions);
@@ -407,6 +408,11 @@ public class LoansApiResource {
                     officeId = loanAccountClientDetails.officeId();
                     newLoanAccount = newLoanAccount == null ? loanAccountClientDetails
                             : LoanAccountData.populateClientDefaults(newLoanAccount, loanAccountClientDetails);
+
+                    if(vendorClientId != null){
+                        final Collection<PortfolioAccountData> vendorSavingsAccountOptions = this.loanReadPlatformService.retrieveVendorSavingAccountsForBnplLoans(vendorClientId);
+                        newLoanAccount.setVendorSavingsAccountOptions(vendorSavingsAccountOptions);
+                    }
                 }
 
                 // if it's JLG loan add group details

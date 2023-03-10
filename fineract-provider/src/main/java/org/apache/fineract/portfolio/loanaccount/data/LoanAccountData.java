@@ -37,6 +37,7 @@ import org.apache.fineract.portfolio.account.data.PortfolioAccountData;
 import org.apache.fineract.portfolio.accountdetails.data.LoanAccountSummaryData;
 import org.apache.fineract.portfolio.calendar.data.CalendarData;
 import org.apache.fineract.portfolio.charge.data.ChargeData;
+import org.apache.fineract.portfolio.client.data.ClientData;
 import org.apache.fineract.portfolio.common.domain.PeriodFrequencyType;
 import org.apache.fineract.portfolio.floatingrates.data.InterestRatePeriodData;
 import org.apache.fineract.portfolio.fund.data.FundData;
@@ -243,6 +244,12 @@ public final class LoanAccountData {
     private final CollectionData delinquent;
 
     private Collection<InterestRateChartSlabData> interestRateChartSlabData;
+
+    private Collection<ClientData> vendorClientOptions;
+    private Collection<PortfolioAccountData> vendorSavingsAccountOptions;
+    private Boolean isBnplLoanProduct;
+    private Boolean requiresEquityContribution;
+    private BigDecimal equityContributionLoanPercentage;
 
     public static LoanAccountData importInstanceIndividual(EnumOptionData loanTypeEnumOption, Long clientId, Long productId,
             Long loanOfficerId, LocalDate submittedOnDate, Long fundId, BigDecimal principal, Integer numberOfRepayments,
@@ -768,7 +775,7 @@ public final class LoanAccountData {
 
     public static LoanAccountData populateClientDefaults(final LoanAccountData acc, final LoanAccountData clientAcc) {
 
-        return new LoanAccountData(acc.id, acc.accountNo, acc.status, acc.externalId, clientAcc.clientId, clientAcc.clientAccountNo,
+         LoanAccountData loanAccountData = new LoanAccountData(acc.id, acc.accountNo, acc.status, acc.externalId, clientAcc.clientId, clientAcc.clientAccountNo,
                 clientAcc.clientName, clientAcc.clientOfficeId, acc.group, acc.loanType, acc.loanProductId, acc.loanProductName,
                 acc.loanProductDescription, acc.isLoanProductLinkedToFloatingRate, acc.fundId, acc.fundName, acc.loanPurposeId,
                 acc.loanPurposeName, acc.loanOfficerId, acc.loanOfficerName, acc.currency, acc.proposedPrincipal, acc.principal,
@@ -795,6 +802,11 @@ public final class LoanAccountData {
                 acc.minimumGap, acc.maximumGap, acc.subStatus, acc.canUseForTopup, acc.clientActiveLoanOptions, acc.isTopup,
                 acc.closureLoanId, acc.closureLoanAccountNo, acc.topupAmount, acc.isEqualAmortization, acc.rates, acc.isRatesEnabled,
                 acc.fixedPrincipalPercentagePerInstallment, acc.delinquent);
+         loanAccountData.setBnplLoanProduct(acc.isBnplLoanProduct);
+         loanAccountData.setRequiresEquityContribution(acc.requiresEquityContribution);
+         loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
+         loanAccountData.setVendorClientOptions(clientAcc.vendorClientOptions);
+         return loanAccountData;
     }
 
     /**
@@ -1361,7 +1373,7 @@ public final class LoanAccountData {
     public static LoanAccountData associationsAndTemplate(final LoanAccountData acc, final Collection<LoanProductData> productOptions,
             final Collection<StaffData> allowedLoanOfficers, final Collection<CalendarData> calendarOptions,
             final Collection<PortfolioAccountData> accountLinkingOptions, final Boolean isRatesEnabled) {
-        return associationsAndTemplate(acc, acc.repaymentSchedule, acc.transactions, acc.charges, acc.collateral, acc.guarantors,
+        LoanAccountData loanAccountData = associationsAndTemplate(acc, acc.repaymentSchedule, acc.transactions, acc.charges, acc.collateral, acc.guarantors,
                 acc.meeting, productOptions, acc.termFrequencyTypeOptions, acc.repaymentFrequencyTypeOptions,
                 acc.repaymentFrequencyNthDayTypeOptions, acc.repaymentFrequencyDaysOfWeekTypeOptions,
                 acc.transactionProcessingStrategyOptions, acc.interestRateFrequencyTypeOptions, acc.amortizationTypeOptions,
@@ -1369,11 +1381,17 @@ public final class LoanAccountData {
                 allowedLoanOfficers, acc.loanPurposeOptions, acc.loanCollateralOptions, calendarOptions, acc.notes, accountLinkingOptions,
                 acc.linkedAccount, acc.disbursementDetails, acc.emiAmountVariations, acc.overdueCharges, acc.paidInAdvance,
                 acc.interestRatesPeriods, acc.clientActiveLoanOptions, acc.rates, isRatesEnabled, acc.delinquent);
+        loanAccountData.setBnplLoanProduct(acc.isBnplLoanProduct);
+        loanAccountData.setRequiresEquityContribution(acc.requiresEquityContribution);
+        loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
+        loanAccountData.setVendorClientOptions(acc.vendorClientOptions);
+        loanAccountData.setVendorSavingsAccountOptions(acc.vendorSavingsAccountOptions);
+        return loanAccountData;
     }
 
     public static LoanAccountData associateGroup(final LoanAccountData acc, final GroupGeneralData group) {
 
-        return new LoanAccountData(acc.id, acc.accountNo, acc.status, acc.externalId, acc.clientId, acc.clientAccountNo, acc.clientName,
+        LoanAccountData loanAccountData = new LoanAccountData(acc.id, acc.accountNo, acc.status, acc.externalId, acc.clientId, acc.clientAccountNo, acc.clientName,
                 acc.clientOfficeId, group, acc.loanType, acc.loanProductId, acc.loanProductName, acc.loanProductDescription,
                 acc.isLoanProductLinkedToFloatingRate, acc.fundId, acc.fundName, acc.loanPurposeId, acc.loanPurposeName, acc.loanOfficerId,
                 acc.loanOfficerName, acc.currency, acc.proposedPrincipal, acc.principal, acc.approvedPrincipal, acc.netDisbursalAmount,
@@ -1399,6 +1417,12 @@ public final class LoanAccountData {
                 acc.minimumGap, acc.maximumGap, acc.subStatus, acc.canUseForTopup, acc.clientActiveLoanOptions, acc.isTopup,
                 acc.closureLoanId, acc.closureLoanAccountNo, acc.topupAmount, acc.isEqualAmortization, acc.rates, acc.isRatesEnabled,
                 acc.fixedPrincipalPercentagePerInstallment, acc.delinquent);
+        loanAccountData.setBnplLoanProduct(acc.isBnplLoanProduct);
+        loanAccountData.setRequiresEquityContribution(acc.requiresEquityContribution);
+        loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
+        loanAccountData.setVendorClientOptions(acc.vendorClientOptions);
+        loanAccountData.setVendorSavingsAccountOptions(acc.vendorSavingsAccountOptions);
+        return loanAccountData;
     }
 
     public static LoanAccountData associateMemberVariations(final LoanAccountData acc, final Map<Long, Integer> memberLoanCycle) {
@@ -1977,5 +2001,45 @@ public final class LoanAccountData {
                 }
             }
         }
+    }
+
+    public Collection<ClientData> getVendorClientOptions() {
+        return vendorClientOptions;
+    }
+
+    public void setVendorClientOptions(Collection<ClientData> vendorClientOptions) {
+        this.vendorClientOptions = vendorClientOptions;
+    }
+
+    public Collection<PortfolioAccountData> getVendorSavingsAccountOptions() {
+        return vendorSavingsAccountOptions;
+    }
+
+    public void setVendorSavingsAccountOptions(Collection<PortfolioAccountData> vendorSavingsAccountOptions) {
+        this.vendorSavingsAccountOptions = vendorSavingsAccountOptions;
+    }
+
+    public Boolean getBnplLoanProduct() {
+        return isBnplLoanProduct;
+    }
+
+    public void setBnplLoanProduct(Boolean bnplLoanProduct) {
+        isBnplLoanProduct = bnplLoanProduct;
+    }
+
+    public Boolean getRequiresEquityContribution() {
+        return requiresEquityContribution;
+    }
+
+    public void setRequiresEquityContribution(Boolean requiresEquityContribution) {
+        this.requiresEquityContribution = requiresEquityContribution;
+    }
+
+    public BigDecimal getEquityContributionLoanPercentage() {
+        return equityContributionLoanPercentage;
+    }
+
+    public void setEquityContributionLoanPercentage(BigDecimal equityContributionLoanPercentage) {
+        this.equityContributionLoanPercentage = equityContributionLoanPercentage;
     }
 }
