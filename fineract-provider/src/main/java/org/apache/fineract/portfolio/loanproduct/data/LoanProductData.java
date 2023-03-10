@@ -208,6 +208,10 @@ public class LoanProductData implements Serializable {
     private Collection<InterestRateChartData> interestRateCharts;
     private InterestRateChartData activeChart;
 
+    private Boolean isBnplLoanProduct;
+    private Boolean requiresEquityContribution;
+    private BigDecimal equityContributionLoanPercentage;
+
     /**
      * Used when returning lookup information about loan product for dropdowns.
      */
@@ -1285,7 +1289,8 @@ public class LoanProductData implements Serializable {
     }
 
     public Boolean isAdvancePaymentInterestForExactDaysInPeriod() {
-        return isInterestRecalculationEnabled() ? this.interestRecalculationData.isAdvancePaymentInterestForExactDaysInPeriod() : Boolean.FALSE;
+        return isInterestRecalculationEnabled() ? this.interestRecalculationData.isAdvancePaymentInterestForExactDaysInPeriod()
+                : Boolean.FALSE;
     }
 
     public boolean canDefineInstallmentAmount() {
@@ -1398,5 +1403,29 @@ public class LoanProductData implements Serializable {
 
     public void setInterestRateCharts(Collection<InterestRateChartData> interestRateCharts) {
         this.activeChart = activeChart(interestRateCharts);
+    }
+
+    public Boolean getBnplLoanProduct() {
+        return isBnplLoanProduct;
+    }
+
+    public void setBnplLoanProduct(Boolean bnplLoanProduct) {
+        isBnplLoanProduct = bnplLoanProduct;
+    }
+
+    public Boolean getRequiresEquityContribution() {
+        return requiresEquityContribution;
+    }
+
+    public void setRequiresEquityContribution(Boolean requiresEquityContribution) {
+        this.requiresEquityContribution = requiresEquityContribution;
+    }
+
+    public BigDecimal getEquityContributionLoanPercentage() {
+        return equityContributionLoanPercentage;
+    }
+
+    public void setEquityContributionLoanPercentage(BigDecimal equityContributionLoanPercentage) {
+        this.equityContributionLoanPercentage = equityContributionLoanPercentage;
     }
 }

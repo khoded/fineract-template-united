@@ -372,13 +372,17 @@ public class LoanProductsApiResource {
                 .retrivePreCloseInterestCalculationStrategyOptions();
         final List<FloatingRateData> floatingRateOptions = this.floatingRateReadPlatformService.retrieveLookupActive();
 
-        return new LoanProductData(productData, chargeOptions, penaltyOptions, paymentTypeOptions, currencyOptions, amortizationTypeOptions,
+        LoanProductData loanProductDataResponse = new LoanProductData(productData, chargeOptions, penaltyOptions, paymentTypeOptions, currencyOptions, amortizationTypeOptions,
                 interestTypeOptions, interestCalculationPeriodTypeOptions, repaymentFrequencyTypeOptions, interestRateFrequencyTypeOptions,
                 fundOptions, transactionProcessingStrategyOptions, rateOptions, accountOptions, accountingRuleTypeOptions,
                 loanCycleValueConditionTypeOptions, daysInMonthTypeOptions, daysInYearTypeOptions,
                 interestRecalculationCompoundingTypeOptions, rescheduleStrategyTypeOptions, interestRecalculationFrequencyTypeOptions,
                 preCloseInterestCalculationStrategyOptions, floatingRateOptions, interestRecalculationNthDayTypeOptions,
                 interestRecalculationDayOfWeekTypeOptions, isRatesEnabled);
+        loanProductDataResponse.setBnplLoanProduct(productData.getBnplLoanProduct());
+        loanProductDataResponse.setRequiresEquityContribution(productData.getRequiresEquityContribution());
+        loanProductDataResponse.setEquityContributionLoanPercentage(productData.getEquityContributionLoanPercentage());
+        return loanProductDataResponse;
     }
 
 }
