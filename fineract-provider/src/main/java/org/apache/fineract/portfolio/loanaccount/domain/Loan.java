@@ -1674,6 +1674,28 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
                     this.fixedPrincipalPercentagePerInstallment);
         }
 
+        //bnpl
+        if (command.isChangeInBooleanParameterNamed(LoanApiConstants.isBnplLoanParamName,
+                this.isBnplLoan)) {
+            final Boolean newValue = command.booleanObjectValueOfParameterNamed(LoanApiConstants.isBnplLoanParamName);
+            actualChanges.put(LoanApiConstants.isBnplLoanParamName, newValue);
+            this.isBnplLoan = newValue;
+        }
+
+        if (command.isChangeInBooleanParameterNamed(LoanApiConstants.requiresEquityContributionParamName,
+                this.requiresEquityContribution)) {
+            final Boolean newValue = command.booleanObjectValueOfParameterNamed(LoanApiConstants.requiresEquityContributionParamName);
+            actualChanges.put(LoanApiConstants.requiresEquityContributionParamName, newValue);
+            this.requiresEquityContribution = newValue;
+        }
+
+        if (command.isChangeInBigDecimalParameterNamed(LoanApiConstants.equityContributionLoanPercentageParamName,
+                this.equityContributionLoanPercentage)) {
+            final BigDecimal newValue = command.bigDecimalValueOfParameterNamed(LoanApiConstants.equityContributionLoanPercentageParamName);
+            actualChanges.put(LoanApiConstants.equityContributionLoanPercentageParamName, newValue);
+            this.equityContributionLoanPercentage = newValue;
+        }
+
         return actualChanges;
     }
 

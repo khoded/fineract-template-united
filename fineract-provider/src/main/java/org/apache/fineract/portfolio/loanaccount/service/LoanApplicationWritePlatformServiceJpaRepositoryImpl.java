@@ -608,7 +608,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                     vendorSavingsAccount = this.savingsAccountAssembler.assembleFrom(vendorSavingsAccountId, backdatedTxnsAllowedTill);
                     this.fromApiJsonDeserializer.validateLinkedVendorSavingsAccountForBnplLoan(vendorSavingsAccount, savingsAccount);
                     boolean isActive = true;
-                    vendorAccountAssociations = AccountAssociations.associateSavingsAccount(newLoanApplication, savingsAccount, vendorSavingsAccount,
+                    vendorAccountAssociations = AccountAssociations.associateSavingsAccount(newLoanApplication, vendorSavingsAccount,
                             AccountAssociationType.BNPL_LINKED_ACCOUNT_ASSOCIATION.getValue(), isActive);
                     this.accountAssociationsRepository.save(vendorAccountAssociations);
                 }
@@ -1206,11 +1206,13 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             AccountAssociations accountAssociations = this.accountAssociationsRepository.findByLoanIdAndType(loanId,
                     AccountAssociationType.LINKED_ACCOUNT_ASSOCIATION.getValue());
             boolean isLinkedAccPresent = false;
+            SavingsAccount customerSavingsAccount = accountAssociations != null ? accountAssociations.linkedSavingsAccount() : null;
             if (savingsAccountId == null) {
                 if (accountAssociations != null) {
                     if (this.fromJsonHelper.parameterExists(linkAccountIdParamName, command.parsedJson())) {
                         this.accountAssociationsRepository.delete(accountAssociations);
                         changes.put(linkAccountIdParamName, null);
+                        customerSavingsAccount = null;
                     } else {
                         isLinkedAccPresent = true;
                     }
@@ -1222,6 +1224,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                     isModified = true;
                 } else {
                     final SavingsAccount savingsAccount = accountAssociations.linkedSavingsAccount();
+                    customerSavingsAccount = savingsAccount;
                     if (savingsAccount == null || !savingsAccount.getId().equals(savingsAccountId)) {
                         isModified = true;
                     }
@@ -1229,6 +1232,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 if (isModified) {
                     final SavingsAccount savingsAccount = this.savingsAccountAssembler.assembleFrom(savingsAccountId,
                             backdatedTxnsAllowedTill);
+                    customerSavingsAccount = savingsAccount;
                     this.fromApiJsonDeserializer.validatelinkedSavingsAccount(savingsAccount, existingLoanApplication);
                     if (accountAssociations == null) {
                         boolean isActive = true;
@@ -1241,6 +1245,44 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                     this.accountAssociationsRepository.save(accountAssociations);
                 }
             }
+
+            // Save vendor linked account information
+            final Long vendorSavingsAccountId = command.longValueOfParameterNamed(LoanApiConstants.linkVendorAccountIdParamName);
+            AccountAssociations vendorAccountAssociations = this.accountAssociationsRepository.findByLoanIdAndType(loanId,
+                    AccountAssociationType.BNPL_LINKED_ACCOUNT_ASSOCIATION.getValue());
+            if (vendorSavingsAccountId == null) {
+                if (vendorAccountAssociations != null) {
+                    if (this.fromJsonHelper.parameterExists(LoanApiConstants.linkVendorAccountIdParamName, command.parsedJson())) {
+                        this.accountAssociationsRepository.delete(vendorAccountAssociations);
+                        changes.put(LoanApiConstants.linkVendorAccountIdParamName, null);
+                    }
+                }
+            } else {
+                boolean isModified = false;
+                if (vendorAccountAssociations == null) {
+                    isModified = true;
+                } else {
+                    final SavingsAccount vendorSavingsAccount = vendorAccountAssociations.linkedSavingsAccount();
+                    if (vendorSavingsAccount == null || !vendorSavingsAccount.getId().equals(vendorSavingsAccountId)) {
+                        isModified = true;
+                    }
+                }
+                if (isModified) {
+                    final SavingsAccount vendorSavingsAccount = this.savingsAccountAssembler.assembleFrom(vendorSavingsAccountId,
+                            backdatedTxnsAllowedTill);
+                    this.fromApiJsonDeserializer.validateLinkedVendorSavingsAccountForBnplLoan(vendorSavingsAccount, customerSavingsAccount);
+                    if (vendorAccountAssociations == null) {
+                        boolean isActive = true;
+                        vendorAccountAssociations = AccountAssociations.associateSavingsAccount(existingLoanApplication, vendorSavingsAccount,
+                                AccountAssociationType.BNPL_LINKED_ACCOUNT_ASSOCIATION.getValue(), isActive);
+                    } else {
+                        vendorAccountAssociations.updateLinkedSavingsAccount(vendorSavingsAccount);
+                    }
+                    changes.put(LoanApiConstants.linkVendorAccountIdParamName, vendorSavingsAccountId);
+                    this.accountAssociationsRepository.save(vendorAccountAssociations);
+                }
+            }
+            //
 
             if (!isLinkedAccPresent) {
                 final Set<LoanCharge> charges = existingLoanApplication.charges();

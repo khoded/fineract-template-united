@@ -75,11 +75,6 @@ public class AccountAssociations extends AbstractPersistableCustom {
         return new AccountAssociations(null, savingsAccount, null, linkedSavingsAccount, associationType, isActive);
     }
 
-    public static AccountAssociations associateSavingsAccount(final Loan loanAccount, final SavingsAccount savingsAccount,
-            final SavingsAccount linkedSavingsAccount, final Integer associationType, boolean isActive) {
-        return new AccountAssociations(loanAccount, savingsAccount, null, linkedSavingsAccount, associationType, isActive);
-    }
-
     public SavingsAccount linkedSavingsAccount() {
         return this.linkedSavingsAccount;
     }
