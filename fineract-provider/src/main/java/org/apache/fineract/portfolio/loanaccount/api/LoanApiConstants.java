@@ -150,4 +150,5 @@ public interface LoanApiConstants {
     String requiresEquityContributionParamName = "requiresEquityContribution";
     String equityContributionLoanPercentageParamName = "equityContributionLoanPercentage";
     String linkVendorAccountIdParamName = "linkVendorAccountId";
+    String linkedVendorAccountAssociateParamName = "linkedVendorAccount";
 }

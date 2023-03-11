@@ -687,6 +687,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     + " l.interest_rate_differential as interestRateDifferential, "
                     + " l.create_standing_instruction_at_disbursement as createStandingInstructionAtDisbursement, "
                     + " lpvi.minimum_gap as minimuminstallmentgap, lpvi.maximum_gap as maximuminstallmentgap, "
+                    + " l.is_bnpl_loan as isBnplLoan, l.requires_equity_contribution as requiresEquityContribution, l.equity_contribution_loan_percentage as equityContributionLoanPercentage, "
                     + " lp.can_use_for_topup as canUseForTopup, " + " l.is_topup as isTopup, " + " topup.closure_loan_id as closureLoanId, "
                     + " l.total_recovered_derived as totalRecovered" + ", topuploan.account_no as closureLoanAccountNo, "
                     + " topup.topup_amount as topupAmount " + " from m_loan l" //
@@ -1013,7 +1014,11 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             final String closureLoanAccountNo = rs.getString("closureLoanAccountNo");
             final BigDecimal topupAmount = rs.getBigDecimal("topupAmount");
 
-            return LoanAccountData.basicLoanDetails(id, accountNo, status, externalId, clientId, clientAccountNo, clientName,
+            final Boolean isBnplLoan = rs.getBoolean("isBnplLoan");
+            final Boolean requiresEquityContribution = rs.getBoolean("requiresEquityContribution");
+            final BigDecimal equityContributionLoanPercentage = rs.getBigDecimal("equityContributionLoanPercentage");
+
+            LoanAccountData loanAccountData = LoanAccountData.basicLoanDetails(id, accountNo, status, externalId, clientId, clientAccountNo, clientName,
                     clientOfficeId, groupData, loanType, loanProductId, loanProductName, loanProductDescription,
                     isLoanProductLinkedToFloatingRate, fundId, fundName, loanPurposeId, loanPurposeName, loanOfficerId, loanOfficerName,
                     currencyData, proposedPrincipal, principal, approvedPrincipal, netDisbursalAmount, totalOverpaid, inArrearsTolerance,
@@ -1028,6 +1033,10 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     createStandingInstructionAtDisbursement, isvariableInstallmentsAllowed, minimumGap, maximumGap, loanSubStatus,
                     canUseForTopup, isTopup, closureLoanId, closureLoanAccountNo, topupAmount, isEqualAmortization,
                     fixedPrincipalPercentagePerInstallment);
+            loanAccountData.setBnplLoan(isBnplLoan);
+            loanAccountData.setRequiresEquityContribution(requiresEquityContribution);
+            loanAccountData.setEquityContributionLoanPercentage(equityContributionLoanPercentage);
+            return loanAccountData;
         }
     }
 
@@ -1473,7 +1482,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                 repaymentFrequencyNthDayTypeOptions, repaymentFrequencyDaysOfWeekTypeOptions, repaymentStrategyOptions,
                 interestRateFrequencyTypeOptions, amortizationTypeOptions, interestTypeOptions, interestCalculationPeriodTypeOptions,
                 fundOptions, chargeOptions, loanPurposeOptions, loanCollateralOptions, loanCycleCounter, activeLoanOptions);
-        loanAccountData.setBnplLoanProduct(loanProduct.getBnplLoanProduct());
+        loanAccountData.setBnplLoan(loanProduct.getBnplLoanProduct());
         loanAccountData.setEquityContributionLoanPercentage(loanProduct.getEquityContributionLoanPercentage());
         loanAccountData.setRequiresEquityContribution(loanProduct.getRequiresEquityContribution());
         return loanAccountData;

@@ -558,6 +558,7 @@ public class LoansApiResource {
         CalendarData meeting = null;
         Collection<NoteData> notes = null;
         PortfolioAccountData linkedAccount = null;
+        PortfolioAccountData linkedVendorAccount = null;
         Collection<DisbursementData> disbursementData = null;
         Collection<LoanTermVariationsData> emiAmountVariations = null;
         Collection<LoanCollateralResponseData> loanCollateralManagements = null;
@@ -572,7 +573,7 @@ public class LoansApiResource {
                         DataTableApiConstant.futureScheduleAssociateParamName, DataTableApiConstant.originalScheduleAssociateParamName,
                         DataTableApiConstant.transactionsAssociateParamName, DataTableApiConstant.chargesAssociateParamName,
                         DataTableApiConstant.guarantorsAssociateParamName, DataTableApiConstant.collateralAssociateParamName,
-                        DataTableApiConstant.notesAssociateParamName, DataTableApiConstant.linkedAccountAssociateParamName,
+                        DataTableApiConstant.notesAssociateParamName, DataTableApiConstant.linkedAccountAssociateParamName, LoanApiConstants.linkedVendorAccountAssociateParamName,
                         DataTableApiConstant.multiDisburseDetailsAssociateParamName, DataTableApiConstant.collectionAssociateParamName));
             }
 
@@ -663,6 +664,11 @@ public class LoansApiResource {
             if (associationParameters.contains(DataTableApiConstant.linkedAccountAssociateParamName)) {
                 mandatoryResponseParameters.add(DataTableApiConstant.linkedAccountAssociateParamName);
                 linkedAccount = this.accountAssociationsReadPlatformService.retriveLoanLinkedAssociation(loanId);
+            }
+
+            if (associationParameters.contains(LoanApiConstants.linkedVendorAccountAssociateParamName)) {
+                mandatoryResponseParameters.add(LoanApiConstants.linkedVendorAccountAssociateParamName);
+                linkedVendorAccount = this.accountAssociationsReadPlatformService.retriveLoanLinkedVendorAssociation(loanId);
             }
 
             if (associationParameters.contains(DataTableApiConstant.collectionAssociateParamName)) {
@@ -767,7 +773,7 @@ public class LoansApiResource {
             rates = this.rateReadService.retrieveLoanRates(loanId);
         }
 
-        final LoanAccountData loanAccount = LoanAccountData.associationsAndTemplate(loanBasicDetails, repaymentSchedule, loanRepayments,
+        LoanAccountData loanAccount = LoanAccountData.associationsAndTemplate(loanBasicDetails, repaymentSchedule, loanRepayments,
                 charges, loanCollateralManagementData, guarantors, meeting, productOptions, loanTermFrequencyTypeOptions,
                 repaymentFrequencyTypeOptions, repaymentFrequencyNthDayTypeOptions, repaymentFrequencyDayOfWeekTypeOptions,
                 repaymentStrategyOptions, interestRateFrequencyTypeOptions, amortizationTypeOptions, interestTypeOptions,
@@ -775,6 +781,7 @@ public class LoansApiResource {
                 loanCollateralOptions, calendarOptions, notes, accountLinkingOptions, linkedAccount, disbursementData, emiAmountVariations,
                 overdueCharges, paidInAdvanceTemplate, interestRatesPeriods, clientActiveLoanOptions, rates, isRatesEnabled,
                 collectionData);
+        loanAccount.setLinkedVendorAccount(linkedVendorAccount);
 
         final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters(),
                 mandatoryResponseParameters);

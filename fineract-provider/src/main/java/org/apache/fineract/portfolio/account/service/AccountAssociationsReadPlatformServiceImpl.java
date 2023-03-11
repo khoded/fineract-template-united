@@ -62,6 +62,23 @@ public class AccountAssociationsReadPlatformServiceImpl implements AccountAssoci
     }
 
     @Override
+    public PortfolioAccountData retriveLoanLinkedVendorAssociation(final Long loanId) {
+        PortfolioAccountData linkedVendorAccount = null;
+        final AccountAssociationsMapper mapper = new AccountAssociationsMapper();
+        final String sql = "select " + mapper.schema() + " where aa.loan_account_id = ? and aa.association_type_enum = ?";
+        try {
+            final AccountAssociationsData accountAssociationsData = this.jdbcTemplate.queryForObject(sql, mapper, loanId, // NOSONAR
+                    AccountAssociationType.BNPL_LINKED_ACCOUNT_ASSOCIATION.getValue());
+            if (accountAssociationsData != null) {
+                linkedVendorAccount = accountAssociationsData.linkedAccount();
+            }
+        } catch (final EmptyResultDataAccessException e) {
+            LOG.debug("Linking account is not configured");
+        }
+        return linkedVendorAccount;
+    }
+
+    @Override
     public Collection<AccountAssociationsData> retriveLoanAssociations(final Long loanId, final Integer associationType) {
         final AccountAssociationsMapper mapper = new AccountAssociationsMapper();
         final String sql = "select " + mapper.schema() + " where aa.loan_account_id = ? and aa.association_type_enum = ?";

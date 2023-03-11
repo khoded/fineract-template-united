@@ -247,9 +247,10 @@ public final class LoanAccountData {
 
     private Collection<ClientData> vendorClientOptions;
     private Collection<PortfolioAccountData> vendorSavingsAccountOptions;
-    private Boolean isBnplLoanProduct;
+    private Boolean isBnplLoan;
     private Boolean requiresEquityContribution;
     private BigDecimal equityContributionLoanPercentage;
+    private PortfolioAccountData linkedVendorAccount;
 
     public static LoanAccountData importInstanceIndividual(EnumOptionData loanTypeEnumOption, Long clientId, Long productId,
             Long loanOfficerId, LocalDate submittedOnDate, Long fundId, BigDecimal principal, Integer numberOfRepayments,
@@ -802,7 +803,7 @@ public final class LoanAccountData {
                 acc.minimumGap, acc.maximumGap, acc.subStatus, acc.canUseForTopup, acc.clientActiveLoanOptions, acc.isTopup,
                 acc.closureLoanId, acc.closureLoanAccountNo, acc.topupAmount, acc.isEqualAmortization, acc.rates, acc.isRatesEnabled,
                 acc.fixedPrincipalPercentagePerInstallment, acc.delinquent);
-         loanAccountData.setBnplLoanProduct(acc.isBnplLoanProduct);
+         loanAccountData.setBnplLoan(acc.isBnplLoan);
          loanAccountData.setRequiresEquityContribution(acc.requiresEquityContribution);
          loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
          loanAccountData.setVendorClientOptions(clientAcc.vendorClientOptions);
@@ -1343,7 +1344,7 @@ public final class LoanAccountData {
             loanProductConfigurableAttributes = acc.product.getloanProductConfigurableAttributes();
         }
 
-        return new LoanAccountData(acc.id, acc.accountNo, acc.status, acc.externalId, acc.clientId, acc.clientAccountNo, acc.clientName,
+        LoanAccountData loanAccountData = new LoanAccountData(acc.id, acc.accountNo, acc.status, acc.externalId, acc.clientId, acc.clientAccountNo, acc.clientName,
                 acc.clientOfficeId, acc.group, acc.loanType, acc.loanProductId, acc.loanProductName, acc.loanProductDescription,
                 acc.isLoanProductLinkedToFloatingRate, acc.fundId, acc.fundName, acc.loanPurposeId, acc.loanPurposeName, acc.loanOfficerId,
                 acc.loanOfficerName, acc.currency, acc.proposedPrincipal, acc.principal, acc.approvedPrincipal, acc.netDisbursalAmount,
@@ -1368,6 +1369,10 @@ public final class LoanAccountData {
                 acc.minimumGap, acc.maximumGap, acc.subStatus, acc.canUseForTopup, clientActiveLoanOptions, acc.isTopup, acc.closureLoanId,
                 acc.closureLoanAccountNo, acc.topupAmount, acc.isEqualAmortization, rates, isRatesEnabled,
                 acc.fixedPrincipalPercentagePerInstallment, delinquent);
+        loanAccountData.setBnplLoan(acc.isBnplLoan);
+        loanAccountData.setRequiresEquityContribution(acc.requiresEquityContribution);
+        loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
+        return loanAccountData;
     }
 
     public static LoanAccountData associationsAndTemplate(final LoanAccountData acc, final Collection<LoanProductData> productOptions,
@@ -1381,7 +1386,7 @@ public final class LoanAccountData {
                 allowedLoanOfficers, acc.loanPurposeOptions, acc.loanCollateralOptions, calendarOptions, acc.notes, accountLinkingOptions,
                 acc.linkedAccount, acc.disbursementDetails, acc.emiAmountVariations, acc.overdueCharges, acc.paidInAdvance,
                 acc.interestRatesPeriods, acc.clientActiveLoanOptions, acc.rates, isRatesEnabled, acc.delinquent);
-        loanAccountData.setBnplLoanProduct(acc.isBnplLoanProduct);
+        loanAccountData.setBnplLoan(acc.isBnplLoan);
         loanAccountData.setRequiresEquityContribution(acc.requiresEquityContribution);
         loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
         loanAccountData.setVendorClientOptions(acc.vendorClientOptions);
@@ -1417,7 +1422,7 @@ public final class LoanAccountData {
                 acc.minimumGap, acc.maximumGap, acc.subStatus, acc.canUseForTopup, acc.clientActiveLoanOptions, acc.isTopup,
                 acc.closureLoanId, acc.closureLoanAccountNo, acc.topupAmount, acc.isEqualAmortization, acc.rates, acc.isRatesEnabled,
                 acc.fixedPrincipalPercentagePerInstallment, acc.delinquent);
-        loanAccountData.setBnplLoanProduct(acc.isBnplLoanProduct);
+        loanAccountData.setBnplLoan(acc.isBnplLoan);
         loanAccountData.setRequiresEquityContribution(acc.requiresEquityContribution);
         loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
         loanAccountData.setVendorClientOptions(acc.vendorClientOptions);
@@ -1497,7 +1502,7 @@ public final class LoanAccountData {
         final LoanInterestRecalculationData interestRecalculationData = LoanInterestRecalculationData
                 .withCalendarData(acc.interestRecalculationData, calendarData, compoundingCalendarData);
 
-        return new LoanAccountData(acc.id, acc.accountNo, acc.status, acc.externalId, acc.clientId, acc.clientAccountNo, acc.clientName,
+        LoanAccountData loanAccountData = new LoanAccountData(acc.id, acc.accountNo, acc.status, acc.externalId, acc.clientId, acc.clientAccountNo, acc.clientName,
                 acc.clientOfficeId, acc.group, acc.loanType, acc.loanProductId, acc.loanProductName, acc.loanProductDescription,
                 acc.isLoanProductLinkedToFloatingRate, acc.fundId, acc.fundName, acc.loanPurposeId, acc.loanPurposeName, acc.loanOfficerId,
                 acc.loanOfficerName, acc.currency, acc.proposedPrincipal, acc.principal, acc.approvedPrincipal, acc.netDisbursalAmount,
@@ -1523,10 +1528,14 @@ public final class LoanAccountData {
                 acc.minimumGap, acc.maximumGap, acc.subStatus, acc.canUseForTopup, acc.clientActiveLoanOptions, acc.isTopup,
                 acc.closureLoanId, acc.closureLoanAccountNo, acc.topupAmount, acc.isEqualAmortization, acc.rates, acc.isRatesEnabled,
                 acc.fixedPrincipalPercentagePerInstallment, acc.delinquent);
+        loanAccountData.setBnplLoan(acc.isBnplLoan);
+        loanAccountData.setRequiresEquityContribution(acc.requiresEquityContribution);
+        loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
+        return loanAccountData;
     }
 
     public static LoanAccountData withLoanCalendarData(final LoanAccountData acc, final CalendarData calendarData) {
-        return new LoanAccountData(acc.id, acc.accountNo, acc.status, acc.externalId, acc.clientId, acc.clientAccountNo, acc.clientName,
+        LoanAccountData loanAccountData = new LoanAccountData(acc.id, acc.accountNo, acc.status, acc.externalId, acc.clientId, acc.clientAccountNo, acc.clientName,
                 acc.clientOfficeId, acc.group, acc.loanType, acc.loanProductId, acc.loanProductName, acc.loanProductDescription,
                 acc.isLoanProductLinkedToFloatingRate, acc.fundId, acc.fundName, acc.loanPurposeId, acc.loanPurposeName, acc.loanOfficerId,
                 acc.loanOfficerName, acc.currency, acc.proposedPrincipal, acc.principal, acc.approvedPrincipal, acc.netDisbursalAmount,
@@ -1552,6 +1561,10 @@ public final class LoanAccountData {
                 acc.minimumGap, acc.maximumGap, acc.subStatus, acc.canUseForTopup, acc.clientActiveLoanOptions, acc.isTopup,
                 acc.closureLoanId, acc.closureLoanAccountNo, acc.topupAmount, acc.isEqualAmortization, acc.rates, acc.isRatesEnabled,
                 acc.fixedPrincipalPercentagePerInstallment, acc.delinquent);
+        loanAccountData.setBnplLoan(acc.isBnplLoan);
+        loanAccountData.setRequiresEquityContribution(acc.requiresEquityContribution);
+        loanAccountData.setEquityContributionLoanPercentage(acc.equityContributionLoanPercentage);
+        return loanAccountData;
     }
 
     public static LoanAccountData withOriginalSchedule(final LoanAccountData acc, final LoanScheduleData originalSchedule) {
@@ -2019,12 +2032,12 @@ public final class LoanAccountData {
         this.vendorSavingsAccountOptions = vendorSavingsAccountOptions;
     }
 
-    public Boolean getBnplLoanProduct() {
-        return isBnplLoanProduct;
+    public Boolean getBnplLoan() {
+        return isBnplLoan;
     }
 
-    public void setBnplLoanProduct(Boolean bnplLoanProduct) {
-        isBnplLoanProduct = bnplLoanProduct;
+    public void setBnplLoan(Boolean isBnplLoan) {
+        this.isBnplLoan = isBnplLoan;
     }
 
     public Boolean getRequiresEquityContribution() {
@@ -2041,5 +2054,13 @@ public final class LoanAccountData {
 
     public void setEquityContributionLoanPercentage(BigDecimal equityContributionLoanPercentage) {
         this.equityContributionLoanPercentage = equityContributionLoanPercentage;
+    }
+
+    public PortfolioAccountData getLinkedVendorAccount() {
+        return linkedVendorAccount;
+    }
+
+    public void setLinkedVendorAccount(PortfolioAccountData linkedVendorAccount) {
+        this.linkedVendorAccount = linkedVendorAccount;
     }
 }
