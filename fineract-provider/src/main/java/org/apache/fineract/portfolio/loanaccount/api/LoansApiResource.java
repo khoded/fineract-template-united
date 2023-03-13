@@ -18,7 +18,6 @@
  */
 package org.apache.fineract.portfolio.loanaccount.api;
 
-import org.apache.fineract.portfolio.client.service.ClientReadPlatformService;
 import static org.apache.fineract.portfolio.loanproduct.service.LoanEnumerations.interestType;
 
 import com.google.gson.JsonElement;
@@ -99,6 +98,7 @@ import org.apache.fineract.portfolio.charge.data.ChargeData;
 import org.apache.fineract.portfolio.charge.domain.ChargeTimeType;
 import org.apache.fineract.portfolio.charge.service.ChargeReadPlatformService;
 import org.apache.fineract.portfolio.client.data.ClientData;
+import org.apache.fineract.portfolio.client.service.ClientReadPlatformService;
 import org.apache.fineract.portfolio.collateralmanagement.data.LoanCollateralResponseData;
 import org.apache.fineract.portfolio.collateralmanagement.service.LoanCollateralManagementReadPlatformService;
 import org.apache.fineract.portfolio.floatingrates.data.InterestRatePeriodData;
@@ -289,8 +289,8 @@ public class LoansApiResource {
             final ConfigurationDomainService configurationDomainService,
             final DefaultToApiJsonSerializer<GlimRepaymentTemplate> glimTemplateToApiJsonSerializer,
             final GLIMAccountInfoReadPlatformService glimAccountInfoReadPlatformService,
-            final LoanCollateralManagementReadPlatformService loanCollateralManagementReadPlatformService, final ClientReadPlatformService clientReadPlatformService,
-            InterestRateChartReadPlatformService chartReadPlatformService) {
+            final LoanCollateralManagementReadPlatformService loanCollateralManagementReadPlatformService,
+            final ClientReadPlatformService clientReadPlatformService, InterestRateChartReadPlatformService chartReadPlatformService) {
         this.context = context;
         this.loanReadPlatformService = loanReadPlatformService;
         this.loanProductReadPlatformService = loanProductReadPlatformService;
@@ -412,8 +412,9 @@ public class LoansApiResource {
                     newLoanAccount = newLoanAccount == null ? loanAccountClientDetails
                             : LoanAccountData.populateClientDefaults(newLoanAccount, loanAccountClientDetails);
 
-                    if(vendorClientId != null){
-                        final Collection<PortfolioAccountData> vendorSavingsAccountOptions = this.loanReadPlatformService.retrieveVendorSavingAccountsForBnplLoans(vendorClientId);
+                    if (vendorClientId != null) {
+                        final Collection<PortfolioAccountData> vendorSavingsAccountOptions = this.loanReadPlatformService
+                                .retrieveVendorSavingAccountsForBnplLoans(vendorClientId);
                         newLoanAccount.setVendorSavingsAccountOptions(vendorSavingsAccountOptions);
                     }
                 }
@@ -576,8 +577,9 @@ public class LoansApiResource {
                         DataTableApiConstant.futureScheduleAssociateParamName, DataTableApiConstant.originalScheduleAssociateParamName,
                         DataTableApiConstant.transactionsAssociateParamName, DataTableApiConstant.chargesAssociateParamName,
                         DataTableApiConstant.guarantorsAssociateParamName, DataTableApiConstant.collateralAssociateParamName,
-                        DataTableApiConstant.notesAssociateParamName, DataTableApiConstant.linkedAccountAssociateParamName, LoanApiConstants.linkedVendorAccountAssociateParamName,
-                        DataTableApiConstant.multiDisburseDetailsAssociateParamName, DataTableApiConstant.collectionAssociateParamName));
+                        DataTableApiConstant.notesAssociateParamName, DataTableApiConstant.linkedAccountAssociateParamName,
+                        LoanApiConstants.linkedVendorAccountAssociateParamName, DataTableApiConstant.multiDisburseDetailsAssociateParamName,
+                        DataTableApiConstant.collectionAssociateParamName));
             }
 
             ApiParameterHelper.excludeAssociationsForResponseIfProvided(exclude, associationParameters);
@@ -769,8 +771,9 @@ public class LoansApiResource {
             }
 
             vendorClientOptions = this.clientReadPlatformService.retrieveAllForLookupByOfficeId(loanBasicDetails.officeId());
-            if(linkedVendorAccount.getClientId() != null){
-                vendorSavingsAccountOptions = this.loanReadPlatformService.retrieveVendorSavingAccountsForBnplLoans(linkedVendorAccount.getClientId());
+            if (linkedVendorAccount.getClientId() != null) {
+                vendorSavingsAccountOptions = this.loanReadPlatformService
+                        .retrieveVendorSavingAccountsForBnplLoans(linkedVendorAccount.getClientId());
             }
         }
 
@@ -786,8 +789,8 @@ public class LoansApiResource {
             rates = this.rateReadService.retrieveLoanRates(loanId);
         }
 
-        LoanAccountData loanAccount = LoanAccountData.associationsAndTemplate(loanBasicDetails, repaymentSchedule, loanRepayments,
-                charges, loanCollateralManagementData, guarantors, meeting, productOptions, loanTermFrequencyTypeOptions,
+        LoanAccountData loanAccount = LoanAccountData.associationsAndTemplate(loanBasicDetails, repaymentSchedule, loanRepayments, charges,
+                loanCollateralManagementData, guarantors, meeting, productOptions, loanTermFrequencyTypeOptions,
                 repaymentFrequencyTypeOptions, repaymentFrequencyNthDayTypeOptions, repaymentFrequencyDayOfWeekTypeOptions,
                 repaymentStrategyOptions, interestRateFrequencyTypeOptions, amortizationTypeOptions, interestTypeOptions,
                 interestCalculationPeriodTypeOptions, fundOptions, chargeOptions, chargeTemplate, allowedLoanOfficers, loanPurposeOptions,

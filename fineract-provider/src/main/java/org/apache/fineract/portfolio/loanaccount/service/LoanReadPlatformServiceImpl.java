@@ -18,10 +18,6 @@
  */
 package org.apache.fineract.portfolio.loanaccount.service;
 
-import org.apache.fineract.portfolio.account.PortfolioAccountType;
-import org.apache.fineract.portfolio.account.data.PortfolioAccountDTO;
-import org.apache.fineract.portfolio.account.data.PortfolioAccountData;
-import org.apache.fineract.portfolio.account.service.PortfolioAccountReadPlatformService;
 import static org.apache.fineract.portfolio.loanproduct.service.LoanEnumerations.interestType;
 
 import java.math.BigDecimal;
@@ -58,7 +54,11 @@ import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.Money;
 import org.apache.fineract.organisation.staff.data.StaffData;
 import org.apache.fineract.organisation.staff.service.StaffReadPlatformService;
+import org.apache.fineract.portfolio.account.PortfolioAccountType;
 import org.apache.fineract.portfolio.account.data.AccountTransferData;
+import org.apache.fineract.portfolio.account.data.PortfolioAccountDTO;
+import org.apache.fineract.portfolio.account.data.PortfolioAccountData;
+import org.apache.fineract.portfolio.account.service.PortfolioAccountReadPlatformService;
 import org.apache.fineract.portfolio.accountdetails.data.LoanAccountSummaryData;
 import org.apache.fineract.portfolio.accountdetails.domain.AccountType;
 import org.apache.fineract.portfolio.accountdetails.service.AccountDetailsReadPlatformService;
@@ -178,7 +178,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             final StaffReadPlatformService staffReadPlatformService, final PaymentTypeReadPlatformService paymentTypeReadPlatformService,
             final LoanRepaymentScheduleTransactionProcessorFactory loanRepaymentScheduleTransactionProcessorFactory,
             final FloatingRatesReadPlatformService floatingRatesReadPlatformService, final LoanUtilService loanUtilService,
-            final ConfigurationDomainService configurationDomainService, final PortfolioAccountReadPlatformService portfolioAccountReadPlatformService,
+            final ConfigurationDomainService configurationDomainService,
+            final PortfolioAccountReadPlatformService portfolioAccountReadPlatformService,
             final AccountDetailsReadPlatformService accountDetailsReadPlatformService, final LoanRepositoryWrapper loanRepositoryWrapper,
             final ColumnValidator columnValidator, DatabaseSpecificSQLGenerator sqlGenerator, PaginationHelper paginationHelper) {
         this.context = context;
@@ -1018,8 +1019,8 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             final Boolean requiresEquityContribution = rs.getBoolean("requiresEquityContribution");
             final BigDecimal equityContributionLoanPercentage = rs.getBigDecimal("equityContributionLoanPercentage");
 
-            LoanAccountData loanAccountData = LoanAccountData.basicLoanDetails(id, accountNo, status, externalId, clientId, clientAccountNo, clientName,
-                    clientOfficeId, groupData, loanType, loanProductId, loanProductName, loanProductDescription,
+            LoanAccountData loanAccountData = LoanAccountData.basicLoanDetails(id, accountNo, status, externalId, clientId, clientAccountNo,
+                    clientName, clientOfficeId, groupData, loanType, loanProductId, loanProductName, loanProductDescription,
                     isLoanProductLinkedToFloatingRate, fundId, fundName, loanPurposeId, loanPurposeName, loanOfficerId, loanOfficerName,
                     currencyData, proposedPrincipal, principal, approvedPrincipal, netDisbursalAmount, totalOverpaid, inArrearsTolerance,
                     termFrequency, termPeriodFrequencyType, numberOfRepayments, repaymentEvery, repaymentFrequencyType, null, null,
@@ -1478,10 +1479,11 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
             activeLoanOptions = this.accountDetailsReadPlatformService.retrieveGroupActiveLoanAccountSummary(groupId);
         }
 
-        LoanAccountData loanAccountData = LoanAccountData.loanProductWithTemplateDefaults(loanProduct, loanTermFrequencyTypeOptions, repaymentFrequencyTypeOptions,
-                repaymentFrequencyNthDayTypeOptions, repaymentFrequencyDaysOfWeekTypeOptions, repaymentStrategyOptions,
-                interestRateFrequencyTypeOptions, amortizationTypeOptions, interestTypeOptions, interestCalculationPeriodTypeOptions,
-                fundOptions, chargeOptions, loanPurposeOptions, loanCollateralOptions, loanCycleCounter, activeLoanOptions);
+        LoanAccountData loanAccountData = LoanAccountData.loanProductWithTemplateDefaults(loanProduct, loanTermFrequencyTypeOptions,
+                repaymentFrequencyTypeOptions, repaymentFrequencyNthDayTypeOptions, repaymentFrequencyDaysOfWeekTypeOptions,
+                repaymentStrategyOptions, interestRateFrequencyTypeOptions, amortizationTypeOptions, interestTypeOptions,
+                interestCalculationPeriodTypeOptions, fundOptions, chargeOptions, loanPurposeOptions, loanCollateralOptions,
+                loanCycleCounter, activeLoanOptions);
         loanAccountData.setBnplLoan(loanProduct.getBnplLoanProduct());
         loanAccountData.setEquityContributionLoanPercentage(loanProduct.getEquityContributionLoanPercentage());
         loanAccountData.setRequiresEquityContribution(loanProduct.getRequiresEquityContribution());
@@ -1496,10 +1498,11 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
         final ClientData clientAccount = this.clientReadPlatformService.retrieveOne(clientId);
         final LocalDate expectedDisbursementDate = DateUtils.getBusinessLocalDate();
 
-        Collection<ClientData> vendorClientOptions = this.clientReadPlatformService.retrieveAllForLookupByOfficeId(clientAccount.officeId());
+        Collection<ClientData> vendorClientOptions = this.clientReadPlatformService
+                .retrieveAllForLookupByOfficeId(clientAccount.officeId());
 
-        LoanAccountData loanAccountData = LoanAccountData.clientDefaults(clientAccount.id(), clientAccount.accountNo(), clientAccount.displayName(),
-                clientAccount.officeId(), expectedDisbursementDate);
+        LoanAccountData loanAccountData = LoanAccountData.clientDefaults(clientAccount.id(), clientAccount.accountNo(),
+                clientAccount.displayName(), clientAccount.officeId(), expectedDisbursementDate);
         loanAccountData.setVendorClientOptions(vendorClientOptions);
         return loanAccountData;
     }
@@ -2410,8 +2413,9 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
     }
 
     @Override
-    public Collection<PortfolioAccountData> retrieveVendorSavingAccountsForBnplLoans(Long vendorClientId){
-        PortfolioAccountDTO portfolioAccountDTO = new PortfolioAccountDTO(PortfolioAccountType.SAVINGS.getValue(), vendorClientId, null, null, null);
+    public Collection<PortfolioAccountData> retrieveVendorSavingAccountsForBnplLoans(Long vendorClientId) {
+        PortfolioAccountDTO portfolioAccountDTO = new PortfolioAccountDTO(PortfolioAccountType.SAVINGS.getValue(), vendorClientId, null,
+                null, null);
         Collection<PortfolioAccountData> accountOptions = this.portfolioAccountReadPlatformService
                 .retrieveAllForLookup(portfolioAccountDTO);
         if (CollectionUtils.isEmpty(accountOptions)) {

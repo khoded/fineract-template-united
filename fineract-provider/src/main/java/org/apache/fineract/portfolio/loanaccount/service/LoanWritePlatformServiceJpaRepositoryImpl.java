@@ -2071,26 +2071,28 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
 
         // for BNPL loan - transfer to vendor savings account as per bnpl configuration if there are any
-        if(loan.getBnplLoan()){
+        if (loan.getBnplLoan()) {
             // get the vendor savings account
             final PortfolioAccountData vendorPortfolioAccountData = this.accountAssociationsReadPlatformService
                     .retriveLoanLinkedVendorAssociation(loan.getId());
             if (vendorPortfolioAccountData == null) {
-                final String errorMessage = "Disburse BNPL Loan with id:" + loan.getId() + " requires linked vendor savings account for payment";
+                final String errorMessage = "Disburse BNPL Loan with id:" + loan.getId()
+                        + " requires linked vendor savings account for payment";
                 throw new LinkedAccountRequiredException("loan.disburse.to.vendorSavings", errorMessage, loan.getId());
             }
 
             // get amount to transfer as per bnpl config
             Money bnplVendorAmount = Money.zero(amount.getCurrency());
 
-            if (Boolean.TRUE.equals(loan.getRequiresEquityContribution())){
-                BigDecimal equityContributionLoanPercentage= loan.getEquityContributionLoanPercentage();
+            if (Boolean.TRUE.equals(loan.getRequiresEquityContribution())) {
+                BigDecimal equityContributionLoanPercentage = loan.getEquityContributionLoanPercentage();
                 if (equityContributionLoanPercentage.compareTo(BigDecimal.ZERO) > 0) {
                     final RoundingMode roundingMode = MoneyHelper.getRoundingMode();
                     final MathContext mc = new MathContext(8, roundingMode);
                     bnplVendorAmount = amount.percentageOf(equityContributionLoanPercentage, mc.getRoundingMode());
                 } else {
-                    final String errorMessage = "Disburse BNPL Loan with id:" + loan.getId() + " requires percentage of loan which needs to be transfer to vendor if the loan RequiresEquityContribution has true";
+                    final String errorMessage = "Disburse BNPL Loan with id:" + loan.getId()
+                            + " requires percentage of loan which needs to be transfer to vendor if the loan RequiresEquityContribution has true";
                     throw new LinkedAccountRequiredException("loan.disburse.to.vendorSavings", errorMessage, loan.getId());
                 }
             } else {
@@ -2098,11 +2100,11 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 bnplVendorAmount = amount;
             }
 
-            final AccountTransferDTO vendorAccountTransferDTO = new AccountTransferDTO(transactionDate, bnplVendorAmount.getAmount(), PortfolioAccountType.SAVINGS,
-                    PortfolioAccountType.SAVINGS, portfolioAccountData.accountId(), vendorPortfolioAccountData.accountId(), "BNPL Loan amount transfer to vendor", locale, fmt,
-                    paymentDetail, LoanTransactionType.BNPL_VENDOR_TRANSFER.getValue(), null, null, null,
-                    AccountTransferType.ACCOUNT_TRANSFER.getValue(), null, null, txnExternalId, loan, null, null,
-                    isRegularTransaction, isExceptionForBalanceCheck);
+            final AccountTransferDTO vendorAccountTransferDTO = new AccountTransferDTO(transactionDate, bnplVendorAmount.getAmount(),
+                    PortfolioAccountType.SAVINGS, PortfolioAccountType.SAVINGS, portfolioAccountData.accountId(),
+                    vendorPortfolioAccountData.accountId(), "BNPL Loan amount transfer to vendor", locale, fmt, paymentDetail,
+                    LoanTransactionType.BNPL_VENDOR_TRANSFER.getValue(), null, null, null, AccountTransferType.ACCOUNT_TRANSFER.getValue(),
+                    null, null, txnExternalId, loan, null, null, isRegularTransaction, isExceptionForBalanceCheck);
             this.accountTransfersWritePlatformService.transferFunds(vendorAccountTransferDTO);
         }
     }

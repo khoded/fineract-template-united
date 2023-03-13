@@ -1270,11 +1270,12 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 if (isModified) {
                     final SavingsAccount vendorSavingsAccount = this.savingsAccountAssembler.assembleFrom(vendorSavingsAccountId,
                             backdatedTxnsAllowedTill);
-                    this.fromApiJsonDeserializer.validateLinkedVendorSavingsAccountForBnplLoan(vendorSavingsAccount, customerSavingsAccount);
+                    this.fromApiJsonDeserializer.validateLinkedVendorSavingsAccountForBnplLoan(vendorSavingsAccount,
+                            customerSavingsAccount);
                     if (vendorAccountAssociations == null) {
                         boolean isActive = true;
-                        vendorAccountAssociations = AccountAssociations.associateSavingsAccount(existingLoanApplication, vendorSavingsAccount,
-                                AccountAssociationType.BNPL_LINKED_ACCOUNT_ASSOCIATION.getValue(), isActive);
+                        vendorAccountAssociations = AccountAssociations.associateSavingsAccount(existingLoanApplication,
+                                vendorSavingsAccount, AccountAssociationType.BNPL_LINKED_ACCOUNT_ASSOCIATION.getValue(), isActive);
                     } else {
                         vendorAccountAssociations.updateLinkedSavingsAccount(vendorSavingsAccount);
                     }
