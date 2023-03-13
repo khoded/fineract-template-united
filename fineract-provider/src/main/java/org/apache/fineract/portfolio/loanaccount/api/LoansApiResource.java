@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.portfolio.loanaccount.api;
 
+import org.apache.fineract.portfolio.client.service.ClientReadPlatformService;
 import static org.apache.fineract.portfolio.loanproduct.service.LoanEnumerations.interestType;
 
 import com.google.gson.JsonElement;
@@ -263,6 +264,7 @@ public class LoansApiResource {
     private final GLIMAccountInfoReadPlatformService glimAccountInfoReadPlatformService;
     private final LoanCollateralManagementReadPlatformService loanCollateralManagementReadPlatformService;
     private final InterestRateChartReadPlatformService chartReadPlatformService;
+    private final ClientReadPlatformService clientReadPlatformService;
 
     public LoansApiResource(final PlatformSecurityContext context, final LoanReadPlatformService loanReadPlatformService,
             final LoanProductReadPlatformService loanProductReadPlatformService,
@@ -287,7 +289,7 @@ public class LoansApiResource {
             final ConfigurationDomainService configurationDomainService,
             final DefaultToApiJsonSerializer<GlimRepaymentTemplate> glimTemplateToApiJsonSerializer,
             final GLIMAccountInfoReadPlatformService glimAccountInfoReadPlatformService,
-            final LoanCollateralManagementReadPlatformService loanCollateralManagementReadPlatformService,
+            final LoanCollateralManagementReadPlatformService loanCollateralManagementReadPlatformService, final ClientReadPlatformService clientReadPlatformService,
             InterestRateChartReadPlatformService chartReadPlatformService) {
         this.context = context;
         this.loanReadPlatformService = loanReadPlatformService;
@@ -321,6 +323,7 @@ public class LoansApiResource {
         this.glimAccountInfoReadPlatformService = glimAccountInfoReadPlatformService;
         this.loanCollateralManagementReadPlatformService = loanCollateralManagementReadPlatformService;
         this.chartReadPlatformService = chartReadPlatformService;
+        this.clientReadPlatformService = clientReadPlatformService;
     }
 
     /*
@@ -700,6 +703,8 @@ public class LoansApiResource {
         Collection<PortfolioAccountData> accountLinkingOptions = null;
         PaidInAdvanceData paidInAdvanceTemplate = null;
         Collection<LoanAccountSummaryData> clientActiveLoanOptions = null;
+        Collection<ClientData> vendorClientOptions = null;
+        Collection<PortfolioAccountData> vendorSavingsAccountOptions = null;
 
         final boolean template = ApiParameterHelper.template(uriInfo.getQueryParameters());
         if (template) {
@@ -750,6 +755,10 @@ public class LoansApiResource {
                 mandatoryResponseParameters.add(DataTableApiConstant.linkedAccountAssociateParamName);
                 linkedAccount = this.accountAssociationsReadPlatformService.retriveLoanLinkedAssociation(loanId);
             }
+            if (!associationParameters.contains(LoanApiConstants.linkedVendorAccountAssociateParamName)) {
+                mandatoryResponseParameters.add(LoanApiConstants.linkedVendorAccountAssociateParamName);
+                linkedVendorAccount = this.accountAssociationsReadPlatformService.retriveLoanLinkedVendorAssociation(loanId);
+            }
             if (loanBasicDetails.groupId() != null) {
                 calendarOptions = this.loanReadPlatformService.retrieveCalendars(loanBasicDetails.groupId());
             }
@@ -759,6 +768,10 @@ public class LoansApiResource {
                         .retrieveClientActiveLoanAccountSummary(loanBasicDetails.clientId());
             }
 
+            vendorClientOptions = this.clientReadPlatformService.retrieveAllForLookupByOfficeId(loanBasicDetails.officeId());
+            if(linkedVendorAccount.getClientId() != null){
+                vendorSavingsAccountOptions = this.loanReadPlatformService.retrieveVendorSavingAccountsForBnplLoans(linkedVendorAccount.getClientId());
+            }
         }
 
         Collection<ChargeData> overdueCharges = this.chargeReadPlatformService.retrieveLoanProductCharges(loanBasicDetails.loanProductId(),
@@ -782,6 +795,8 @@ public class LoansApiResource {
                 overdueCharges, paidInAdvanceTemplate, interestRatesPeriods, clientActiveLoanOptions, rates, isRatesEnabled,
                 collectionData);
         loanAccount.setLinkedVendorAccount(linkedVendorAccount);
+        loanAccount.setVendorClientOptions(vendorClientOptions);
+        loanAccount.setVendorSavingsAccountOptions(vendorSavingsAccountOptions);
 
         final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters(),
                 mandatoryResponseParameters);

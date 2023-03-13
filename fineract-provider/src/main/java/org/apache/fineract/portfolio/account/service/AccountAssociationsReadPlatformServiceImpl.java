@@ -157,6 +157,7 @@ public class AccountAssociationsReadPlatformServiceImpl implements AccountAssoci
             sqlBuilder.append("loanAccount.id as loanAccountId, loanAccount.account_no as loanAccountNo,");
             // sqlBuilder.append("linkLoanAccount.id as linkLoanAccountId,
             // linkLoanAccount.account_no as linkLoanAccountNo, ");
+            sqlBuilder.append("linkSavingsAccount.client_id as linkSavingsAccountClientId, ");
             sqlBuilder.append("linkSavingsAccount.id as linkSavingsAccountId, linkSavingsAccount.account_no as linkSavingsAccountNo ");
             sqlBuilder.append("from m_portfolio_account_associations aa ");
             // sqlBuilder.append("left join m_savings_account savingsAccount on
@@ -189,11 +190,14 @@ public class AccountAssociationsReadPlatformServiceImpl implements AccountAssoci
              */
             final Long linkSavingsAccountId = JdbcSupport.getLong(rs, "linkSavingsAccountId");
             final String linkSavingsAccountNo = rs.getString("linkSavingsAccountNo");
+            final Long linkSavingsAccountClientId = JdbcSupport.getLong(rs, "linkSavingsAccountClientId");
+            // linkSavingsAccountClientId
             // final Long linkLoanAccountId = JdbcSupport.getLong(rs,
             // "linkLoanAccountId");
             // final String linkLoanAccountNo =
             // rs.getString("linkLoanAccountNo");
-            final PortfolioAccountData linkedAccount = PortfolioAccountData.lookup(linkSavingsAccountId, linkSavingsAccountNo);
+            PortfolioAccountData linkedAccount = PortfolioAccountData.lookup(linkSavingsAccountId, linkSavingsAccountNo);
+            linkedAccount.setClientId(linkSavingsAccountClientId);
             /*
              * if (linkSavingsAccountId != null) { linkedAccount = PortfolioAccountData.lookup(linkSavingsAccountId,
              * linkSavingsAccountNo); } else if (linkLoanAccountId != null) { linkedAccount =
