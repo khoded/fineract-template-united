@@ -70,6 +70,7 @@ import org.apache.fineract.portfolio.savings.SavingsCompoundingInterestPeriodTyp
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationDaysInYearType;
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationType;
 import org.apache.fineract.portfolio.savings.SavingsPostingInterestPeriodType;
+import org.apache.fineract.portfolio.savings.WithdrawalFrequency;
 import org.apache.fineract.portfolio.savings.data.SavingsProductData;
 import org.apache.fineract.portfolio.savings.data.SavingsProductFloatingInterestRateData;
 import org.apache.fineract.portfolio.savings.service.SavingsDropdownReadPlatformService;
@@ -266,6 +267,8 @@ public class SavingsProductsApiResource {
         final EnumOptionData interestCalculationType = SavingsEnumerations
                 .interestCalculationType(SavingsInterestCalculationType.DAILY_BALANCE);
 
+        final EnumOptionData withdrawalFrequency = SavingsEnumerations.withdrawalFrequency(WithdrawalFrequency.MONTHLY);
+
         final EnumOptionData interestCalculationDaysInYearType = SavingsEnumerations
                 .interestCalculationDaysInYearType(SavingsInterestCalculationDaysInYearType.DAYS_365);
 
@@ -298,6 +301,7 @@ public class SavingsProductsApiResource {
 
         final Collection<EnumOptionData> accountingRuleOptions = this.accountingDropdownReadPlatformService
                 .retrieveAccountingRuleTypeOptions();
+        final Collection<EnumOptionData> withdrawalFrequencies = this.dropdownReadPlatformService.retrieveWithdrawalFrequencyOptions();
         final Map<String, List<GLAccountData>> accountingMappingOptions = this.accountingDropdownReadPlatformService
                 .retrieveAccountMappingOptionsForSavingsProducts();
 
@@ -316,14 +320,15 @@ public class SavingsProductsApiResource {
             savingsProductToReturn = SavingsProductData.withTemplate(savingsProduct, currencyOptions, interestCompoundingPeriodTypeOptions,
                     interestPostingPeriodTypeOptions, interestCalculationTypeOptions, interestCalculationDaysInYearTypeOptions,
                     lockinPeriodFrequencyTypeOptions, withdrawalFeeTypeOptions, paymentTypeOptions, accountingRuleOptions,
-                    accountingMappingOptions, chargeOptions, penaltyOptions, taxGroupOptions, accountMappingForPayment);
+                    accountingMappingOptions, chargeOptions, penaltyOptions, taxGroupOptions, accountMappingForPayment,
+                    savingsProduct.getWithdrawalFrequency(), withdrawalFrequencies);
         } else {
             savingsProductToReturn = SavingsProductData.template(currency, interestCompoundingPeriodType, interestPostingPeriodType,
                     interestCalculationType, interestCalculationDaysInYearType, accountingRule, currencyOptions,
                     interestCompoundingPeriodTypeOptions, interestPostingPeriodTypeOptions, interestCalculationTypeOptions,
                     interestCalculationDaysInYearTypeOptions, lockinPeriodFrequencyTypeOptions, withdrawalFeeTypeOptions,
                     paymentTypeOptions, accountingRuleOptions, accountingMappingOptions, chargeOptions, penaltyOptions, taxGroupOptions,
-                    accountMappingForPayment);
+                    accountMappingForPayment, withdrawalFrequency, withdrawalFrequencies);
         }
 
         return savingsProductToReturn;

@@ -20,15 +20,27 @@
 
 -->
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-    <changeSet author="hitesh@fiter.io" id="bnpl_loan_product_configurations_id">
-        <addColumn tableName="m_product_loan">
-            <column defaultValueBoolean="false" name="is_bnpl_loan_product" type="boolean">
-                <constraints nullable="true"/>
+    <changeSet author="bosco@fiter.io" id="add_withdrawal_frequency">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_savings_product" columnName="withdrawal_frequency"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_savings_product">
+            <column name="withdrawal_frequency" type="BIGINT">
             </column>
-            <column defaultValueBoolean="false" name="requires_equity_contribution" type="boolean">
-                <constraints nullable="true"/>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_withdrawal_frequency_enum">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_savings_product" columnName="withdrawal_frequency_enum"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_savings_product">
+            <column name="withdrawal_frequency_enum" type="BIGINT">
             </column>
-            <column defaultValueComputed="NULL" name="equity_contribution_loan_percentage" type="DECIMAL(19, 6)"/>
         </addColumn>
     </changeSet>
 </databaseChangeLog>
