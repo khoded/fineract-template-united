@@ -37,6 +37,7 @@ public class ContentS3Config {
                 .withCredentials(
                         new AWSStaticCredentialsProvider(new BasicAWSCredentials(fineractProperties.getContent().getS3().getAccessKey(),
                                 fineractProperties.getContent().getS3().getSecretKey())))
+                .withRegion(fineractProperties.getContent().getS3().getRegion())
                 .build();
     }
 }
