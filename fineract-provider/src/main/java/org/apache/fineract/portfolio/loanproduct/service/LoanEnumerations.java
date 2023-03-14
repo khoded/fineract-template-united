@@ -427,6 +427,10 @@ public final class LoanEnumerations {
                 optionData = new LoanTransactionEnumData(LoanTransactionType.GOODWILL_CREDIT.getValue().longValue(),
                         LoanTransactionType.GOODWILL_CREDIT.getCode(), "Goodwill Credit");
             break;
+            case BNPL_VENDOR_TRANSFER:
+                optionData = new LoanTransactionEnumData(LoanTransactionType.BNPL_VENDOR_TRANSFER.getValue().longValue(),
+                        LoanTransactionType.BNPL_VENDOR_TRANSFER.getCode(), "BNPL Vendor Transfer");
+            break;
         }
         return optionData;
     }
