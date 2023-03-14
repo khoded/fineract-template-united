@@ -65,8 +65,8 @@
         </addColumn>
     </changeSet>
 
-    <changeSet author="naphlin@fiter.io" id="UC-62_m_client_additional_info_table_133">
-        <preConditions>
+    <changeSet author="naphlin@fiter.io" id="UC-62_m_client_additional_info_table_13">
+        <preConditions onFail="MARK_RAN">
             <not>
                 <tableExists tableName="m_client_additional_info"/>
             </not>
@@ -94,7 +94,12 @@
         </createTable>
     </changeSet>
 
-    <changeSet author="naphlin@fiter.io" id="UC-62_add_family_member_identifier">
+    <changeSet author="naphlin@fiter.io" id="UC-62_add_family_member_identifier_1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="m_family_member_identifier"/>
+            </not>
+        </preConditions>
         <createTable tableName="m_family_member_identifier">
             <column autoIncrement="true" name="id" type="BIGINT">
                 <constraints nullable="false" primaryKey="true"/>
