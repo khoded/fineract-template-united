@@ -24,7 +24,7 @@
 
         <preConditions onFail="MARK_RAN">
             <not>
-                <columnExists tableName="m_guarantor" columnName="pep"/>
+                <columnExists tableName="m_guarantor" columnName="is_pep"/>
             </not>
         </preConditions>
 
