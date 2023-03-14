@@ -22,6 +22,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoField;
 import java.time.temporal.ChronoUnit;
@@ -64,10 +66,14 @@ import org.apache.fineract.infrastructure.entityaccess.domain.FineractEntityToEn
 import org.apache.fineract.infrastructure.entityaccess.domain.FineractEntityToEntityMappingRepository;
 import org.apache.fineract.infrastructure.entityaccess.exception.NotOfficeSpecificProductException;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
+import org.apache.fineract.organisation.monetary.domain.Money;
+import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
 import org.apache.fineract.organisation.staff.domain.Staff;
+import org.apache.fineract.portfolio.account.data.PortfolioAccountData;
 import org.apache.fineract.portfolio.account.domain.AccountAssociationType;
 import org.apache.fineract.portfolio.account.domain.AccountAssociations;
 import org.apache.fineract.portfolio.account.domain.AccountAssociationsRepository;
+import org.apache.fineract.portfolio.account.service.AccountAssociationsReadPlatformService;
 import org.apache.fineract.portfolio.accountdetails.domain.AccountType;
 import org.apache.fineract.portfolio.businessevent.domain.loan.LoanApprovedBusinessEvent;
 import org.apache.fineract.portfolio.businessevent.domain.loan.LoanCreatedBusinessEvent;
@@ -203,6 +209,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
     private final GSIMReadPlatformService gsimReadPlatformService;
     private final LoanCollateralManagementRepository loanCollateralManagementRepository;
     private final ClientCollateralManagementRepository clientCollateralManagementRepository;
+    private final AccountAssociationsReadPlatformService accountAssociationsReadPlatformService;
 
     @Autowired
     public LoanApplicationWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context, final FromJsonHelper fromJsonHelper,
@@ -231,7 +238,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             final LoanRepository loanRepository, final GSIMReadPlatformService gsimReadPlatformService, final RateAssembler rateAssembler,
             final LoanProductReadPlatformService loanProductReadPlatformService,
             final LoanCollateralManagementRepository loanCollateralManagementRepository,
-            final ClientCollateralManagementRepository clientCollateralManagementRepository) {
+            final ClientCollateralManagementRepository clientCollateralManagementRepository, final AccountAssociationsReadPlatformService accountAssociationsReadPlatformService) {
         this.context = context;
         this.fromJsonHelper = fromJsonHelper;
         this.loanApplicationTransitionApiJsonValidator = loanApplicationTransitionApiJsonValidator;
@@ -274,6 +281,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
         this.gsimReadPlatformService = gsimReadPlatformService;
         this.loanCollateralManagementRepository = loanCollateralManagementRepository;
         this.clientCollateralManagementRepository = clientCollateralManagementRepository;
+        this.accountAssociationsReadPlatformService = accountAssociationsReadPlatformService;
     }
 
     private LoanLifecycleStateMachine defaultLoanLifecycleStateMachine() {
@@ -1485,6 +1493,36 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
         }
 
         checkClientOrGroupActive(loan);
+
+        // if bnpl loan and equity contribution, the check client's savings account for client's contribution for bnpl vendor payment
+        if(loan.getBnplLoan() && loan.getRequiresEquityContribution()) {
+            Money disburseAmount = loan.adjustDisburseAmount(command, expectedDisbursementDate);
+            Money amountToDisburse = disburseAmount.copy();
+            // get amount to transfer as equity
+            Money equityAmount = Money.zero(amountToDisburse.getCurrency());
+            BigDecimal equityContributionLoanPercentage = loan.getEquityContributionLoanPercentage();
+            if (equityContributionLoanPercentage.compareTo(BigDecimal.ZERO) > 0) {
+                final RoundingMode roundingMode = MoneyHelper.getRoundingMode();
+                final MathContext mc = new MathContext(8, roundingMode);
+                equityAmount = disburseAmount.percentageOf(equityContributionLoanPercentage, mc.getRoundingMode());
+            } else {
+                final String errorMessage = "Approval BNPL Loan with id:" + loan.getId()
+                        + " requires percentage of loan which needs to be transfer to vendor if the loan RequiresEquityContribution has true";
+                throw new LinkedAccountRequiredException("loan.approval.link.Savings", errorMessage, loan.getId());
+            }
+
+            //get client savings account
+            final PortfolioAccountData vendorPortfolioAccountData = this.accountAssociationsReadPlatformService
+                    .retriveLoanLinkedVendorAssociation(loan.getId());
+            if (vendorPortfolioAccountData == null) {
+                final String errorMessage = "Approval BNPL Loan with id:" + loan.getId()
+                        + " requires linked savings account for disbursement";
+                throw new LinkedAccountRequiredException("loan.approval.links.savings", errorMessage, loan.getId());
+            }
+            final SavingsAccount clientSavingsAccount = this.savingsAccountAssembler.assembleFrom(vendorPortfolioAccountData.accountId(), false);
+            clientSavingsAccount.validateAccountBalanceDoesNotBecomeNegativeMinimal(equityAmount.getAmount(), false);
+        }
+
         Boolean isSkipRepaymentOnFirstMonth = false;
         Integer numberOfDays = 0;
         // validate expected disbursement date against meeting date
