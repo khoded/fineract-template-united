@@ -113,7 +113,7 @@
         </addColumn>
     </changeSet>
 
-    <changeSet author="naphlin@fiter.io" id="UC-62_m_client_additional_info_table">
+    <changeSet author="naphlin@fiter.io" id="UC-62_m_client_additional_info_table_133">
         <preConditions>
             <not>
                 <tableExists tableName="m_client_additional_info"/>
@@ -126,15 +126,15 @@
             <column name="client_id" type="bigint" >
                 <constraints nullable="true" foreignKeyName="m_client_client_additional_info" references="m_client(id)"/>
             </column>
-            <column name="alt_phone_no" type="varchar" />
-            <column name="title" type="bigint" >
+            <column name="alt_phone_no" type="varchar(50)" />
+            <column name="title" type="int" >
                 <constraints nullable="true" foreignKeyName="m_client_code_value_title" references="m_code_value(id)"/>
             </column>
-            <column name="mnemonics" type="varchar" />
-            <column name="marital_status"  type="bigint">
+            <column name="mnemonics" type="varchar(255)" />
+            <column name="marital_status"  type="int">
                 <constraints nullable="true" foreignKeyName="m_client_code_value_marital_status" references="m_code_value(id)"/>
             </column>
-            <column name="initials" type="varchar" />
+            <column name="initials" type="varchar(255)" />
             <column defaultValueComputed="NULL" name="createdby_id" type="BIGINT"/>
             <column defaultValueComputed="NULL" name="lastmodifiedby_id" type="BIGINT"/>
             <column defaultValueComputed="NULL" name="created_date" type="datetime"/>
