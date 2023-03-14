@@ -85,6 +85,7 @@ import org.apache.fineract.portfolio.charge.exception.ChargeCannotBeAppliedToExc
 import org.apache.fineract.portfolio.loanproduct.exception.InvalidCurrencyException;
 import org.apache.fineract.portfolio.savings.SavingsCompoundingInterestPeriodType;
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationDaysInYearType;
+import org.apache.fineract.portfolio.savings.SavingsApiConstants;
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationType;
 import org.apache.fineract.portfolio.savings.SavingsPeriodFrequencyType;
 import org.apache.fineract.portfolio.savings.SavingsPostingInterestPeriodType;
@@ -225,13 +226,17 @@ public class SavingsProductAssembler {
         final Long numOfCreditTransaction = command.longValueOfParameterNamed(numberOfCreditTransactionsParamName);
         final Long numOfDebitTransaction = command.longValueOfParameterNamed(numberOfDebitTransactionsParamName);
 
+        final Integer withdrawalFrequencyEnum = command.integerValueOfParameterNamed(SavingsApiConstants.WITHDRAWAL_FREQUENCY);
+        final Integer withdrawalFrequency = command.integerValueOfParameterNamed(SavingsApiConstants.WITHDRAWAL_FREQUENCY_ENUM);
+
+
         return SavingsProduct.createNew(name, shortName, description, currency, interestRate, interestCompoundingPeriodType,
                 interestPostingPeriodType, interestCalculationType, interestCalculationDaysInYearType, minRequiredOpeningBalance,
                 lockinPeriodFrequency, lockinPeriodFrequencyType, iswithdrawalFeeApplicableForTransfer, accountingRuleType, charges,
                 allowOverdraft, overdraftLimit, enforceMinRequiredBalance, minRequiredBalance, lienAllowed, maxAllowedLienLimit,
                 minBalanceForInterestCalculation, nominalAnnualInterestRateOverdraft, minOverdraftForInterestCalculation, withHoldTax,
                 taxGroup, isDormancyTrackingActive, daysToInactive, daysToDormancy, daysToEscheat, isInterestPostingConfigUpdate,
-                numOfCreditTransaction, numOfDebitTransaction, useFloatingInterestRate);
+                numOfCreditTransaction, numOfDebitTransaction, useFloatingInterestRate,withdrawalFrequency,withdrawalFrequencyEnum);
     }
 
     public Set<SavingsProductFloatingInterestRate> assembleListOfFloatingInterestRates(final JsonCommand command,
