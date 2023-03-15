@@ -1495,7 +1495,9 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
         checkClientOrGroupActive(loan);
 
         // if bnpl loan and equity contribution, the check client's savings account for client's contribution for bnpl vendor payment
-        if(loan.getBnplLoan() && loan.getRequiresEquityContribution()) {
+        BigDecimal amountToDisburseForBnplEquityContributionLoan = BigDecimal.ZERO;
+        Boolean isBnplEquityContributionLoan = loan.getBnplLoan() && loan.getRequiresEquityContribution();
+        if(isBnplEquityContributionLoan) {
             Money disburseAmount = loan.adjustDisburseAmount(command, expectedDisbursementDate);
             Money amountToDisburse = disburseAmount.copy();
             // get amount to transfer as equity
@@ -1512,15 +1514,16 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             }
 
             //get client savings account
-            final PortfolioAccountData vendorPortfolioAccountData = this.accountAssociationsReadPlatformService
-                    .retriveLoanLinkedVendorAssociation(loan.getId());
-            if (vendorPortfolioAccountData == null) {
+            final PortfolioAccountData clientPortfolioAccountData = this.accountAssociationsReadPlatformService
+                    .retriveLoanLinkedAssociation(loan.getId());
+            if (clientPortfolioAccountData == null) {
                 final String errorMessage = "Approval BNPL Loan with id:" + loan.getId()
                         + " requires linked savings account for disbursement";
                 throw new LinkedAccountRequiredException("loan.approval.links.savings", errorMessage, loan.getId());
             }
-            final SavingsAccount clientSavingsAccount = this.savingsAccountAssembler.assembleFrom(vendorPortfolioAccountData.accountId(), false);
+            final SavingsAccount clientSavingsAccount = this.savingsAccountAssembler.assembleFrom(clientPortfolioAccountData.accountId(), false);
             clientSavingsAccount.validateAccountBalanceDoesNotBecomeNegativeMinimal(equityAmount.getAmount(), false);
+            amountToDisburseForBnplEquityContributionLoan = amountToDisburse.getAmount().subtract(equityAmount.getAmount());
         }
 
         Boolean isSkipRepaymentOnFirstMonth = false;
@@ -1543,11 +1546,10 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             }
             this.loanScheduleAssembler.validateDisbursementDateWithMeetingDates(expectedDisbursementDate, calendar,
                     isSkipRepaymentOnFirstMonth, numberOfDays);
-
         }
 
         final Map<String, Object> changes = loan.loanApplicationApproval(currentUser, command, disbursementDataArray,
-                defaultLoanLifecycleStateMachine());
+                defaultLoanLifecycleStateMachine(), isBnplEquityContributionLoan, amountToDisburseForBnplEquityContributionLoan);
 
         entityDatatableChecksWritePlatformService.runTheCheckForProduct(loanId, EntityTables.LOAN.getName(),
                 StatusEnum.APPROVE.getCode().longValue(), EntityTables.LOAN.getForeignKeyColumnNameOnDatatable(), loan.productId());

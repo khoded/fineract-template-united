@@ -2087,9 +2087,12 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             if (Boolean.TRUE.equals(loan.getRequiresEquityContribution())) {
                 BigDecimal equityContributionLoanPercentage = loan.getEquityContributionLoanPercentage();
                 if (equityContributionLoanPercentage.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal hundredPercentage = new BigDecimal(100);
+                    BigDecimal disbursedPercentage = hundredPercentage.subtract(equityContributionLoanPercentage);
                     final RoundingMode roundingMode = MoneyHelper.getRoundingMode();
                     final MathContext mc = new MathContext(8, roundingMode);
-                    bnplVendorAmount = amount.percentageOf(equityContributionLoanPercentage, mc.getRoundingMode());
+                    BigDecimal originalDisbursedAmount = amount.getAmount().multiply(hundredPercentage, mc).divide(disbursedPercentage, mc);
+                    bnplVendorAmount = Money.of(loan.getCurrency(), originalDisbursedAmount);
                 } else {
                     final String errorMessage = "Disburse BNPL Loan with id:" + loan.getId()
                             + " requires percentage of loan which needs to be transfer to vendor if the loan RequiresEquityContribution has true";
