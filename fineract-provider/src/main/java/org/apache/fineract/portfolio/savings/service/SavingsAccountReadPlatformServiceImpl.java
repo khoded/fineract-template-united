@@ -62,6 +62,7 @@ import org.apache.fineract.portfolio.group.service.GroupReadPlatformService;
 import org.apache.fineract.portfolio.paymentdetail.data.PaymentDetailData;
 import org.apache.fineract.portfolio.paymenttype.data.PaymentTypeData;
 import org.apache.fineract.portfolio.savings.DepositAccountType;
+import org.apache.fineract.portfolio.savings.WithdrawalFrequency;
 import org.apache.fineract.portfolio.savings.SavingsAccountTransactionType;
 import org.apache.fineract.portfolio.savings.SavingsCompoundingInterestPeriodType;
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationDaysInYearType;
@@ -1129,6 +1130,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
                     .retrieveLockinPeriodFrequencyTypeOptions();
 
             final Collection<EnumOptionData> withdrawalFeeTypeOptions = this.dropdownReadPlatformService.retrievewithdrawalFeeTypeOptions();
+            final Collection<EnumOptionData> withdrawalFrequencyOptions = this.dropdownReadPlatformService.retrieveWithdrawalFrequencyOptions();
 
             final Collection<SavingsAccountTransactionData> transactions = null;
             final Collection<ChargeData> productCharges = this.chargeReadPlatformService.retrieveSavingsProductCharges(productId);
@@ -1177,6 +1179,7 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
                     charges, chargeOptions, null, null);
             template.setFloatingInterestRates(accountFloatingInterestRates);
             template.setUseFloatingInterestRate(useFloatingInterestRateFromProduct);
+            template.setWithdrawalFrequencyOptions(withdrawalFrequencyOptions);
         } else {
 
             String clientName = null;
@@ -1650,6 +1653,13 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
 
             final SavingsAccountApplicationTimelineData timeline = SavingsAccountApplicationTimelineData.templateDefault();
             final EnumOptionData depositType = null;
+            final Integer withdrawalFrequency = JdbcSupport.getInteger(rs, "withdrawalFrequency");
+
+            EnumOptionData withdrawalFrequencyEnum = null;
+            final Integer withdrawalFrequencyEnumValue = JdbcSupport.getInteger(rs, "withdrawalFrequencyEnum");
+            if (withdrawalFrequencyEnumValue != null) {
+                withdrawalFrequencyEnum = SavingsEnumerations.withdrawalFrequency(WithdrawalFrequency.fromInt(withdrawalFrequencyEnumValue));
+            }
 
             SavingsAccountData savingsAccountData = SavingsAccountData.instance(null, null, depositType, null, groupId, groupName, clientId,
                     clientName, productId, productName, fieldOfficerId, fieldOfficerName, status, subStatus, reasonForBlock, timeline,
@@ -1661,6 +1671,8 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
                     daysToInactive, daysToDormancy, daysToEscheat, savingsAmountOnHold, numOfCreditTransaction, numOfDebitTransaction, null,
                     null, null, null, null);
             savingsAccountData.setUseFloatingInterestRate(useFloatingInterestRate);
+            savingsAccountData.setWithdrawalFrequency(withdrawalFrequency);
+            savingsAccountData.setWithdrawalFrequencyEnum(withdrawalFrequencyEnum);
             return savingsAccountData;
         }
     }
