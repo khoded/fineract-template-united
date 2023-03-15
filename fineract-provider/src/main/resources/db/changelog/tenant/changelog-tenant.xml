@@ -81,4 +81,5 @@
     <include file="parts/UC-62-additional-kyc-information.xml" relativeToChangelogFile="true" />
     <include file="parts/UC-68-additional-guarantor-information.xml" relativeToChangelogFile="true" />
     <include file="parts/OXY-116_BNPL_loan_product_configuration.xml" relativeToChangelogFile="true" />
+    <include file="parts/OXY-118-BNPL_attributes_for_loan.xml" relativeToChangelogFile="true" />
 </databaseChangeLog>

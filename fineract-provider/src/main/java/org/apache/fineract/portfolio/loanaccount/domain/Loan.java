@@ -404,6 +404,15 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
     @Column(name = "total_extensions", nullable = true)
     private Integer total_extensions;
 
+    @Column(name = "is_bnpl_loan")
+    private Boolean isBnplLoan;
+
+    @Column(name = "requires_equity_contribution")
+    private Boolean requiresEquityContribution;
+
+    @Column(name = "equity_contribution_loan_percentage", scale = 6, precision = 19)
+    private BigDecimal equityContributionLoanPercentage;
+
     public static Loan newIndividualLoanApplication(final String accountNo, final Client client, final Integer loanType,
             final LoanProduct loanProduct, final Fund fund, final Staff officer, final CodeValue loanPurpose,
             final LoanTransactionProcessingStrategy transactionProcessingStrategy,
@@ -1663,6 +1672,27 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
                     .bigDecimalValueOfParameterNamed(LoanApiConstants.fixedPrincipalPercentagePerInstallmentParamName);
             actualChanges.put(LoanApiConstants.fixedPrincipalPercentagePerInstallmentParamName,
                     this.fixedPrincipalPercentagePerInstallment);
+        }
+
+        // bnpl
+        if (command.isChangeInBooleanParameterNamed(LoanApiConstants.isBnplLoanParamName, this.isBnplLoan)) {
+            final Boolean newValue = command.booleanObjectValueOfParameterNamed(LoanApiConstants.isBnplLoanParamName);
+            actualChanges.put(LoanApiConstants.isBnplLoanParamName, newValue);
+            this.isBnplLoan = newValue;
+        }
+
+        if (command.isChangeInBooleanParameterNamed(LoanApiConstants.requiresEquityContributionParamName,
+                this.requiresEquityContribution)) {
+            final Boolean newValue = command.booleanObjectValueOfParameterNamed(LoanApiConstants.requiresEquityContributionParamName);
+            actualChanges.put(LoanApiConstants.requiresEquityContributionParamName, newValue);
+            this.requiresEquityContribution = newValue;
+        }
+
+        if (command.isChangeInBigDecimalParameterNamed(LoanApiConstants.equityContributionLoanPercentageParamName,
+                this.equityContributionLoanPercentage)) {
+            final BigDecimal newValue = command.bigDecimalValueOfParameterNamed(LoanApiConstants.equityContributionLoanPercentageParamName);
+            actualChanges.put(LoanApiConstants.equityContributionLoanPercentageParamName, newValue);
+            this.equityContributionLoanPercentage = newValue;
         }
 
         return actualChanges;
@@ -6899,5 +6929,29 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
 
     public void setGraceOnArrearsAging(Integer day) {
         this.getLoanProductRelatedDetail().setGraceOnArrearsAgeing(day);
+    }
+
+    public Boolean getBnplLoan() {
+        return isBnplLoan;
+    }
+
+    public void setBnplLoan(Boolean bnplLoan) {
+        isBnplLoan = bnplLoan;
+    }
+
+    public Boolean getRequiresEquityContribution() {
+        return requiresEquityContribution;
+    }
+
+    public void setRequiresEquityContribution(Boolean requiresEquityContribution) {
+        this.requiresEquityContribution = requiresEquityContribution;
+    }
+
+    public BigDecimal getEquityContributionLoanPercentage() {
+        return equityContributionLoanPercentage;
+    }
+
+    public void setEquityContributionLoanPercentage(BigDecimal equityContributionLoanPercentage) {
+        this.equityContributionLoanPercentage = equityContributionLoanPercentage;
     }
 }
