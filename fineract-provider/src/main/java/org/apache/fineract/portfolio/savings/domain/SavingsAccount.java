@@ -398,6 +398,15 @@ public class SavingsAccount extends AbstractPersistableCustom {
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "savingsAccount", orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<SavingsAccountFloatingInterestRate> savingsAccountFloatingInterestRates = new HashSet<>();
 
+    @Column(name = "withdrawal_frequency")
+    private Integer withdrawalFrequency;
+    @Column(name = "withdrawal_frequency_enum")
+    private Integer withdrawalFrequencyEnum;
+    @Column(name = "previous_flex_withdrawal_date")
+    private LocalDate previousFlexWithdrawalDate;
+    @Column(name = "next_flex_withdrawal_date")
+    private LocalDate nextFlexWithdrawalDate;
+
     protected SavingsAccount() {
         //
     }

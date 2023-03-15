@@ -43,4 +43,50 @@
             </column>
         </addColumn>
     </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_withdrawal_frequency_m_savings_account">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_savings_account" columnName="withdrawal_frequency"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_savings_account">
+            <column name="withdrawal_frequency" type="BIGINT">
+            </column>
+        </addColumn>
+    </changeSet>
+
+    <changeSet author="bosco@fiter.io" id="add_withdrawal_frequency_enum_m_savings_account">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_savings_account" columnName="withdrawal_frequency_enum"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_savings_account">
+            <column name="withdrawal_frequency_enum" type="BIGINT">
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet author="bosco@fiter.io" id="add_previous_flex_withdrawal_date_m_savings_account">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_savings_account" columnName="previous_flex_withdrawal_date"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_savings_account">
+            <column name="previous_flex_withdrawal_date" type="date">
+            </column>
+        </addColumn>
+    </changeSet>
+    <changeSet author="bosco@fiter.io" id="add_next_flex_withdrawal_date_m_savings_account">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_savings_account" columnName="next_flex_withdrawal_date"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_savings_account">
+            <column name="next_flex_withdrawal_date" type="date">
+            </column>
+        </addColumn>
+    </changeSet>
 </databaseChangeLog>

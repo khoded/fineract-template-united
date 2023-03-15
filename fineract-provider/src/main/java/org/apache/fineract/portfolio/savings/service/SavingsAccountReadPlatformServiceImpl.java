@@ -1522,10 +1522,6 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             sqlBuilder.append("sp.min_required_opening_balance as minRequiredOpeningBalance, ");
             sqlBuilder.append("sp.lockin_period_frequency as lockinPeriodFrequency,");
             sqlBuilder.append("sp.lockin_period_frequency_enum as lockinPeriodFrequencyType, ");
-            // sqlBuilder.append("sp.withdrawal_fee_amount as
-            // withdrawalFeeAmount,");
-            // sqlBuilder.append("sp.withdrawal_fee_type_enum as
-            // withdrawalFeeTypeEnum, ");
             sqlBuilder.append("sp.withdrawal_fee_for_transfer as withdrawalFeeForTransfers, ");
             sqlBuilder.append("sp.min_balance_for_interest_calculation as minBalanceForInterestCalculation, ");
             sqlBuilder.append("sp.allow_overdraft as allowOverdraft, ");
@@ -1541,7 +1537,9 @@ public class SavingsAccountReadPlatformServiceImpl implements SavingsAccountRead
             sqlBuilder.append("sp.enforce_min_required_balance as enforceMinRequiredBalance, ");
             sqlBuilder.append("sp.max_allowed_lien_limit as maxAllowedLienLimit, ");
             sqlBuilder.append("sp.use_floating_interest_rate as useFloatingInterestRate, ");
-            sqlBuilder.append("sp.is_lien_allowed as lienAllowed ");
+            sqlBuilder.append("sp.is_lien_allowed as lienAllowed, ");
+            sqlBuilder.append("sp.withdrawal_frequency as withdrawalFrequency, ");
+            sqlBuilder.append("sp.withdrawal_frequency_enum as withdrawalFrequencyEnum ");
             sqlBuilder.append("from m_savings_product sp ");
             sqlBuilder.append("join m_currency curr on curr.code = sp.currency_code ");
             sqlBuilder.append("left join m_tax_group tg on tg.id = sp.tax_group_id  ");
