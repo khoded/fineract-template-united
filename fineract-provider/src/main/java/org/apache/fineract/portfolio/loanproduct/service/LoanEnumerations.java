@@ -431,6 +431,10 @@ public final class LoanEnumerations {
                 optionData = new LoanTransactionEnumData(LoanTransactionType.BNPL_VENDOR_TRANSFER.getValue().longValue(),
                         LoanTransactionType.BNPL_VENDOR_TRANSFER.getCode(), "BNPL Vendor Transfer");
             break;
+            case TOP_UP:
+                optionData = new LoanTransactionEnumData(LoanTransactionType.TOP_UP.getValue().longValue(),
+                        LoanTransactionType.TOP_UP.getCode(), "Top Up");
+                break;
         }
         return optionData;
     }

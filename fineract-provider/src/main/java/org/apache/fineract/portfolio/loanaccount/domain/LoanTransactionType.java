@@ -28,6 +28,7 @@ public enum LoanTransactionType {
     REPAYMENT_AT_DISBURSEMENT(5, "loanTransactionType.repaymentAtDisbursement"), //
     WRITEOFF(6, "loanTransactionType.writeOff"), //
     MARKED_FOR_RESCHEDULING(7, "loanTransactionType.marked.for.rescheduling"), //
+    TOP_UP(25, "loanTransactionType.topUp"),
     /**
      * This type of transactions is allowed on written-off loans where mfi still attempts to recover payments from
      * applicant after writing-off.
@@ -150,6 +151,9 @@ public enum LoanTransactionType {
             break;
             case 24:
                 loanTransactionType = LoanTransactionType.BNPL_VENDOR_TRANSFER;
+            break;
+            case 25:
+                loanTransactionType = LoanTransactionType.TOP_UP;
             break;
             default:
                 loanTransactionType = LoanTransactionType.INVALID;

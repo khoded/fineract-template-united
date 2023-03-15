@@ -1322,7 +1322,13 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
 
         public String loanPaymentsSchema() {
 
-            return " tr.id as id, tr.transaction_type_enum as transactionType, tr.transaction_date as " + sqlGenerator.escape("date")
+            return " tr.id as id, " +
+                    " CASE "
+                    + "     WHEN mlt.id IS not null and tr.transaction_type_enum = 1 and mlt.topup_amount <> tr.amount "
+                    + "       then 25 "
+                    + "    ELSE tr.transaction_type_enum "
+                    + " END as transactionType,"
+                    + " tr.transaction_date as " + sqlGenerator.escape("date")
                     + ", tr.amount as total, " + " tr.principal_portion_derived as principal, tr.interest_portion_derived as interest, "
                     + " tr.fee_charges_portion_derived as fees, tr.penalty_charges_portion_derived as penalties, "
                     + " tr.overpayment_portion_derived as overpayment, tr.outstanding_loan_balance_derived as outstandingLoanBalance, "
@@ -1344,7 +1350,7 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
                     + " left JOIN m_payment_detail pd ON tr.payment_detail_id = pd.id"
                     + " left join m_payment_type pt on pd.payment_type_id = pt.id" + " left join m_office office on office.id=tr.office_id"
                     + " left join m_account_transfer_transaction fromtran on fromtran.from_loan_transaction_id = tr.id "
-                    + " left join m_account_transfer_transaction totran on totran.to_loan_transaction_id = tr.id ";
+                    + " left join m_account_transfer_transaction totran on totran.to_loan_transaction_id = tr.id left join m_loan_topup mlt  on mlt.loan_id = tr.loan_id ";
         }
 
         @Override
