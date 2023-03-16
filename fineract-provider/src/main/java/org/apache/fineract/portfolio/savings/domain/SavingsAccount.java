@@ -5150,4 +5150,24 @@ public class SavingsAccount extends AbstractPersistableCustom {
     public Set<SavingsAccountFloatingInterestRate> getSavingsAccountFloatingInterestRates() {
         return savingsAccountFloatingInterestRates;
     }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
+    public void setWithdrawalFrequency(Integer withdrawalFrequency) {
+        this.withdrawalFrequency = withdrawalFrequency;
+    }
+
+    public void setWithdrawalFrequencyEnum(Integer withdrawalFrequencyEnum) {
+        this.withdrawalFrequencyEnum = withdrawalFrequencyEnum;
+    }
+
+    public void setPreviousFlexWithdrawalDate(LocalDate previousFlexWithdrawalDate) {
+        this.previousFlexWithdrawalDate = previousFlexWithdrawalDate;
+    }
+
+    public void setNextFlexWithdrawalDate(LocalDate nextFlexWithdrawalDate) {
+        this.nextFlexWithdrawalDate = nextFlexWithdrawalDate;
+    }
 }

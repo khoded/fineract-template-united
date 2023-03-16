@@ -231,7 +231,8 @@ public class SavingsProductReadPlatformServiceImpl implements SavingsProductRead
             EnumOptionData withdrawalFrequencyEnum = null;
             final Integer withdrawalFrequencyEnumValue = JdbcSupport.getInteger(rs, "withdrawalFrequencyEnum");
             if (withdrawalFrequencyEnumValue != null) {
-                withdrawalFrequencyEnum = SavingsEnumerations.withdrawalFrequency(WithdrawalFrequency.fromInt(withdrawalFrequencyEnumValue));
+                withdrawalFrequencyEnum = SavingsEnumerations
+                        .withdrawalFrequency(WithdrawalFrequency.fromInt(withdrawalFrequencyEnumValue));
             }
 
             return SavingsProductData.instance(id, name, shortName, description, currency, nominalAnnualInterestRate,
@@ -240,7 +241,8 @@ public class SavingsProductReadPlatformServiceImpl implements SavingsProductRead
                     accountingRuleType, allowOverdraft, overdraftLimit, minRequiredBalance, enforceMinRequiredBalance, maxAllowedLienLimit,
                     lienAllowed, minBalanceForInterestCalculation, nominalAnnualInterestRateOverdraft, minOverdraftForInterestCalculation,
                     withHoldTax, taxGroupData, isDormancyTrackingActive, daysToInactive, daysToDormancy, daysToEscheat,
-                    isInterestPostingConfigUpdate, numOfCreditTransaction, numOfDebitTransaction, useFloatingInterestRate,withdrawalFrequency,withdrawalFrequencyEnum);
+                    isInterestPostingConfigUpdate, numOfCreditTransaction, numOfDebitTransaction, useFloatingInterestRate,
+                    withdrawalFrequency, withdrawalFrequencyEnum);
         }
     }
 

@@ -656,7 +656,8 @@ public final class SavingsAccountData implements Serializable {
                 enforceMinRequiredBalance, maxAllowedLienLimit, lienAllowed, minBalanceForInterestCalculation, onHoldFunds,
                 nominalAnnualInterestRateOverdraft, minOverdraftForInterestCalculation, withHoldTax, taxGroup, lastActiveTransactionDate,
                 isDormancyTrackingActive, daysToInactive, daysToDormancy, daysToEscheat, savingsAmountOnHold, numOfCreditTransaction,
-                numOfDebitTransaction, blockNarration, null, null, vaultTargetDate, vaultTargetAmount, accountType, lockedInUntilDate,null,null);
+                numOfDebitTransaction, blockNarration, null, null, vaultTargetDate, vaultTargetAmount, accountType, lockedInUntilDate, null,
+                null);
     }
 
     public static SavingsAccountData lookup(final Long accountId, final String accountNo, final EnumOptionData depositType) {
@@ -734,7 +735,7 @@ public final class SavingsAccountData implements Serializable {
                 minRequiredBalance, enforceMinRequiredBalance, maxAllowedLienLimit, lienAllowed, minBalanceForInterestCalculation,
                 onHoldFunds, nominalAnnualInterestRateOverdraft, minOverdraftForInterestCalculation, withHoldTax, taxGroup,
                 lastActiveTransactionDate, isDormancyTrackingActive, daysToInactive, daysToDormancy, daysToEscheat, savingsAmountOnHold,
-                null, null, blockNarration, null, null, null, null, null, null,null,null);
+                null, null, blockNarration, null, null, null, null, null, null, null, null);
     }
 
     public static SavingsAccountData lookupWithProductDetails(final Long accountId, final String accountNo,
@@ -810,7 +811,7 @@ public final class SavingsAccountData implements Serializable {
                 minRequiredBalance, enforceMinRequiredBalance, maxAllowedLienLimit, lienAllowed, minBalanceForInterestCalculation,
                 onHoldFunds, nominalAnnualInterestRateOverdraft, minOverdraftForInterestCalculation, withHoldTax, taxGroup,
                 lastActiveTransactionDate, isDormancyTrackingActive, daysToInactive, daysToDormancy, daysToEscheat, savingsAmountOnHold,
-                null, null, blockNarration, null, null, null, null, null, null,null,null);
+                null, null, blockNarration, null, null, null, null, null, null, null, null);
     }
 
     public static SavingsAccountData withTemplateOptions(final SavingsAccountData account, final SavingsAccountData template,
@@ -851,7 +852,8 @@ public final class SavingsAccountData implements Serializable {
                 account.taxGroup, account.lastActiveTransactionDate, account.isDormancyTrackingActive, account.daysToInactive,
                 account.daysToDormancy, account.daysToEscheat, account.savingsAmountOnHold, account.numOfCreditTransaction,
                 account.numOfDebitTransaction, account.blockNarration, blockNarrationOptions, blockNarrationHistoryData,
-                account.vaultTargetDate, account.vaultTargetAmount, account.accountType, account.lockedInUntilDate,account.withdrawalFrequency,account.withdrawalFrequencyEnum);
+                account.vaultTargetDate, account.vaultTargetAmount, account.accountType, account.lockedInUntilDate,
+                account.withdrawalFrequency, account.withdrawalFrequencyEnum);
     }
 
     public static SavingsAccountData withTemplateOptions(final SavingsAccountData account,
@@ -881,7 +883,7 @@ public final class SavingsAccountData implements Serializable {
                 account.isDormancyTrackingActive, account.daysToInactive, account.daysToDormancy, account.daysToEscheat,
                 account.savingsAmountOnHold, account.numOfCreditTransaction, account.numOfDebitTransaction, account.blockNarration,
                 blockNarrationOptions, blockNarrationHistoryData, account.vaultTargetDate, account.vaultTargetAmount, account.accountType,
-                account.lockedInUntilDate,account.withdrawalFrequency,account.withdrawalFrequencyEnum);
+                account.lockedInUntilDate, account.withdrawalFrequency, account.withdrawalFrequencyEnum);
     }
 
     public static SavingsAccountData withClientTemplate(final Long clientId, final String clientName, final Long groupId,
@@ -959,7 +961,7 @@ public final class SavingsAccountData implements Serializable {
                 minRequiredBalance, enforceMinRequiredBalance, maxAllowedLienLimit, lienAllowed, minBalanceForInterestCalculation,
                 onHoldFunds, nominalAnnualInterestRateOverdraft, minOverdraftForInterestCalculation, withHoldTax, taxGroup,
                 lastActiveTransactionDate, isDormancyTrackingActive, daysToInactive, daysToDormancy, daysToEscheat, savingsAmountOnHold,
-                null, null, blockNarration, null, null, null, null, null, null,null,null);
+                null, null, blockNarration, null, null, null, null, null, null, null, null);
     }
 
     private SavingsAccountData(final Long id, final String accountNo, final EnumOptionData depositType, final String externalId,
@@ -987,7 +989,8 @@ public final class SavingsAccountData implements Serializable {
             final Long numOfCreditTransaction, final Long numOfDebitTransaction, final CodeValueData blockNarration,
             final Collection<CodeValueData> blockNarrationOptions,
             Collection<SavingsAccountBlockNarrationHistoryData> blockNarrationHistoryData, final LocalDate vaultTargetDate,
-            final BigDecimal vaultTargetAmount, final AccountType accountType, final LocalDate lockedInUntilDate,final Integer withdrawalFrequency,final EnumOptionData withdrawalFrequencyEnum) {
+            final BigDecimal vaultTargetAmount, final AccountType accountType, final LocalDate lockedInUntilDate,
+            final Integer withdrawalFrequency, final EnumOptionData withdrawalFrequencyEnum) {
         this.id = id;
         this.accountNo = accountNo;
         this.depositType = depositType;

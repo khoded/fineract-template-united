@@ -115,7 +115,7 @@ public class SavingsProductDataValidator {
             minBalanceForInterestCalculationParamName, withHoldTaxParamName, taxGroupIdParamName, isInterestPostingConfigUpdateParamName,
             numberOfCreditTransactionsParamName, numberOfDebitTransactionsParamName, "receivablePenaltyAccountId",
             "receivableInterestAccountId", "receivableFeeAccountId", "interestPayableAccountId", useFloatingInterestRateParamName,
-            floatingInterestRatesParamName,SavingsApiConstants.WITHDRAWAL_FREQUENCY_ENUM,SavingsApiConstants.WITHDRAWAL_FREQUENCY));
+            floatingInterestRatesParamName, SavingsApiConstants.WITHDRAWAL_FREQUENCY_ENUM, SavingsApiConstants.WITHDRAWAL_FREQUENCY));
 
     @Autowired
     public SavingsProductDataValidator(final FromJsonHelper fromApiJsonHelper) {

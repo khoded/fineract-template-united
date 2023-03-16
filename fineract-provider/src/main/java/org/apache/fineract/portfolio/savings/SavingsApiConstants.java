@@ -228,4 +228,5 @@ public class SavingsApiConstants {
     public static final String ADD_PENALTY_ON_MISSED_TARGET_SAVINGS = "addPenaltyOnMissedTargetSavings";
     public static final String WITHDRAWAL_FREQUENCY = "withdrawalFrequency";
     public static final String WITHDRAWAL_FREQUENCY_ENUM = "withdrawalFrequencyEnum";
+    public static final String WITHDRAWAL_FREQUENCY_OPTIONS = "withdrawalFrequencyOptions";
 }
