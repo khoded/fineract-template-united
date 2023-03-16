@@ -46,6 +46,7 @@ import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.accounting.common.AccountingRuleType;
+import org.apache.fineract.infrastructure.codes.domain.CodeValue;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
@@ -217,9 +218,17 @@ public class LoanProduct extends AbstractPersistableCustom {
     @Column(name = "equity_contribution_loan_percentage", scale = 6, precision = 19)
     private BigDecimal equityContributionLoanPercentage;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_category_id")
+    private CodeValue productCategory;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "product_type_id")
+    private CodeValue productType;
+
     public static LoanProduct assembleFromJson(final Fund fund, final LoanTransactionProcessingStrategy loanTransactionProcessingStrategy,
             final List<Charge> productCharges, final JsonCommand command, final AprCalculator aprCalculator, FloatingRate floatingRate,
-            final List<Rate> productRates) {
+            final List<Rate> productRates, final CodeValue productCategory, final CodeValue productType) {
 
         final String name = command.stringValueOfParameterNamed("name");
         final String shortName = command.stringValueOfParameterNamed(LoanProductConstants.SHORT_NAME);
@@ -1724,5 +1733,22 @@ public class LoanProduct extends AbstractPersistableCustom {
 
     public BigDecimal getEquityContributionLoanPercentage() {
         return equityContributionLoanPercentage;
+    }
+
+
+    public CodeValue getProductCategory() {
+        return productCategory;
+    }
+
+    public void setProductCategory(CodeValue productCategory) {
+        this.productCategory = productCategory;
+    }
+
+    public CodeValue getProductType() {
+        return productType;
+    }
+
+    public void setProductType(CodeValue productType) {
+        this.productType = productType;
     }
 }
