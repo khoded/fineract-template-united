@@ -20,9 +20,7 @@ package org.apache.fineract.portfolio.savings;
 
 public enum WithdrawalFrequency {
 
-    MONTHLY(0, "withdrawal.frequency.monthly"), QUARTERLY(1, "withdrawal.frequency.quarterly"), BI_ANNUAL(2,
-            "withdrawal.frequency.biannual"), ANNUAL(3, "withdrawal.frequency.annual"), INVALID(404, "withdrawal.frequency.invalid");
-    ;
+    MONTH(0, "withdrawal.frequency.month"), INVALID(404, "withdrawal.frequency.invalid");
 
     private final Integer value;
     private final String code;
@@ -35,13 +33,7 @@ public enum WithdrawalFrequency {
     public static WithdrawalFrequency fromInt(int value) {
         switch (value) {
             case 0:
-                return MONTHLY;
-            case 1:
-                return QUARTERLY;
-            case 2:
-                return BI_ANNUAL;
-            case 3:
-                return ANNUAL;
+                return MONTH;
             default:
                 throw new IllegalArgumentException("Invalid integer value for WithdrawalFrequency: " + value);
         }

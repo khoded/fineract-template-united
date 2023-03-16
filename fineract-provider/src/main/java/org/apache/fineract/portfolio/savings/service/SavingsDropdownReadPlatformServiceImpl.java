@@ -102,6 +102,6 @@ public class SavingsDropdownReadPlatformServiceImpl implements SavingsDropdownRe
 
     @Override
     public Collection<EnumOptionData> retrieveWithdrawalFrequencyOptions() {
-        return Arrays.asList(SavingsEnumerations.withdrawalFrequency(WithdrawalFrequency.MONTHLY));
+        return Arrays.asList(SavingsEnumerations.withdrawalFrequency(WithdrawalFrequency.MONTH));
     }
 }

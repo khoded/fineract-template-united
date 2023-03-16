@@ -882,23 +882,9 @@ public final class SavingsEnumerations {
     public static EnumOptionData withdrawalFrequency(final WithdrawalFrequency withdrawalFrequency) {
         EnumOptionData optionData;
         switch (withdrawalFrequency) {
-            case MONTHLY:
-                optionData = new EnumOptionData(WithdrawalFrequency.MONTHLY.getValue().longValue(), WithdrawalFrequency.MONTHLY.getCode(),
-                        "Monthly");
-            break;
-            case QUARTERLY:
-                optionData = new EnumOptionData(WithdrawalFrequency.QUARTERLY.getValue().longValue(),
-                        WithdrawalFrequency.QUARTERLY.getCode(), "Quarterly");
-            break;
-
-            case BI_ANNUAL:
-                optionData = new EnumOptionData(WithdrawalFrequency.BI_ANNUAL.getValue().longValue(),
-                        WithdrawalFrequency.BI_ANNUAL.getCode(), "Biannual");
-            break;
-
-            case ANNUAL:
-                optionData = new EnumOptionData(WithdrawalFrequency.ANNUAL.getValue().longValue(), WithdrawalFrequency.ANNUAL.getCode(),
-                        "Annual");
+            case MONTH:
+                optionData = new EnumOptionData(WithdrawalFrequency.MONTH.getValue().longValue(), WithdrawalFrequency.MONTH.getCode(),
+                        "Month");
             break;
             default:
                 optionData = new EnumOptionData(WithdrawalFrequency.INVALID.getValue().longValue(), WithdrawalFrequency.INVALID.getCode(),

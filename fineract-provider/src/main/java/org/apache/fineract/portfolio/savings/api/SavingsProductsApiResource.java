@@ -301,7 +301,7 @@ public class SavingsProductsApiResource {
                 .retrieveAccountingRuleTypeOptions();
 
         final Collection<EnumOptionData> withdrawalFrequencyOptions = this.dropdownReadPlatformService.retrieveWithdrawalFrequencyOptions();
-        final EnumOptionData withdrawalFrequencyEnum = SavingsEnumerations.withdrawalFrequency(WithdrawalFrequency.MONTHLY);
+        final EnumOptionData withdrawalFrequencyEnum = SavingsEnumerations.withdrawalFrequency(WithdrawalFrequency.MONTH);
 
         final Map<String, List<GLAccountData>> accountingMappingOptions = this.accountingDropdownReadPlatformService
                 .retrieveAccountMappingOptionsForSavingsProducts();
