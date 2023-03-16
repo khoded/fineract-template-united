@@ -884,7 +884,7 @@ public final class SavingsEnumerations {
         switch (withdrawalFrequency) {
             case MONTH:
                 optionData = new EnumOptionData(WithdrawalFrequency.MONTH.getValue().longValue(), WithdrawalFrequency.MONTH.getCode(),
-                        "Month");
+                        "Month/s");
             break;
             default:
                 optionData = new EnumOptionData(WithdrawalFrequency.INVALID.getValue().longValue(), WithdrawalFrequency.INVALID.getCode(),

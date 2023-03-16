@@ -20,7 +20,7 @@ package org.apache.fineract.portfolio.savings;
 
 public enum WithdrawalFrequency {
 
-    MONTH(0, "withdrawal.frequency.month"), INVALID(404, "withdrawal.frequency.invalid");
+    MONTH(0, "withdrawal.frequency.month/s"), INVALID(404, "withdrawal.frequency.invalid");
 
     private final Integer value;
     private final String code;
