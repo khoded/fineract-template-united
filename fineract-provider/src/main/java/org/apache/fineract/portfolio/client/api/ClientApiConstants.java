@@ -69,6 +69,10 @@ public class ClientApiConstants {
 
     public static final String TITLE = "TITLE";
 
+    public static final String PRODUCT_CATEGORY = "ProductCategory";
+
+    public static final String PRODUCT_TYPE = "ProductType";
+
     // general
     public static final String localeParamName = "locale";
     public static final String dateFormatParamName = "dateFormat";
