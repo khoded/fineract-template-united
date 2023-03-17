@@ -177,7 +177,7 @@ public final class SavingsProductData implements Serializable {
                 product.interestCompoundingPeriodTypeOptions, product.interestPostingPeriodTypeOptions,
                 product.interestCalculationTypeOptions, product.interestCalculationDaysInYearTypeOptions,
                 product.lockinPeriodFrequencyTypeOptions, product.withdrawalFeeTypeOptions, product.paymentTypeOptions,
-                product.accountingRuleOptions, product.accountingMappingOptions, null, product.chargeOptions, product.penaltyOptions,
+                product.accountingRuleOptions, product.accountingMappingOptions, product.charges, product.chargeOptions, product.penaltyOptions,
                 product.feeToIncomeAccountMappings, product.penaltyToIncomeAccountMappings, product.allowOverdraft, product.overdraftLimit,
                 product.minRequiredBalance, product.enforceMinRequiredBalance, product.maxAllowedLienLimit, product.lienAllowed,
                 product.minBalanceForInterestCalculation, product.nominalAnnualInterestRateOverdraft,
