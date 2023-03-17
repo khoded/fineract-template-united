@@ -392,6 +392,7 @@ public class LoanProductsApiResource {
                 preCloseInterestCalculationStrategyOptions, floatingRateOptions, interestRecalculationNthDayTypeOptions,
                 interestRecalculationDayOfWeekTypeOptions, isRatesEnabled, productCategories,
                 productTypes,productData.getProductCategoryId(), productData.getProductTypeId());
+                
         loanProductDataResponse.setBnplLoanProduct(productData.getBnplLoanProduct());
         loanProductDataResponse.setRequiresEquityContribution(productData.getRequiresEquityContribution());
         loanProductDataResponse.setEquityContributionLoanPercentage(productData.getEquityContributionLoanPercentage());

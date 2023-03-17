@@ -434,7 +434,7 @@ public final class LoanEnumerations {
             case TOP_UP:
                 optionData = new LoanTransactionEnumData(LoanTransactionType.TOP_UP.getValue().longValue(),
                         LoanTransactionType.TOP_UP.getCode(), "Top Up");
-                break;
+            break;
         }
         return optionData;
     }

@@ -75,14 +75,17 @@ import org.apache.fineract.accounting.common.AccountingRuleType;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
+import org.apache.fineract.infrastructure.core.exception.GeneralPlatformDomainRuleException;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.portfolio.charge.domain.Charge;
 import org.apache.fineract.portfolio.charge.domain.ChargeRepositoryWrapper;
+import org.apache.fineract.portfolio.charge.domain.ChargeTimeType;
 import org.apache.fineract.portfolio.charge.exception.ChargeCannotBeAppliedToException;
 import org.apache.fineract.portfolio.loanproduct.exception.InvalidCurrencyException;
+import org.apache.fineract.portfolio.savings.SavingsApiConstants;
 import org.apache.fineract.portfolio.savings.SavingsCompoundingInterestPeriodType;
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationDaysInYearType;
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationType;
@@ -225,13 +228,47 @@ public class SavingsProductAssembler {
         final Long numOfCreditTransaction = command.longValueOfParameterNamed(numberOfCreditTransactionsParamName);
         final Long numOfDebitTransaction = command.longValueOfParameterNamed(numberOfDebitTransactionsParamName);
 
+        final Integer withdrawalFrequency = command.integerValueOfParameterNamed(SavingsApiConstants.WITHDRAWAL_FREQUENCY);
+        final Integer withdrawalFrequencyEnum = command.integerValueOfParameterNamed(SavingsApiConstants.WITHDRAWAL_FREQUENCY_ENUM);
+
+        if (withdrawalFrequency != null) {
+            if (withdrawalFrequencyEnum == null) {
+                throw new GeneralPlatformDomainRuleException(
+                        "Please provide withdrawalFrequencyEnum since you provided withdrawalFrequency",
+                        "Please provide withdrawalFrequencyEnum since you provided withdrawalFrequency");
+            }
+            if (CollectionUtils.isEmpty(charges)) {
+                throw new GeneralPlatformDomainRuleException("withdrawalFrequency.requires.a.withdrawal.fee.charge.on.this.product",
+                        "withdrawalFrequency requires a charge of ChargeTimeType [withdrawalFee ] on this product");
+            }
+            List<Charge> chargeList = new ArrayList<>();
+
+            for (Charge charge : charges) {
+                if (ChargeTimeType.fromInt(charge.getChargeTimeType()).equals(ChargeTimeType.WITHDRAWAL_FEE)) {
+                    chargeList.add(charge);
+                }
+            }
+            if (chargeList.size() == 0) {
+                throw new GeneralPlatformDomainRuleException(
+                        "ithdrawalFrequency.requires.a.withdrawal.fee.charge.on.this.product.but.it's not.supplied",
+                        "withdrawalFrequency requires a charge of ChargeTimeType [withdrawalFee ] on this product but it's not supplied");
+
+            }
+        } else {
+            if (withdrawalFrequencyEnum != null) {
+                throw new GeneralPlatformDomainRuleException(
+                        "Please provide withdrawalFrequency since you provided withdrawalFrequencyEnum",
+                        "Please provide withdrawalFrequency since you provided withdrawalFrequencyEnum");
+            }
+        }
+
         return SavingsProduct.createNew(name, shortName, description, currency, interestRate, interestCompoundingPeriodType,
                 interestPostingPeriodType, interestCalculationType, interestCalculationDaysInYearType, minRequiredOpeningBalance,
                 lockinPeriodFrequency, lockinPeriodFrequencyType, iswithdrawalFeeApplicableForTransfer, accountingRuleType, charges,
                 allowOverdraft, overdraftLimit, enforceMinRequiredBalance, minRequiredBalance, lienAllowed, maxAllowedLienLimit,
                 minBalanceForInterestCalculation, nominalAnnualInterestRateOverdraft, minOverdraftForInterestCalculation, withHoldTax,
                 taxGroup, isDormancyTrackingActive, daysToInactive, daysToDormancy, daysToEscheat, isInterestPostingConfigUpdate,
-                numOfCreditTransaction, numOfDebitTransaction, useFloatingInterestRate);
+                numOfCreditTransaction, numOfDebitTransaction, useFloatingInterestRate, withdrawalFrequency, withdrawalFrequencyEnum);
     }
 
     public Set<SavingsProductFloatingInterestRate> assembleListOfFloatingInterestRates(final JsonCommand command,
