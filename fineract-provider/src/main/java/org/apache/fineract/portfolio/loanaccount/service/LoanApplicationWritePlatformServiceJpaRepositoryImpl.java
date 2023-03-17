@@ -238,7 +238,8 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             final LoanRepository loanRepository, final GSIMReadPlatformService gsimReadPlatformService, final RateAssembler rateAssembler,
             final LoanProductReadPlatformService loanProductReadPlatformService,
             final LoanCollateralManagementRepository loanCollateralManagementRepository,
-            final ClientCollateralManagementRepository clientCollateralManagementRepository, final AccountAssociationsReadPlatformService accountAssociationsReadPlatformService) {
+            final ClientCollateralManagementRepository clientCollateralManagementRepository,
+            final AccountAssociationsReadPlatformService accountAssociationsReadPlatformService) {
         this.context = context;
         this.fromJsonHelper = fromJsonHelper;
         this.loanApplicationTransitionApiJsonValidator = loanApplicationTransitionApiJsonValidator;
@@ -1494,10 +1495,11 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
 
         checkClientOrGroupActive(loan);
 
-        // if bnpl loan and equity contribution, the check client's savings account for client's contribution for bnpl vendor payment
+        // if bnpl loan and equity contribution, the check client's savings account for client's contribution for bnpl
+        // vendor payment
         BigDecimal amountToDisburseForBnplEquityContributionLoan = BigDecimal.ZERO;
         Boolean isBnplEquityContributionLoan = loan.getBnplLoan() && loan.getRequiresEquityContribution();
-        if(isBnplEquityContributionLoan) {
+        if (isBnplEquityContributionLoan) {
             Money disburseAmount = loan.adjustDisburseAmount(command, expectedDisbursementDate);
             Money amountToDisburse = disburseAmount.copy();
             // get amount to transfer as equity
@@ -1513,7 +1515,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 throw new LinkedAccountRequiredException("loan.approval.link.Savings", errorMessage, loan.getId());
             }
 
-            //get client savings account
+            // get client savings account
             final PortfolioAccountData clientPortfolioAccountData = this.accountAssociationsReadPlatformService
                     .retriveLoanLinkedAssociation(loan.getId());
             if (clientPortfolioAccountData == null) {
@@ -1521,7 +1523,8 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                         + " requires linked savings account for disbursement";
                 throw new LinkedAccountRequiredException("loan.approval.links.savings", errorMessage, loan.getId());
             }
-            final SavingsAccount clientSavingsAccount = this.savingsAccountAssembler.assembleFrom(clientPortfolioAccountData.accountId(), false);
+            final SavingsAccount clientSavingsAccount = this.savingsAccountAssembler.assembleFrom(clientPortfolioAccountData.accountId(),
+                    false);
             clientSavingsAccount.validateAccountBalanceForBnplLoanWithEquityContribution(equityAmount.getAmount(), false);
             amountToDisburseForBnplEquityContributionLoan = amountToDisburse.getAmount().subtract(equityAmount.getAmount());
         }

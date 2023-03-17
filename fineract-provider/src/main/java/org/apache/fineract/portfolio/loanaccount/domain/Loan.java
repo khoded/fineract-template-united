@@ -2265,7 +2265,8 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
     }
 
     public Map<String, Object> loanApplicationApproval(final AppUser currentUser, final JsonCommand command,
-            final JsonArray disbursementDataArray, final LoanLifecycleStateMachine loanLifecycleStateMachine, Boolean isBnplEquityContributionLoan, BigDecimal amountToDisburseForBnplEquityContributionLoan) {
+            final JsonArray disbursementDataArray, final LoanLifecycleStateMachine loanLifecycleStateMachine,
+            Boolean isBnplEquityContributionLoan, BigDecimal amountToDisburseForBnplEquityContributionLoan) {
 
         validateAccountStatus(LoanEvent.LOAN_APPROVED);
 
@@ -2321,7 +2322,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
 
             // for bnpl with equity contribution loan, approved principal amount changes as per percentage
             // approved principal amount = original principal - equity% of original principal
-            if(isBnplEquityContributionLoan){
+            if (isBnplEquityContributionLoan) {
                 compareApprovedToProposedPrincipal(amountToDisburseForBnplEquityContributionLoan);
                 /*
                  * All the calculations are done based on the principal amount, so it is necessary to set principal
