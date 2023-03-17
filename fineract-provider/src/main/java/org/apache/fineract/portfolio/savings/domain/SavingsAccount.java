@@ -2971,6 +2971,26 @@ public class SavingsAccount extends AbstractPersistableCustom {
         return nextDueDate;
     }
 
+    public void validateAccountBalanceForBnplLoanWithEquityContribution(final BigDecimal bnplEquityAmount, final boolean isException) {
+        Money runningBalance = this.summary.getAccountBalance(getCurrency());
+        Money minRequiredBalance = minRequiredBalanceDerived(getCurrency()).add(bnplEquityAmount);
+        final BigDecimal withdrawalFee = null;
+
+        // In overdraft cases, minRequiredBalance can be in violation after interest posting
+        // and should be checked after processing all transactions
+        if (!isOverdraft()) {
+            if (runningBalance.minus(minRequiredBalance).isLessThanZero()) {
+                throw new InsufficientAccountBalanceException("bnplEquityAmount", getAccountBalance(), withdrawalFee, bnplEquityAmount);
+            }
+        }
+
+        if (this.getSavingsHoldAmount().compareTo(BigDecimal.ZERO) > 0) {
+            if (runningBalance.minus(this.getSavingsHoldAmount()).minus(minRequiredBalance).isLessThanZero()) {
+                throw new InsufficientAccountBalanceException("bnplEquityAmount", getAccountBalance(), withdrawalFee, bnplEquityAmount);
+            }
+        }
+    }
+
     public void validateAccountBalanceDoesNotBecomeNegativeMinimal(final BigDecimal transactionAmount, final boolean isException) {
         // final List<SavingsAccountTransaction> transactionsSortedByDate = retreiveListOfTransactions();
         Money runningBalance = this.summary.getAccountBalance(getCurrency());

@@ -2265,7 +2265,8 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
     }
 
     public Map<String, Object> loanApplicationApproval(final AppUser currentUser, final JsonCommand command,
-            final JsonArray disbursementDataArray, final LoanLifecycleStateMachine loanLifecycleStateMachine) {
+            final JsonArray disbursementDataArray, final LoanLifecycleStateMachine loanLifecycleStateMachine,
+            Boolean isBnplEquityContributionLoan, BigDecimal amountToDisburseForBnplEquityContributionLoan) {
 
         validateAccountStatus(LoanEvent.LOAN_APPROVED);
 
@@ -2317,6 +2318,22 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
                 if (disbursementDataArray != null) {
                     updateDisbursementDetails(command, actualChanges);
                 }
+            }
+
+            // for bnpl with equity contribution loan, approved principal amount changes as per percentage
+            // approved principal amount = original principal - equity% of original principal
+            if (isBnplEquityContributionLoan) {
+                compareApprovedToProposedPrincipal(amountToDisburseForBnplEquityContributionLoan);
+                /*
+                 * All the calculations are done based on the principal amount, so it is necessary to set principal
+                 * amount to approved amount
+                 */
+                this.approvedPrincipal = amountToDisburseForBnplEquityContributionLoan;
+
+                this.loanRepaymentScheduleDetail.setPrincipal(amountToDisburseForBnplEquityContributionLoan);
+                actualChanges.put(LoanApiConstants.approvedLoanAmountParameterName, amountToDisburseForBnplEquityContributionLoan);
+                actualChanges.put(LoanApiConstants.disbursementPrincipalParameterName, amountToDisburseForBnplEquityContributionLoan);
+                actualChanges.put(LoanApiConstants.disbursementNetDisbursalAmountParameterName, netDisbursalAmount);
             }
 
             recalculateAllCharges();
