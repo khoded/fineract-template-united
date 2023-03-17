@@ -1522,7 +1522,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 throw new LinkedAccountRequiredException("loan.approval.links.savings", errorMessage, loan.getId());
             }
             final SavingsAccount clientSavingsAccount = this.savingsAccountAssembler.assembleFrom(clientPortfolioAccountData.accountId(), false);
-            clientSavingsAccount.validateAccountBalanceDoesNotBecomeNegativeMinimal(equityAmount.getAmount(), false);
+            clientSavingsAccount.validateAccountBalanceForBnplLoanWithEquityContribution(equityAmount.getAmount(), false);
             amountToDisburseForBnplEquityContributionLoan = amountToDisburse.getAmount().subtract(equityAmount.getAmount());
         }
 
