@@ -392,11 +392,20 @@ public class SavingsAccount extends AbstractPersistableCustom {
     @Column(name = "is_unlocked")
     private boolean unlocked;
 
-    @Column(name = "use_floating_interest_rate",nullable = true)
+    @Column(name = "use_floating_interest_rate", nullable = true)
     private Boolean useFloatingInterestRate;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "savingsAccount", orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<SavingsAccountFloatingInterestRate> savingsAccountFloatingInterestRates = new HashSet<>();
+
+    @Column(name = "withdrawal_frequency")
+    private Integer withdrawalFrequency;
+    @Column(name = "withdrawal_frequency_enum")
+    private Integer withdrawalFrequencyEnum;
+    @Column(name = "previous_flex_withdrawal_date")
+    private LocalDate previousFlexWithdrawalDate;
+    @Column(name = "next_flex_withdrawal_date")
+    private LocalDate nextFlexWithdrawalDate;
 
     protected SavingsAccount() {
         //
@@ -5140,5 +5149,25 @@ public class SavingsAccount extends AbstractPersistableCustom {
 
     public Set<SavingsAccountFloatingInterestRate> getSavingsAccountFloatingInterestRates() {
         return savingsAccountFloatingInterestRates;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
+    public void setWithdrawalFrequency(Integer withdrawalFrequency) {
+        this.withdrawalFrequency = withdrawalFrequency;
+    }
+
+    public void setWithdrawalFrequencyEnum(Integer withdrawalFrequencyEnum) {
+        this.withdrawalFrequencyEnum = withdrawalFrequencyEnum;
+    }
+
+    public void setPreviousFlexWithdrawalDate(LocalDate previousFlexWithdrawalDate) {
+        this.previousFlexWithdrawalDate = previousFlexWithdrawalDate;
+    }
+
+    public void setNextFlexWithdrawalDate(LocalDate nextFlexWithdrawalDate) {
+        this.nextFlexWithdrawalDate = nextFlexWithdrawalDate;
     }
 }
