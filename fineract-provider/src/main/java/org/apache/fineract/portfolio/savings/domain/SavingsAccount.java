@@ -1661,7 +1661,8 @@ public class SavingsAccount extends AbstractPersistableCustom {
             // auto pay withdrawal fee
             payWithdrawalFee(transactionDTO.getTransactionAmount(), transactionDTO.getTransactionDate(), transactionDTO.getAppUser(),
                     transactionDTO.getPaymentDetail(), backdatedTxnsAllowedTill, refNo);
-        }else if(applyWithdrawFee && this.withdrawalFrequency != null && this.withdrawalFrequencyEnum != null && !this.nextFlexWithdrawalDate.isEqual(transactionDTO.getTransactionDate())){
+        } else if (applyWithdrawFee && this.withdrawalFrequency != null && this.withdrawalFrequencyEnum != null
+                && !this.nextFlexWithdrawalDate.isEqual(transactionDTO.getTransactionDate())) {
             payWithdrawalFee(transactionDTO.getTransactionAmount(), transactionDTO.getTransactionDate(), transactionDTO.getAppUser(),
                     transactionDTO.getPaymentDetail(), backdatedTxnsAllowedTill, refNo);
         }

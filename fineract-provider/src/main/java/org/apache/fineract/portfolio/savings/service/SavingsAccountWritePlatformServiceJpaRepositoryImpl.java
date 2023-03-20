@@ -101,6 +101,7 @@ import org.apache.fineract.portfolio.paymenttype.domain.PaymentTypeRepositoryWra
 import org.apache.fineract.portfolio.savings.SavingsAccountTransactionType;
 import org.apache.fineract.portfolio.savings.SavingsApiConstants;
 import org.apache.fineract.portfolio.savings.SavingsTransactionBooleanValues;
+import org.apache.fineract.portfolio.savings.WithdrawalFrequency;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountChargeDataValidator;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountDataValidator;
@@ -142,7 +143,6 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
-import org.apache.fineract.portfolio.savings.WithdrawalFrequency;
 
 @Service
 public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements SavingsAccountWritePlatformService {
@@ -284,8 +284,8 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
         entityDatatableChecksWritePlatformService.runTheCheckForProduct(savingsId, EntityTables.SAVING.getName(),
                 StatusEnum.ACTIVATE.getCode().longValue(), EntityTables.SAVING.getForeignKeyColumnNameOnDatatable(), account.productId());
 
-        if(account.getWithdrawalFrequency() != null && account.getWithdrawalFrequencyEnum() != null){
-            if(account.getWithdrawalFrequencyEnum().equals(WithdrawalFrequency.MONTH.getValue())){
+        if (account.getWithdrawalFrequency() != null && account.getWithdrawalFrequencyEnum() != null) {
+            if (account.getWithdrawalFrequencyEnum().equals(WithdrawalFrequency.MONTH.getValue())) {
                 LocalDate nextWithDrawDate = account.getActivationLocalDate().plusMonths(account.getWithdrawalFrequency());
                 account.setPreviousFlexWithdrawalDate(account.getActivationLocalDate());
                 account.setNextFlexWithdrawalDate(nextWithDrawDate);
