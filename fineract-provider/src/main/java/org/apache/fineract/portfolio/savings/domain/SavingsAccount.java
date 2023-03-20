@@ -5190,4 +5190,12 @@ public class SavingsAccount extends AbstractPersistableCustom {
     public void setNextFlexWithdrawalDate(LocalDate nextFlexWithdrawalDate) {
         this.nextFlexWithdrawalDate = nextFlexWithdrawalDate;
     }
+
+    public Integer getWithdrawalFrequency() {
+        return withdrawalFrequency;
+    }
+
+    public Integer getWithdrawalFrequencyEnum() {
+        return withdrawalFrequencyEnum;
+    }
 }
