@@ -189,4 +189,11 @@ public class SavingsAccountRepositoryWrapper {
             @Param("gsimId") Long gsimId) {
         return this.repository.findByClientIdAndGroupIdAndGsimId(clientId, groupId, gsimId);
     }
+
+    @Transactional(readOnly = true)
+    public List<SavingsAccount> findSavingAccountToUpdateNextFlexWithdrawalDate() {
+        List<SavingsAccount> accounts = this.repository.findSavingAccountToUpdateNextFlexWithdrawalDate();
+        loadLazyCollections(accounts);
+        return accounts;
+    }
 }
