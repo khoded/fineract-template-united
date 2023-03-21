@@ -2429,4 +2429,39 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
                 .build();
     }
 
+    @Transactional
+    @Override
+    public CommandProcessingResult nextWithdrawalDateSavingsAccount(Long savingsId, JsonCommand command) {
+        this.context.authenticatedUser();
+
+        final LocalDate nextWithdrawalDate = command.localDateValueOfParameterNamed("nextWithdrawalDate");
+        final SavingsAccount account = this.savingAccountAssembler.assembleFrom(savingsId);
+        checkClientOrGroupActive(account);
+        if (account.getWithdrawalFrequency() == null || account.getWithdrawalFrequencyEnum() == null) {
+            String message = String.format("This savings account [%s] doesn't support withdrawal Frequency", account.getId());
+            throw new GeneralPlatformDomainRuleException(message, message);
+        }
+        if (account.getNextFlexWithdrawalDate() == null) {
+            String message = String.format("This savings account [%s] doesn't have the [current Withdrawal Date]", account.getId());
+            throw new GeneralPlatformDomainRuleException(message, message);
+        }
+        if (account.getNextFlexWithdrawalDate().isAfter(nextWithdrawalDate)) {
+            String message = String.format("Next Withdrawal Date submitted should not be less than [current Withdrawal Date] [%s]",
+                    account.getNextFlexWithdrawalDate());
+            throw new GeneralPlatformDomainRuleException(message, message);
+        }
+        account.setNextFlexWithdrawalDate(nextWithdrawalDate);
+
+        this.savingAccountRepositoryWrapper.save(account);
+
+        return new CommandProcessingResultBuilder() //
+                .withEntityId(savingsId) //
+                .withOfficeId(account.officeId()) //
+                .withClientId(account.clientId()) //
+                .withGroupId(account.groupId()) //
+                .withSavingsId(savingsId) //
+                .build();
+
+    }
+
 }

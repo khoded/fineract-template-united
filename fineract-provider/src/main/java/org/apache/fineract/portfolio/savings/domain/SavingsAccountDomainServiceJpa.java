@@ -48,6 +48,7 @@ import org.apache.fineract.portfolio.loanaccount.service.LoanReadPlatformService
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
 import org.apache.fineract.portfolio.savings.SavingsAccountTransactionType;
 import org.apache.fineract.portfolio.savings.SavingsTransactionBooleanValues;
+import org.apache.fineract.portfolio.savings.WithdrawalFrequency;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountTransactionDTO;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountTransactionDataValidator;
 import org.apache.fineract.portfolio.savings.exception.DepositAccountTransactionNotAllowedException;
@@ -183,6 +184,16 @@ public class SavingsAccountDomainServiceJpa implements SavingsAccountDomainServi
         if (backdatedTxnsAllowedTill) {
             // Update transactions separately
             saveUpdatedTransactionsOfSavingsAccount(account.getSavingsAccountTransactionsWithPivotConfig());
+        }
+
+        account.setPreviousFlexWithdrawalDate(transactionDate);
+        if (account.getWithdrawalFrequency() != null && account.getWithdrawalFrequencyEnum() != null
+                && (account.getNextFlexWithdrawalDate().isEqual(transactionDTO.getTransactionDate())
+                        || transactionDTO.getTransactionDate().isAfter(account.getNextFlexWithdrawalDate()))) {
+            if (account.getWithdrawalFrequencyEnum().equals(WithdrawalFrequency.MONTH.getValue())) {
+                LocalDate nextWithDrawDate = account.getNextFlexWithdrawalDate().plusMonths(account.getWithdrawalFrequency());
+                account.setNextFlexWithdrawalDate(nextWithDrawDate);
+            }
         }
         this.savingsAccountRepository.save(account);
 

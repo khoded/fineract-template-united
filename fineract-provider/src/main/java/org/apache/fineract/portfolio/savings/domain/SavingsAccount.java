@@ -5202,4 +5202,16 @@ public class SavingsAccount extends AbstractPersistableCustom {
     public Integer getWithdrawalFrequencyEnum() {
         return withdrawalFrequencyEnum;
     }
+
+    public Group getGroup() {
+        return group;
+    }
+
+    public LocalDate getPreviousFlexWithdrawalDate() {
+        return previousFlexWithdrawalDate;
+    }
+
+    public LocalDate getNextFlexWithdrawalDate() {
+        return nextFlexWithdrawalDate;
+    }
 }

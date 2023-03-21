@@ -89,4 +89,18 @@
             </column>
         </addColumn>
     </changeSet>
+    <changeSet author="bosco@fiter.io" id="add_m_permissions_NEXTWITHDRAWALDATE_SAVINGSACCOUNT">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                SELECT COUNT(1) FROM m_permission WHERE code = 'NEXTWITHDRAWALDATE_SAVINGSACCOUNT'
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="transaction_savings" />
+            <column name="code" value="NEXTWITHDRAWALDATE_SAVINGSACCOUNT" />
+            <column name="entity_name" value="SAVINGSACCOUNT" />
+            <column name="action_name" value="NEXTWITHDRAWALDATE" />
+            <column name="can_maker_checker" valueBoolean="false" />
+        </insert>
+    </changeSet>
 </databaseChangeLog>
