@@ -939,7 +939,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
             account.postInterest(mc, today, false, isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth, null);
         } else {
             account.calculateInterestUsing(mc, today, false, isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth, null,
-                    includePostingAndWithHoldTax);
+                    includePostingAndWithHoldTax, false, false);
         }
         List<DepositAccountOnHoldTransaction> depositAccountOnHoldTransactions = null;
         if (account.getOnHoldFunds().compareTo(BigDecimal.ZERO) > 0) {
@@ -1633,7 +1633,7 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
         } else {
             final LocalDate today = DateUtils.getLocalDateOfTenant();
             account.calculateInterestUsing(mc, today, isInterestTransfer, isSavingsInterestPostingAtCurrentPeriodEnd,
-                    financialYearBeginningMonth, postInterestOnDate, includePostingAndWithHoldTax);
+                    financialYearBeginningMonth, postInterestOnDate, includePostingAndWithHoldTax, false, false);
         }
         List<DepositAccountOnHoldTransaction> depositAccountOnHoldTransactions = null;
         if (account.getOnHoldFunds().compareTo(BigDecimal.ZERO) > 0) {

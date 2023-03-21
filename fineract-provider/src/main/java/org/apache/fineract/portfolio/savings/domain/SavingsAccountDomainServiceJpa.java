@@ -166,7 +166,8 @@ public class SavingsAccountDomainServiceJpa implements SavingsAccountDomainServi
                     financialYearBeginningMonth, postInterestOnDate, backdatedTxnsAllowedTill, postReversals);
         } else {
             account.calculateInterestUsing(mc, today, transactionBooleanValues.isInterestTransfer(),
-                    isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth, postInterestOnDate, true);
+                    isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth, postInterestOnDate, true,
+                    backdatedTxnsAllowedTill, false);
         }
 
         List<DepositAccountOnHoldTransaction> depositAccountOnHoldTransactions = null;
@@ -285,7 +286,7 @@ public class SavingsAccountDomainServiceJpa implements SavingsAccountDomainServi
                     postInterestOnDate, backdatedTxnsAllowedTill, postReversals);
         } else {
             account.calculateInterestUsing(mc, today, isInterestTransfer, isSavingsInterestPostingAtCurrentPeriodEnd,
-                    financialYearBeginningMonth, postInterestOnDate, true);
+                    financialYearBeginningMonth, postInterestOnDate, true, backdatedTxnsAllowedTill, false);
         }
 
         saveTransactionToGenerateTransactionId(deposit);
