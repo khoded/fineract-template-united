@@ -1182,7 +1182,8 @@ public class SavingsAccount extends AbstractPersistableCustom {
 
     public List<PostingPeriod> calculateInterestUsing(final MathContext mc, final LocalDate upToInterestCalculationDate,
             boolean isInterestTransfer, final boolean isSavingsInterestPostingAtCurrentPeriodEnd, final Integer financialYearBeginningMonth,
-            final LocalDate postInterestOnDate, final Boolean includePostingAndWithHoldTax, final boolean backdatedTxnsAllowedTill, final boolean postReversals) {
+            final LocalDate postInterestOnDate, final Boolean includePostingAndWithHoldTax, final boolean backdatedTxnsAllowedTill,
+            final boolean postReversals) {
 
         // no openingBalance concept supported yet but probably will to allow
         // for migrations.
