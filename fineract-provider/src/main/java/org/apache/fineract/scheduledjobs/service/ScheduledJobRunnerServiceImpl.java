@@ -540,7 +540,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
         for (final SavingsAccount account : savingsAccounts) {
             try {
                 if (account.getWithdrawalFrequency() != null && account.getWithdrawalFrequencyEnum() != null
-                        && LocalDate.now().isAfter(account.getNextFlexWithdrawalDate())) {
+                        && DateUtils.getBusinessLocalDate().isAfter(account.getNextFlexWithdrawalDate())) {
 
                     if (account.getWithdrawalFrequencyEnum().equals(WithdrawalFrequency.MONTH.getValue())) {
                         LocalDate nextWithDrawDate = account.getNextFlexWithdrawalDate().plusMonths(account.getWithdrawalFrequency());
