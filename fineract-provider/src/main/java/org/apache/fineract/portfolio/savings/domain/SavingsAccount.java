@@ -4994,9 +4994,9 @@ public class SavingsAccount extends AbstractPersistableCustom {
 
     private boolean interestAlreadyPosted(SavingsAccountTransaction lastTransaction, SavingsAccountTransaction lastInterestPosting,
             LocalDateInterval periodInterval) {
-        if (lastTransaction != null && periodInterval.endDate().plusDays(1).isBefore(lastTransaction.getTransactionLocalDate())) {
+        /*if (lastTransaction != null && periodInterval.endDate().plusDays(1).isBefore(lastTransaction.getTransactionLocalDate())) {
             return true;
-        }
+        }*/
 
         if (lastInterestPosting != null && periodInterval.endDate().plusDays(1).isEqual(lastInterestPosting.getTransactionLocalDate())) {
             return true;
