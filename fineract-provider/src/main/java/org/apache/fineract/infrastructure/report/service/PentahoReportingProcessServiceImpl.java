@@ -190,8 +190,8 @@ public class PentahoReportingProcessServiceImpl implements ReportingProcessServi
                     tenantConnection.getSchemaServer(), tenantConnection.getSchemaServerPort(), tenantConnection.getSchemaName(),
                     tenantConnection.getSchemaConnectionParameters());
             if (isPentahoReportEngineRunOnPostgres) {
-                tenantUrl = toJdbcUrl(fineractProperties.getTenant().getProtocol() + ":postgresql", tenantConnection.getSchemaServer(),
-                        tenantConnection.getSchemaServerPort(), tenantConnection.getSchemaName(),
+                tenantUrl = toJdbcUrl(fineractProperties.getTenant().getProtocol() + ":" + fineractProperties.getTenant().getSubprotocol(),
+                        tenantConnection.getSchemaServer(), tenantConnection.getSchemaServerPort(), tenantConnection.getSchemaName(),
                         tenantConnection.getSchemaConnectionParameters());
             }
             /*
