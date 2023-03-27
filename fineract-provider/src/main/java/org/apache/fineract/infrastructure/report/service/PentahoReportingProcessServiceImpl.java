@@ -62,8 +62,8 @@ public class PentahoReportingProcessServiceImpl implements ReportingProcessServi
 
     private final PlatformSecurityContext context;
     private final FineractProperties fineractProperties;
-    @Value("${fineract.configuration.isPentahoReportEngineRunOnPostgres}")
-    private Boolean isPentahoReportEngineRunOnPostgres;
+    @Value("${fineract.configuration.pentahoFolderName}")
+    private String pentahoFolderName;
 
     @Autowired
     public PentahoReportingProcessServiceImpl(final PlatformSecurityContext context, final FineractProperties fineractProperties) {
@@ -89,10 +89,7 @@ public class PentahoReportingProcessServiceImpl implements ReportingProcessServi
             throw new PlatformDataIntegrityException("error.msg.invalid.outputType", "No matching Output Type: " + outputType);
         }
 
-        var reportPath = MIFOS_BASE_DIR + File.separator + "pentahoReports" + File.separator + reportName + ".prpt";
-        if (isPentahoReportEngineRunOnPostgres) {
-            reportPath = MIFOS_BASE_DIR + File.separator + "pentahoReportsPostgres" + File.separator + reportName + ".prpt";
-        }
+        final var reportPath = MIFOS_BASE_DIR + File.separator + pentahoFolderName + File.separator + reportName + ".prpt";
         var outPutInfo = "Report path: " + reportPath;
         LOGGER.info("Report path: {}", outPutInfo);
 
@@ -186,14 +183,10 @@ public class PentahoReportingProcessServiceImpl implements ReportingProcessServi
             // and data scoping
             final var tenant = ThreadLocalContextUtil.getTenant();
             final var tenantConnection = tenant.getConnection();
-            var tenantUrl = toJdbcUrl(fineractProperties.getTenant().getProtocol() + ":" + fineractProperties.getTenant().getSubprotocol(),
+            final var tenantUrl = toJdbcUrl(
+                    fineractProperties.getTenant().getProtocol() + ":" + fineractProperties.getTenant().getSubprotocol(),
                     tenantConnection.getSchemaServer(), tenantConnection.getSchemaServerPort(), tenantConnection.getSchemaName(),
                     tenantConnection.getSchemaConnectionParameters());
-            if (isPentahoReportEngineRunOnPostgres) {
-                tenantUrl = toJdbcUrl(fineractProperties.getTenant().getProtocol() + ":" + fineractProperties.getTenant().getSubprotocol(),
-                        tenantConnection.getSchemaServer(), tenantConnection.getSchemaServerPort(), tenantConnection.getSchemaName(),
-                        tenantConnection.getSchemaConnectionParameters());
-            }
             /*
              * var tenantUrl = "jdbc:mariadb://" + tenantConnection.getSchemaServer() + ":" +
              * tenantConnection.getSchemaServerPort() + "/" + tenantConnection.getSchemaName() + "?useSSL=false";
