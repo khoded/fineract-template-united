@@ -112,7 +112,8 @@ public class AccountTransfersWritePlatformServiceImpl implements AccountTransfer
             final GSIMRepositoy gsimRepository, ConfigurationDomainService configurationDomainService,
             final ReadWriteNonCoreDataService readWriteNonCoreDataService, final SavingsProductRepository savingsProductRepository,
             final LoanScheduleHistoryWritePlatformService loanScheduleHistoryWritePlatformService,
-            final LoanTransactionRepository loanTransactionRepository, final AccountAssociationsReadPlatformService accountAssociationsReadPlatformService) {
+            final LoanTransactionRepository loanTransactionRepository,
+            final AccountAssociationsReadPlatformService accountAssociationsReadPlatformService) {
         this.accountTransfersDataValidator = accountTransfersDataValidator;
         this.accountTransferAssembler = accountTransferAssembler;
         this.accountTransferRepository = accountTransferRepository;
@@ -308,20 +309,23 @@ public class AccountTransfersWritePlatformServiceImpl implements AccountTransfer
         }
 
         // for bnpl, fetch vendor transaction which is transferred
-        //  from client to vendor during disbursement
+        // from client to vendor during disbursement
         List<AccountTransferTransaction> bnplAcccountTransfers = null;
-        if(loan.getBnplLoan()){
+        if (loan.getBnplLoan()) {
             // fetch the account transfer details between client and vendor accounts
             // on disbursement day
             final PortfolioAccountData portfolioAccountData = this.accountAssociationsReadPlatformService
                     .retriveLoanLinkedAssociation(loan.getId());
             final PortfolioAccountData vendorPortfolioAccountData = this.accountAssociationsReadPlatformService
                     .retriveLoanLinkedVendorAssociation(loan.getId());
-            // fetch bnpl transaction by custormer account, vendor account, loan disbursementDate and the description of transaction
-            bnplAcccountTransfers = this.accountTransferRepository.findAllFromSavingsAccountIdToVendorSavingsAccountIdForDateAndDescription(portfolioAccountData.accountId(), vendorPortfolioAccountData.accountId(), loan.getDisbursementDate(), "BNPL Loan amount transfer to vendor");
+            // fetch bnpl transaction by custormer account, vendor account, loan disbursementDate and the description of
+            // transaction
+            bnplAcccountTransfers = this.accountTransferRepository.findAllFromSavingsAccountIdToVendorSavingsAccountIdForDateAndDescription(
+                    portfolioAccountData.accountId(), vendorPortfolioAccountData.accountId(), loan.getDisbursementDate(),
+                    "BNPL Loan amount transfer to vendor");
         }
         if (acccountTransfers != null && acccountTransfers.size() > 0) {
-            if( bnplAcccountTransfers != null && bnplAcccountTransfers.size() > 0){
+            if (bnplAcccountTransfers != null && bnplAcccountTransfers.size() > 0) {
                 acccountTransfers.addAll(bnplAcccountTransfers);
             }
             undoTransactions(acccountTransfers);
