@@ -22,69 +22,69 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-    <include file="parts/0003_postgresql_specific_initial_data.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0004_camelcase_column_renaming.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0005_savings_transaction_reversal.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0006_product_loan_disallow_expected_disbursements.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0007_product_loan_higher_than_applied_loan_amount_management.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0008_loan_charge_add_external_id.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0009_hold_reason_savings_account.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0010_lien_allowed_on_savings_account_products.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0011_add_credit_balance_refund_permission.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0012_add_merchantissuedrefund_payoutrefund_goodwillcredit_permissions.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0013_remove_topics.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0014_remove_unused_jobs.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0015_add_business_date.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0016_changed_unique_constraint_of_ref_no.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0017_fix_stretchy_reports.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0018_pentaho_reports_to_table.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0019_refactor_loan_transaction.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0020_add_audit_entries.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0026_reversals_for_reversed_transactions.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0027_create_table_for_business_owner.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0028_add_field_in_business_owners_table_for_isActive.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0029_add_codes_for_city_and_Title_and_Type.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0030_add_fields_in_family_members_table.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0031_add_min_add_max_amount_on_m_charge_Table.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0031_add_codes_and_codevalue_for_blocknarration.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0032_savings_account_block_narration_history_table.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0033_add_fields_in_m_savings_product_table.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0034_add_fields_in_m_savings_account_table.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0035_add_entry_for_job_to_update_interest_config.xml" relativeToChangelogFile="true"/>
-    <include file="parts/UC-24_Accrual_accounting_on_savings_account.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0013_create_table_for_business_owner.xml" relativeToChangelogFile="true"/>
-    <include file="parts/MON-92_FD_topup.xml" relativeToChangelogFile="true"/>
-    <include file="parts/MON-92_FD_topup_permission.xml" relativeToChangelogFile="true"/>
-    <include file="parts/MON-92_FD_topup_old_account_reference.xml" relativeToChangelogFile="true"/>
-    <include file="parts/MON-104_add_lga_in_address.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0036_add_isUSDProduct_in_savings_product_table.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0037_create_table_for_Fx_rate.xml" relativeToChangelogFile="true"/>
-    <include file="parts/MON-93_permission_fd_partial_liquidation.xml" relativeToChangelogFile="true"/>
-    <include file="parts/MON-110_Vault_Tribe.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0038_add_free_withdrawal_in_recurring_details.xml" relativeToChangelogFile="true"/>
-    <include file="parts/0039_add_free_withdrawal_in_recurring_details_product.xml" relativeToChangelogFile="true"/>
-    <include file="parts/040_add_validation_limits.xml" relativeToChangelogFile="true"/>
-    <include file="parts/041_add_client_transaction_limit.xml" relativeToChangelogFile="true"/>
-    <include file="parts/MON-140_add_allowManuallyEnterInterestRate_in_savings_product_table.xml" relativeToChangelogFile="true"/>
-    <include file="parts/OXY-37_add_maxNumberOfLoanExtensionsAllowed_in_loan_product_table.xml" relativeToChangelogFile="true"/>
-    <include file="parts/OXY-33-add-new-column-max-occurrence-in-charge.xml" relativeToChangelogFile="true"/>
-    <include file="parts/OXY-44_add_isAccountLevelArrearsToleranceEnable_in_loan_product_table.xml" relativeToChangelogFile="true"/>
-    <include file="parts/OXY-42_enforce_loan_overdue_amount_in_min_balance.xml" relativeToChangelogFile="true"/>
-    <include file="parts/OXY-40-Loan-Repayment-Reminder.xml" relativeToChangelogFile="true"/>
-    <include file="parts/oxy-39_product_loan_interest_rate_chart_table.xml" relativeToChangelogFile="true"/>
-    <include file="parts/OXY-95-add_job_for_notifying_failed_standing_instruction.xml" relativeToChangelogFile="true"/>
-    <include file="parts/OXY-35_lp_interest_calculation_detail_interest_exact_days.xml" relativeToChangelogFile="true" />
-    <include file="parts/OXY-97-Loan-Overdue-Reminder.xml" relativeToChangelogFile="true" />
-    <include file="parts/oxy-46_create_update_validation_limits_and_client_level_code_values.xml" relativeToChangelogFile="true"/>
-    <include file="parts/OXY-100_floating_interest_rate.xml" relativeToChangelogFile="true" />
-    <include file="parts/OXY-106_savings_account_floating_interest_rate.xml" relativeToChangelogFile="true" />
-    <include file="parts/UC-62-additional-kyc-information.xml" relativeToChangelogFile="true" />
-    <include file="parts/UC-68-additional-guarantor-information.xml" relativeToChangelogFile="true" />
-    <include file="parts/OXY-116_BNPL_loan_product_configuration.xml" relativeToChangelogFile="true" />
-    <include file="parts/OXY-118-BNPL_attributes_for_loan.xml" relativeToChangelogFile="true" />
-    <include file="parts/CI18-127_add_product_categories_and_product_type_column.xml" relativeToChangelogFile="true" />
-    <include file="parts/CI18-128_add_product_categories_and_product_type_column.xml" relativeToChangelogFile="true" />
-    <include file="parts/OXY-83_flexi_account_withdrawal_window.xml" relativeToChangelogFile="true" />
-    <include file="parts/OXY-137_add_max_withdrawal_global_config.xml" relativeToChangelogFile="true" />
-    <include file="parts/OXY-138_add_on_hold_table_for_savings_account.xml" relativeToChangelogFile="true" />
+<!--    <include file="parts/0003_postgresql_specific_initial_data.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0004_camelcase_column_renaming.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0005_savings_transaction_reversal.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0006_product_loan_disallow_expected_disbursements.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0007_product_loan_higher_than_applied_loan_amount_management.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0008_loan_charge_add_external_id.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0009_hold_reason_savings_account.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0010_lien_allowed_on_savings_account_products.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0011_add_credit_balance_refund_permission.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0012_add_merchantissuedrefund_payoutrefund_goodwillcredit_permissions.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0013_remove_topics.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0014_remove_unused_jobs.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0015_add_business_date.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0016_changed_unique_constraint_of_ref_no.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0017_fix_stretchy_reports.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0018_pentaho_reports_to_table.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0019_refactor_loan_transaction.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0020_add_audit_entries.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0026_reversals_for_reversed_transactions.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0027_create_table_for_business_owner.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0028_add_field_in_business_owners_table_for_isActive.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0029_add_codes_for_city_and_Title_and_Type.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0030_add_fields_in_family_members_table.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0031_add_min_add_max_amount_on_m_charge_Table.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0031_add_codes_and_codevalue_for_blocknarration.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0032_savings_account_block_narration_history_table.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0033_add_fields_in_m_savings_product_table.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0034_add_fields_in_m_savings_account_table.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0035_add_entry_for_job_to_update_interest_config.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/UC-24_Accrual_accounting_on_savings_account.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0013_create_table_for_business_owner.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/MON-92_FD_topup.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/MON-92_FD_topup_permission.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/MON-92_FD_topup_old_account_reference.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/MON-104_add_lga_in_address.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0036_add_isUSDProduct_in_savings_product_table.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0037_create_table_for_Fx_rate.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/MON-93_permission_fd_partial_liquidation.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/MON-110_Vault_Tribe.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0038_add_free_withdrawal_in_recurring_details.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/0039_add_free_withdrawal_in_recurring_details_product.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/040_add_validation_limits.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/041_add_client_transaction_limit.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/MON-140_add_allowManuallyEnterInterestRate_in_savings_product_table.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/OXY-37_add_maxNumberOfLoanExtensionsAllowed_in_loan_product_table.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/OXY-33-add-new-column-max-occurrence-in-charge.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/OXY-44_add_isAccountLevelArrearsToleranceEnable_in_loan_product_table.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/OXY-42_enforce_loan_overdue_amount_in_min_balance.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/OXY-40-Loan-Repayment-Reminder.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/oxy-39_product_loan_interest_rate_chart_table.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/OXY-95-add_job_for_notifying_failed_standing_instruction.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/OXY-35_lp_interest_calculation_detail_interest_exact_days.xml" relativeToChangelogFile="true" />-->
+<!--    <include file="parts/OXY-97-Loan-Overdue-Reminder.xml" relativeToChangelogFile="true" />-->
+<!--    <include file="parts/oxy-46_create_update_validation_limits_and_client_level_code_values.xml" relativeToChangelogFile="true"/>-->
+<!--    <include file="parts/OXY-100_floating_interest_rate.xml" relativeToChangelogFile="true" />-->
+<!--    <include file="parts/OXY-106_savings_account_floating_interest_rate.xml" relativeToChangelogFile="true" />-->
+<!--    <include file="parts/UC-62-additional-kyc-information.xml" relativeToChangelogFile="true" />-->
+<!--    <include file="parts/UC-68-additional-guarantor-information.xml" relativeToChangelogFile="true" />-->
+<!--    <include file="parts/OXY-116_BNPL_loan_product_configuration.xml" relativeToChangelogFile="true" />-->
+<!--    <include file="parts/OXY-118-BNPL_attributes_for_loan.xml" relativeToChangelogFile="true" />-->
+<!--    <include file="parts/CI18-127_add_product_categories_and_product_type_column.xml" relativeToChangelogFile="true" />-->
+<!--    <include file="parts/CI18-128_add_product_categories_and_product_type_column.xml" relativeToChangelogFile="true" />-->
+<!--    <include file="parts/OXY-83_flexi_account_withdrawal_window.xml" relativeToChangelogFile="true" />-->
+<!--    <include file="parts/OXY-137_add_max_withdrawal_global_config.xml" relativeToChangelogFile="true" />-->
+<!--    <include file="parts/OXY-138_add_on_hold_table_for_savings_account.xml" relativeToChangelogFile="true" />-->
 </databaseChangeLog>
