@@ -574,7 +574,7 @@ public final class LoanApplicationCommandFromApiJsonHelper {
                     .value(equityContributionLoanPercentage).ignoreIfNull().zeroOrPositiveAmount();
         }
 
-        validateBnplValues(baseDataValidator,isBnplLoan == null ? false : isBnplLoan,
+        validateBnplValues(baseDataValidator, isBnplLoan == null ? false : isBnplLoan,
                 requiresEquityContribution == null ? false : requiresEquityContribution, equityContributionLoanPercentage);
     }
 
