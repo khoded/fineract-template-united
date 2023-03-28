@@ -399,6 +399,8 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
         final PaymentDetail paymentDetail = this.paymentDetailWritePlatformService.createAndPersistPaymentDetail(command, changes);
         boolean isAccountTransfer = false;
         boolean isRegularTransaction = true;
+        // Post overdraft interest if applicable
+        this.postOverdraftInterest(account, transactionDate);
         final SavingsAccountTransaction deposit = this.savingsAccountDomainService.handleDeposit(account, fmt, transactionDate,
                 transactionAmount, paymentDetail, isAccountTransfer, isRegularTransaction, backdatedTxnsAllowedTill);
 
@@ -434,6 +436,18 @@ public class SavingsAccountWritePlatformServiceJpaRepositoryImpl implements Savi
                 .with(changes) //
                 .build();
 
+    }
+
+    /**
+     * Checks if account is in overdraft and if so, posts overdraft interest for the transactionDate if the global
+     * feature is turned on.
+     */
+    private void postOverdraftInterest(SavingsAccount account, LocalDate transactionDate) {
+        if (this.configurationDomainService.isPostOverdraftInterestOnDepositEnabled() && account.isPostOverdraftInterestOnDeposit()) {
+            if (account.isOverdraft() && BigDecimal.ZERO.compareTo(account.getSummary().getAccountBalance()) > 0) {
+                this.postInterest(account, true, transactionDate);
+            }
+        }
     }
 
     private Long saveTransactionToGenerateTransactionId(final SavingsAccountTransaction transaction) {
