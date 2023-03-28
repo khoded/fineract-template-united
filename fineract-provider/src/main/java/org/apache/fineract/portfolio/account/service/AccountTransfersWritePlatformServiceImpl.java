@@ -18,7 +18,6 @@
  */
 package org.apache.fineract.portfolio.account.service;
 
-import java.util.Collections;
 import static org.apache.fineract.portfolio.account.AccountDetailConstants.fromAccountIdParamName;
 import static org.apache.fineract.portfolio.account.AccountDetailConstants.fromAccountTypeParamName;
 import static org.apache.fineract.portfolio.account.AccountDetailConstants.toAccountIdParamName;
@@ -32,6 +31,7 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
