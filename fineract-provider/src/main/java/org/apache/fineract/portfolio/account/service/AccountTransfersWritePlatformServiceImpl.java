@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.portfolio.account.service;
 
+import java.util.Collections;
 import static org.apache.fineract.portfolio.account.AccountDetailConstants.fromAccountIdParamName;
 import static org.apache.fineract.portfolio.account.AccountDetailConstants.fromAccountTypeParamName;
 import static org.apache.fineract.portfolio.account.AccountDetailConstants.toAccountIdParamName;
@@ -327,6 +328,7 @@ public class AccountTransfersWritePlatformServiceImpl implements AccountTransfer
         if (acccountTransfers != null && acccountTransfers.size() > 0) {
             if (bnplAcccountTransfers != null && bnplAcccountTransfers.size() > 0) {
                 acccountTransfers.addAll(bnplAcccountTransfers);
+                Collections.sort(acccountTransfers, Collections.reverseOrder());
             }
             undoTransactions(acccountTransfers);
         }
