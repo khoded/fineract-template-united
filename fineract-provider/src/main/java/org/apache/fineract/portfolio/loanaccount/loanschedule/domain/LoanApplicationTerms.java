@@ -930,6 +930,7 @@ public final class LoanApplicationTerms {
             Money interestForThisInstallment) {
         final int totalRepaymentsWithCapitalPayment = calculateNumberOfRepaymentsWithPrincipalPayment();
         Money principalPerPeriod = null;
+        //
         if (getFixedEmiAmount() == null) {
             if (this.fixedPrincipalPercentagePerInstallment != null) {
                 principalPerPeriod = this.principal.minus(totalPrincipalAccounted)

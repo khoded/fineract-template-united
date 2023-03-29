@@ -386,7 +386,7 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
         List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
         for (LoanRepaymentScheduleInstallment installment : installments) {
             if (installment.getDueDate().isEqual(rescheduleFromLocDate)
-                    || (installment.getDueDate().isAfter(rescheduleFromLocDate) )) {
+                    || installment.getDueDate().isAfter(rescheduleFromLocDate)) {
                 createLoanTermVariations(loanRescheduleRequest, termType, loan, installment.getDueDate(), installment.getDueDate(),
                         loanRescheduleRequestToTermVariationMappings, isActive, true, principalAmount, parent);
             }
