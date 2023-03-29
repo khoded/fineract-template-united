@@ -32,7 +32,7 @@
         <insert tableName="c_configuration">
             <column name="name" value="max-active-loans" />
             <column name="value" value="0" />
-            <column name="enabled" valueBoolean="0" />
+            <column name="enabled" valueBoolean="false" />
             <column name="description" value="Defines the maximum number of active loans a client should have at a time. 0 means unlimited if this config is enabled." />
         </insert>
     </changeSet>
