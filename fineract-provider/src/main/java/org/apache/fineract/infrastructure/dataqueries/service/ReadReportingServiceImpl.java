@@ -40,6 +40,7 @@ import javax.ws.rs.core.StreamingOutput;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.apache.fineract.infrastructure.core.domain.JdbcSupport;
 import org.apache.fineract.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.apache.fineract.infrastructure.core.service.database.DatabaseSpecificSQLGenerator;
@@ -50,7 +51,6 @@ import org.apache.fineract.infrastructure.dataqueries.data.ReportParameterJoinDa
 import org.apache.fineract.infrastructure.dataqueries.data.ResultsetColumnHeaderData;
 import org.apache.fineract.infrastructure.dataqueries.data.ResultsetRowData;
 import org.apache.fineract.infrastructure.dataqueries.exception.ReportNotFoundException;
-import org.apache.fineract.infrastructure.documentmanagement.contentrepository.FileSystemContentRepository;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.infrastructure.security.service.SqlInjectionPreventerService;
 import org.apache.fineract.infrastructure.security.utils.LogParameterEscapeUtil;
@@ -72,6 +72,7 @@ public class ReadReportingServiceImpl implements ReadReportingService {
     private final GenericDataService genericDataService;
     private final SqlInjectionPreventerService sqlInjectionPreventerService;
     private final DatabaseSpecificSQLGenerator sqlGenerator;
+    private final FineractProperties fineractProperties;
 
     @Override
     public StreamingOutput retrieveReportCSV(final String name, final String type, final Map<String, String> queryParams,
@@ -197,6 +198,9 @@ public class ReadReportingServiceImpl implements ReadReportingService {
         sql = StringUtils.replaceIgnoreCase(sql, "CURRENT_DATE", sqlGenerator.currentBusinessDate());
         sql = this.genericDataService.wrapSQL(sql);
 
+        if (!name.equalsIgnoreCase("FullParameterList")) {
+            sql = this.genericDataService.wrapSQL(sql);
+        }
         return sql;
     }
 
@@ -220,6 +224,7 @@ public class ReadReportingServiceImpl implements ReadReportingService {
 
     @Override
     public String getReportType(final String reportName, final boolean isSelfServiceUserReport, final boolean isParameterType) {
+        String reportType = "Table";
         if (isParameterType) {
             return "Table";
         }
@@ -231,16 +236,16 @@ public class ReadReportingServiceImpl implements ReadReportingService {
         final SqlRowSet rs = this.jdbcTemplate.queryForRowSet(sqlWrapped, reportName, isSelfServiceUserReport);
 
         if (rs.next()) {
-            return rs.getString("report_type");
+            reportType = rs.getString("report_type");
         }
-        throw new ReportNotFoundException(reportName);
+        return reportType;
     }
 
     @Override
     public String retrieveReportPDF(final String reportName, final String type, final Map<String, String> queryParams,
             final boolean isSelfServiceUserReport) {
 
-        final String fileLocation = FileSystemContentRepository.FINERACT_BASE_DIR + File.separator + "";
+        final String fileLocation = fineractProperties.getContent().getFilesystem().getRootFolder() + File.separator + "";
         if (!new File(fileLocation).isDirectory()) {
             new File(fileLocation).mkdirs();
         }

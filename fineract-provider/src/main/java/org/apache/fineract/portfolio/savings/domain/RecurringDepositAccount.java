@@ -42,6 +42,8 @@ import javax.persistence.FetchType;
 import javax.persistence.OneToMany;
 import javax.persistence.OneToOne;
 import javax.persistence.OrderBy;
+import javax.persistence.Transient;
+import org.apache.fineract.accounting.journalentry.service.AccountingProcessorHelper;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
@@ -88,6 +90,9 @@ public class RecurringDepositAccount extends SavingsAccount {
     @OrderBy(value = "installmentNumber, id")
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "account", orphanRemoval = true, fetch = FetchType.LAZY)
     private List<RecurringDepositScheduleInstallment> depositScheduleInstallments = new ArrayList<>();
+
+    @Transient
+    private AccountingProcessorHelper helper;
 
     protected RecurringDepositAccount() {
         //
@@ -356,7 +361,7 @@ public class RecurringDepositAccount extends SavingsAccount {
             final PostingPeriod postingPeriod = PostingPeriod.createFrom(periodInterval, periodStartingBalance, transactions, this.currency,
                     compoundingPeriodType, interestCalculationType, interestRateAsFraction, daysInYearType.getValue(), maturityDate,
                     interestPostTransactions, isInterestTransfer, minBalanceForInterestCalculation,
-                    isSavingsInterestPostingAtCurrentPeriodEnd, isUserPosting, financialYearBeginningMonth);
+                    isSavingsInterestPostingAtCurrentPeriodEnd, isUserPosting, financialYearBeginningMonth, this, mc);
 
             periodStartingBalance = postingPeriod.closingBalance();
 
@@ -1167,6 +1172,7 @@ public class RecurringDepositAccount extends SavingsAccount {
         this.activatedOnDate = now;
     }
 
+    @Override
     public void setClosedOnDate(final LocalDate closedOnDate) {
         this.closedOnDate = closedOnDate;
     }
@@ -1273,5 +1279,17 @@ public class RecurringDepositAccount extends SavingsAccount {
 
     public BigDecimal getDepositAmount() {
         return this.accountTermAndPreClosure.depositAmount();
+    }
+
+    public void setHelper(AccountingProcessorHelper helper) {
+        this.helper = helper;
+    }
+
+    public RecurringDepositProduct getProduct() {
+        return (RecurringDepositProduct) this.product;
+    }
+
+    public DepositAccountTermAndPreClosure getAccountTermAndPreClosure() {
+        return accountTermAndPreClosure;
     }
 }

@@ -34,6 +34,7 @@ import org.apache.fineract.portfolio.savings.SavingsInterestCalculationType;
 import org.apache.fineract.portfolio.savings.SavingsPeriodFrequencyType;
 import org.apache.fineract.portfolio.savings.SavingsPostingInterestPeriodType;
 import org.apache.fineract.portfolio.savings.SavingsWithdrawalFeesType;
+import org.apache.fineract.portfolio.savings.WithdrawalFrequency;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountStatusEnumData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountSubStatusEnumData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountTransactionEnumData;
@@ -145,6 +146,16 @@ public final class SavingsEnumerations {
                 optionData = new SavingsAccountTransactionEnumData(SavingsAccountTransactionType.INTEREST_POSTING.getValue().longValue(),
                         SavingsAccountTransactionType.INTEREST_POSTING.getCode(), "Interest posting");
             break;
+            case ACCRUAL_INTEREST_POSTING:
+                optionData = new SavingsAccountTransactionEnumData(
+                        SavingsAccountTransactionType.ACCRUAL_INTEREST_POSTING.getValue().longValue(),
+                        SavingsAccountTransactionType.ACCRUAL_INTEREST_POSTING.getCode(), "Accrual Interest posting");
+            break;
+            case OVERDRAFT_ACCRUAL_INTEREST:
+                optionData = new SavingsAccountTransactionEnumData(
+                        SavingsAccountTransactionType.OVERDRAFT_ACCRUAL_INTEREST.getValue().longValue(),
+                        SavingsAccountTransactionType.OVERDRAFT_ACCRUAL_INTEREST.getCode(), "Overdraft Accrual posting");
+            break;
             case WITHDRAWAL_FEE:
                 optionData = new SavingsAccountTransactionEnumData(SavingsAccountTransactionType.WITHDRAWAL_FEE.getValue().longValue(),
                         SavingsAccountTransactionType.WITHDRAWAL_FEE.getCode(), "Withdrawal fee");
@@ -204,6 +215,10 @@ public final class SavingsEnumerations {
             case AMOUNT_RELEASE:
                 optionData = new SavingsAccountTransactionEnumData(SavingsAccountTransactionType.AMOUNT_RELEASE.getValue().longValue(),
                         SavingsAccountTransactionType.AMOUNT_RELEASE.getCode(), "Release Amount");
+            break;
+            case REVOKED_INTEREST:
+                optionData = new SavingsAccountTransactionEnumData(SavingsAccountTransactionType.REVOKED_INTEREST.getValue().longValue(),
+                        SavingsAccountTransactionType.REVOKED_INTEREST.getCode(), "Revoked Interest");
             break;
         }
         return optionData;
@@ -384,6 +399,10 @@ public final class SavingsEnumerations {
                 optionData = new EnumOptionData(SavingsPostingInterestPeriodType.ANNUAL.getValue().longValue(),
                         codePrefix + SavingsPostingInterestPeriodType.ANNUAL.getCode(), "Annually");
             break;
+            case TENURE:
+                optionData = new EnumOptionData(SavingsPostingInterestPeriodType.TENURE.getValue().longValue(),
+                        codePrefix + SavingsPostingInterestPeriodType.TENURE.getCode(), "Per Tenure");
+            break;
         }
 
         return optionData;
@@ -482,7 +501,9 @@ public final class SavingsEnumerations {
                 SavingsInterestCalculationDaysInYearType.INVALID.getCode(), "Invalid");
 
         switch (type) {
-            case INVALID:
+            case ACTUAL:
+                optionData = new EnumOptionData(SavingsInterestCalculationDaysInYearType.ACTUAL.getValue().longValue(),
+                        SavingsInterestCalculationDaysInYearType.ACTUAL.getCode(), "Actual Days");
             break;
             case DAYS_360:
                 optionData = new EnumOptionData(SavingsInterestCalculationDaysInYearType.DAYS_360.getValue().longValue(),
@@ -491,6 +512,8 @@ public final class SavingsEnumerations {
             case DAYS_365:
                 optionData = new EnumOptionData(SavingsInterestCalculationDaysInYearType.DAYS_365.getValue().longValue(),
                         SavingsInterestCalculationDaysInYearType.DAYS_365.getCode(), "365 Days");
+            break;
+            default:
             break;
         }
 
@@ -850,6 +873,22 @@ public final class SavingsEnumerations {
             case RELEASE:
                 optionData = new EnumOptionData(DepositAccountOnHoldTransactionType.RELEASE.getValue().longValue(),
                         DepositAccountOnHoldTransactionType.RELEASE.getCode(), "release");
+            break;
+
+        }
+        return optionData;
+    }
+
+    public static EnumOptionData withdrawalFrequency(final WithdrawalFrequency withdrawalFrequency) {
+        EnumOptionData optionData;
+        switch (withdrawalFrequency) {
+            case MONTH:
+                optionData = new EnumOptionData(WithdrawalFrequency.MONTH.getValue().longValue(), WithdrawalFrequency.MONTH.getCode(),
+                        "Month/s");
+            break;
+            default:
+                optionData = new EnumOptionData(WithdrawalFrequency.INVALID.getValue().longValue(), WithdrawalFrequency.INVALID.getCode(),
+                        "Invalid");
             break;
 
         }

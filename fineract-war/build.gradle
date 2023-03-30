@@ -22,6 +22,29 @@ apply plugin: 'war'
 apply plugin: 'distribution'
 apply from: "${rootDir}/buildSrc/src/main/groovy/org.apache.fineract.dependencies.gradle"
 
+repositories {
+    mavenCentral()
+    jcenter()
+    maven { url 'https://repo.orl.eng.hitachivantara.com/artifactory/pnt-mvn/'  }
+}
+
+dependencies {
+    implementation 'org.apache.poi:poi:4.1.2'
+    implementation 'org.apache.poi:poi-ooxml:4.1.2'
+    implementation 'org.apache.poi:poi-ooxml-schemas:4.1.2'
+
+    //Pentaho
+    fileTree('thirdparty') {
+        include '*.jar' }
+    implementation 'org.openjdk.nashorn:nashorn-core:15.1'
+    implementation 'org.codehaus.groovy:groovy-jsr223:3.0.10'
+
+    //Fiter custom dependencies
+    implementation 'org.json:json:20171018'
+    implementation 'org.apache.pdfbox:pdfbox:2.0.20'
+}
+
+
 war {
     archiveFileName = 'fineract-provider.war'
     from("$rootDir/licenses/binary/") {

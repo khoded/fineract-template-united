@@ -31,11 +31,11 @@ public interface SavingsAccountDomainService {
 
     SavingsAccountTransaction handleWithdrawal(SavingsAccount account, DateTimeFormatter fmt, LocalDate transactionDate,
             BigDecimal transactionAmount, PaymentDetail paymentDetail, SavingsTransactionBooleanValues transactionBooleanValues,
-            boolean backdatedTxnsAllowedTill);
+            boolean backdatedTxnsAllowedTill, boolean isNotTransferToOtherAccount);
 
     SavingsAccountTransaction handleDeposit(SavingsAccount account, DateTimeFormatter fmt, LocalDate transactionDate,
             BigDecimal transactionAmount, PaymentDetail paymentDetail, boolean isAccountTransfer, boolean isRegularTransaction,
-            boolean backdatedTxnsAllowedTill);
+            boolean applyDepositFee);
 
     void postJournalEntries(SavingsAccount savingsAccount, Set<Long> existingTransactionIds, Set<Long> existingReversedTransactionIds,
             boolean backdatedTxnsAllowedTill);
@@ -48,4 +48,6 @@ public interface SavingsAccountDomainService {
 
     SavingsAccountTransaction handleHold(SavingsAccount account, AppUser createdUser, BigDecimal amount, LocalDate transactionDate,
             Boolean lienAllowed);
+
+    List<SavingsAccountTransaction> extractNewTransactions(SavingsAccount account);
 }

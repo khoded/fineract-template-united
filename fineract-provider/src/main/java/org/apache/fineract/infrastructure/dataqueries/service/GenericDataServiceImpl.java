@@ -69,7 +69,7 @@ public class GenericDataServiceImpl implements GenericDataService {
 
             for (int i = 0; i < rsmd.getColumnCount(); i++) {
 
-                final String columnName = rsmd.getColumnName(i + 1);
+                final String columnName = rsmd.getColumnLabel(i + 1);
                 final String columnType = rsmd.getColumnTypeName(i + 1);
 
                 final ResultsetColumnHeaderData columnHeader = ResultsetColumnHeaderData.basic(columnName, columnType);
@@ -79,7 +79,7 @@ public class GenericDataServiceImpl implements GenericDataService {
             while (rs.next()) {
                 final List<String> columnValues = new ArrayList<>();
                 for (int i = 0; i < rsmd.getColumnCount(); i++) {
-                    final String columnName = rsmd.getColumnName(i + 1);
+                    final String columnName = rsmd.getColumnLabel(i + 1);
                     final String columnValue = rs.getString(columnName);
                     columnValues.add(columnValue);
                 }
@@ -200,7 +200,7 @@ public class GenericDataServiceImpl implements GenericDataService {
     }
 
     @Override
-    public List<ResultsetColumnHeaderData> fillResultsetColumnHeaders(final String datatable) {
+    public List<ResultsetColumnHeaderData> fillResultsetColumnHeaders(final String datatable, boolean fieldsSkip) {
         final SqlRowSet columnDefinitions = getDatatableMetaData(datatable);
 
         final List<ResultsetColumnHeaderData> columnHeaders = new ArrayList<>();
@@ -225,9 +225,16 @@ public class GenericDataServiceImpl implements GenericDataService {
                     columnValues = retreiveColumnValues(codeName);
                 }
             }
+            if ((columnName.equals("created_at") || columnName.equals("updated_at"))) {
+                if (!fieldsSkip) {
+                    columnHeaders.add(ResultsetColumnHeaderData.detailed(columnName, columnType, columnLength, columnNullable,
+                            columnIsPrimaryKey, columnValues, codeName));
+                }
+            } else {
+                columnHeaders.add(ResultsetColumnHeaderData.detailed(columnName, columnType, columnLength, columnNullable,
+                        columnIsPrimaryKey, columnValues, codeName));
+            }
 
-            columnHeaders.add(ResultsetColumnHeaderData.detailed(columnName, columnType, columnLength, columnNullable, columnIsPrimaryKey,
-                    columnValues, codeName));
         }
 
         return columnHeaders;

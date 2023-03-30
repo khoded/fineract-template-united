@@ -142,4 +142,13 @@ public interface LoanApiConstants {
     String fixedPrincipalPercentagePerInstallmentParamName = "fixedPrincipalPercentagePerInstallment";
 
     String LOAN_ASSOCIATIONS_ALL = "all";
+    String LOAN_TERM_INCLUDES_TOPPED_UP_LOAN_TERM = "loanTermIncludesToppedUpLoanTerm";
+    String NUMBER_OF_REPAYMENT_TO_CARRY_FORWARD = "numberOfRepaymentsToCarryForward";
+    String LOAN_TERM_TO_TOP_UP = "loanTermToTopUp";
+
+    String isBnplLoanParamName = "isBnplLoan";
+    String requiresEquityContributionParamName = "requiresEquityContribution";
+    String equityContributionLoanPercentageParamName = "equityContributionLoanPercentage";
+    String linkVendorAccountIdParamName = "linkVendorAccountId";
+    String linkedVendorAccountAssociateParamName = "linkedVendorAccount";
 }

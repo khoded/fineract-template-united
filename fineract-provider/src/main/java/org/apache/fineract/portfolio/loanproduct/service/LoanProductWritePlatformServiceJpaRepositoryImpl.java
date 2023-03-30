@@ -18,18 +18,28 @@
  */
 package org.apache.fineract.portfolio.loanproduct.service;
 
+import static org.apache.fineract.portfolio.interestratechart.InterestRateChartApiConstants.deleteParamName;
+import static org.apache.fineract.portfolio.interestratechart.InterestRateChartApiConstants.idParamName;
+
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import javax.persistence.PersistenceException;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.fineract.accounting.producttoaccountmapping.service.ProductToGLAccountMappingWritePlatformService;
+import org.apache.fineract.infrastructure.codes.domain.CodeValue;
+import org.apache.fineract.infrastructure.codes.domain.CodeValueRepositoryWrapper;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
+import org.apache.fineract.infrastructure.core.data.ApiParameterError;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResultBuilder;
+import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
+import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.apache.fineract.infrastructure.entityaccess.domain.FineractEntityAccessType;
 import org.apache.fineract.infrastructure.entityaccess.service.FineractEntityAccessUtil;
@@ -38,11 +48,15 @@ import org.apache.fineract.portfolio.businessevent.domain.loan.product.LoanProdu
 import org.apache.fineract.portfolio.businessevent.service.BusinessEventNotifierService;
 import org.apache.fineract.portfolio.charge.domain.Charge;
 import org.apache.fineract.portfolio.charge.domain.ChargeRepositoryWrapper;
+import org.apache.fineract.portfolio.client.api.ClientApiConstants;
 import org.apache.fineract.portfolio.floatingrates.domain.FloatingRate;
 import org.apache.fineract.portfolio.floatingrates.domain.FloatingRateRepositoryWrapper;
 import org.apache.fineract.portfolio.fund.domain.Fund;
 import org.apache.fineract.portfolio.fund.domain.FundRepository;
 import org.apache.fineract.portfolio.fund.exception.FundNotFoundException;
+import org.apache.fineract.portfolio.interestratechart.InterestRateChartApiConstants;
+import org.apache.fineract.portfolio.interestratechart.domain.InterestRateChart;
+import org.apache.fineract.portfolio.interestratechart.service.InterestRateChartAssembler;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepositoryWrapper;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionProcessingStrategyRepository;
 import org.apache.fineract.portfolio.loanaccount.exception.LoanTransactionProcessingStrategyNotFoundException;
@@ -58,10 +72,13 @@ import org.apache.fineract.portfolio.loanproduct.exception.LoanProductNotFoundEx
 import org.apache.fineract.portfolio.loanproduct.serialization.LoanProductDataValidator;
 import org.apache.fineract.portfolio.rate.domain.Rate;
 import org.apache.fineract.portfolio.rate.domain.RateRepositoryWrapper;
+import org.apache.fineract.portfolio.savings.DepositsApiConstants;
+import org.apache.fineract.portfolio.savings.domain.DepositProductAssembler;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.lang.Nullable;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -84,6 +101,12 @@ public class LoanProductWritePlatformServiceJpaRepositoryImpl implements LoanPro
     private final LoanRepositoryWrapper loanRepositoryWrapper;
     private final BusinessEventNotifierService businessEventNotifierService;
 
+    private final DepositProductAssembler depositProductAssembler;
+
+    private final InterestRateChartAssembler chartAssembler;
+
+    private final CodeValueRepositoryWrapper codeValueRepository;
+
     @Autowired
     public LoanProductWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context,
             final LoanProductDataValidator fromApiJsonDeserializer, final LoanProductRepository loanProductRepository,
@@ -92,7 +115,9 @@ public class LoanProductWritePlatformServiceJpaRepositoryImpl implements LoanPro
             final ChargeRepositoryWrapper chargeRepository, final RateRepositoryWrapper rateRepository,
             final ProductToGLAccountMappingWritePlatformService accountMappingWritePlatformService,
             final FineractEntityAccessUtil fineractEntityAccessUtil, final FloatingRateRepositoryWrapper floatingRateRepository,
-            final LoanRepositoryWrapper loanRepositoryWrapper, final BusinessEventNotifierService businessEventNotifierService) {
+            final LoanRepositoryWrapper loanRepositoryWrapper, final BusinessEventNotifierService businessEventNotifierService,
+            DepositProductAssembler depositProductAssembler, InterestRateChartAssembler chartAssembler,
+            CodeValueRepositoryWrapper codeValueRepository) {
         this.context = context;
         this.fromApiJsonDeserializer = fromApiJsonDeserializer;
         this.loanProductRepository = loanProductRepository;
@@ -106,6 +131,9 @@ public class LoanProductWritePlatformServiceJpaRepositoryImpl implements LoanPro
         this.floatingRateRepository = floatingRateRepository;
         this.loanRepositoryWrapper = loanRepositoryWrapper;
         this.businessEventNotifierService = businessEventNotifierService;
+        this.depositProductAssembler = depositProductAssembler;
+        this.chartAssembler = chartAssembler;
+        this.codeValueRepository = codeValueRepository;
     }
 
     @Transactional
@@ -134,9 +162,18 @@ public class LoanProductWritePlatformServiceJpaRepositoryImpl implements LoanPro
                 floatingRate = this.floatingRateRepository
                         .findOneWithNotFoundDetection(command.longValueOfParameterNamed("floatingRatesId"));
             }
+
+            CodeValue productCategory = getLoanProductCategory(command);
+            CodeValue productType = getLoanProductType(command);
             final LoanProduct loanProduct = LoanProduct.assembleFromJson(fund, loanTransactionProcessingStrategy, charges, command,
-                    this.aprCalculator, floatingRate, rates);
+                    this.aprCalculator, floatingRate, rates, productCategory, productType);
             loanProduct.updateLoanProductInRelatedClasses();
+            // Interest rate charts
+            final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+            final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("loanproduct");
+            final Set<InterestRateChart> charts = this.depositProductAssembler.assembleListOfCharts(command,
+                    loanProduct.getCurrency().getCode(), baseDataValidator);
+            loanProduct.setCharts(charts);
 
             this.loanProductRepository.saveAndFlush(loanProduct);
 
@@ -208,7 +245,7 @@ public class LoanProductWritePlatformServiceJpaRepositoryImpl implements LoanPro
             }
 
             final Map<String, Object> changes = product.update(command, this.aprCalculator, floatingRate);
-
+            this.updateCharts(command, changes, product);
             if (changes.containsKey("fundId")) {
                 final Long fundId = (Long) changes.get("fundId");
                 final Fund fund = findFundByIdIfProvided(fundId);
@@ -374,5 +411,80 @@ public class LoanProductWritePlatformServiceJpaRepositoryImpl implements LoanPro
 
     private void logAsErrorUnexpectedDataIntegrityException(final Exception dve) {
         LOG.error("Error occured.", dve);
+    }
+
+    private void updateCharts(JsonCommand command, Map<String, Object> actualChanges, LoanProduct product) {
+        final Map<String, Object> deletedCharts = new HashMap<>();
+        final Map<String, Object> chartsChanges = new HashMap<>();
+
+        final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("loanproduct");
+
+        if (command.hasParameter(DepositsApiConstants.chartsParamName)) {
+            final JsonArray array = command.arrayOfParameterNamed(DepositsApiConstants.chartsParamName);
+            if (array != null) {
+                for (int i = 0; i < array.size(); i++) {
+                    final JsonObject chartElement = array.get(i).getAsJsonObject();
+                    JsonCommand chartCommand = JsonCommand.fromExistingCommand(command, chartElement);
+                    if (chartCommand.parameterExists(idParamName)) {
+                        final Long chartId = chartCommand.longValueOfParameterNamed(idParamName);
+                        final InterestRateChart chart = product.findChart(chartId);
+                        if (chart == null) {
+                            baseDataValidator.parameter(idParamName).value(chartId).failWithCode("no.chart.associated.with.id");
+                        } else if (chartCommand.parameterExists(deleteParamName)) {
+                            if (product.removeChart(chart)) {
+                                deletedCharts.put(idParamName, chartId);
+                            }
+                        } else {
+                            chart.update(chartCommand, chartsChanges, baseDataValidator, product.setOfCharts(),
+                                    product.getCurrency().getCode());
+                        }
+                    } else {
+                        // assemble chart
+                        final InterestRateChart newChart = this.chartAssembler.assembleFrom(chartElement, product.getCurrency().getCode(),
+                                baseDataValidator);
+                        product.addChart(newChart);
+                    }
+                }
+            }
+        }
+
+        // this.validateCharts(baseDataValidator);
+
+        // add chart changes to actual changes list.
+        if (!chartsChanges.isEmpty()) {
+            actualChanges.put(InterestRateChartApiConstants.chartSlabs, chartsChanges);
+        }
+
+        // add deleted chart to actual changes
+        if (!deletedCharts.isEmpty()) {
+            actualChanges.put("deletedChartSlabs", deletedCharts);
+        }
+
+        if (!dataValidationErrors.isEmpty()) {
+            throw new PlatformApiDataValidationException(dataValidationErrors);
+        }
+    }
+
+    @Nullable
+    private CodeValue getLoanProductCategory(JsonCommand command) {
+        CodeValue productCategory = null;
+        final Long productCategoryId = command.longValueOfParameterNamed(LoanProductConstants.LOAN_PRODUCT_CATEGORY);
+        if (productCategoryId != null) {
+            productCategory = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.PRODUCT_CATEGORY,
+                    productCategoryId);
+        }
+        return productCategory;
+    }
+
+    @Nullable
+    private CodeValue getLoanProductType(JsonCommand command) {
+        CodeValue productType = null;
+        final Long productTypeId = command.longValueOfParameterNamed(LoanProductConstants.LOAN_PRODUCT_TYPE);
+        if (productTypeId != null) {
+            productType = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.PRODUCT_TYPE,
+                    productTypeId);
+        }
+        return productType;
     }
 }

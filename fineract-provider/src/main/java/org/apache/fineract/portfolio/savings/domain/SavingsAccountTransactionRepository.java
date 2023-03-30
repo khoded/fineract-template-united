@@ -49,4 +49,34 @@ public interface SavingsAccountTransactionRepository
 
     @Query("select sat from SavingsAccountTransaction sat where sat.refNo = :refNo")
     List<SavingsAccountTransaction> findAllTransactionByRefNo(@Param("refNo") String refNo);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    List<SavingsAccountTransaction> findBySavingsAccountId(@Param("savingsAccountId") Long savingsAccountId);
+
+    @Query("SELECT sat FROM SavingsAccountTransaction sat WHERE sat.savingsAccount.id = :savingsId ORDER BY sat.dateOf, sat.createdDate, sat.id")
+    List<SavingsAccountTransaction> getTransactionsByAccountId(@Param("savingsId") Long savingsId);
+
+    @Query("SELECT sat FROM SavingsAccountTransaction sat WHERE sat.savingsAccount.id = :savingsId and sat.typeOf = :type ORDER BY sat.dateOf, sat.createdDate, sat.id")
+    List<SavingsAccountTransaction> getTransactionsByAccountIdAndType(@Param("savingsId") Long savingsId, @Param("type") Integer type);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select st from SavingsAccountTransaction st where st.savingsAccount = :savingsAccount and st.dateOf > :transactionDate order by st.dateOf DESC")
+    List<SavingsAccountTransaction> findTransactionsAfterTransactionCurrentDate(@Param("savingsAccount") SavingsAccount savingsAccount,
+            @Param("transactionDate") LocalDate transactionDate);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select st from SavingsAccountTransaction st  INNER JOIN FETCH st.paymentDetail where st.savingsAccount = :savingsAccount and st.dateOf <= :transactionDate and st.typeOf = 3 and st.reversed = false  and st.paymentDetail.parentSavingsAccountTransactionId IS NULL and st.paymentDetail.parentTransactionPaymentDetailsId  IS NULL  order by st.dateOf DESC")
+    List<SavingsAccountTransaction> findInterestPostingToBeRevokedOnVaultTribe(@Param("savingsAccount") SavingsAccount savingsAccount,
+            @Param("transactionDate") LocalDate transactionDate);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select st from SavingsAccountTransaction st  INNER JOIN FETCH st.paymentDetail where  st.typeOf = 2 AND st.paymentDetail IS NOT NULL AND st.paymentDetail.parentSavingsAccountTransactionId = :transactionId AND  st.paymentDetail.parentTransactionPaymentDetailsId = :paymentDetailsId ")
+    SavingsAccountTransaction findRevokedInterestTransaction(@Param("transactionId") Long transactionId,
+            @Param("paymentDetailsId") Long paymentDetailsId);
+
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select st from SavingsAccountTransaction st INNER JOIN FETCH st.savingsAccount  where  st.id = :transactionId AND st.savingsAccount.id = :savingsAccountId ")
+    SavingsAccountTransaction findSavingsAccountTransaction(@Param("transactionId") Long transactionId,
+            @Param("savingsAccountId") Long savingsAccountId);
+
 }

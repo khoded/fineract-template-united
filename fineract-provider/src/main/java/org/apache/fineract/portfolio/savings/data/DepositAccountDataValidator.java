@@ -42,6 +42,7 @@ import static org.apache.fineract.portfolio.savings.DepositsApiConstants.recurri
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.transferInterestToSavingsParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.transferToSavingsIdParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.accountNoParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.allowPartialLiquidation;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.amountParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.chargeIdParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.chargesParamName;
@@ -61,12 +62,14 @@ import static org.apache.fineract.portfolio.savings.SavingsApiConstants.minRequi
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.nominalAnnualInterestRateParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.productIdParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.submittedOnDateParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.totalLiquidationAllowed;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.withHoldTaxParamName;
 
 import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.reflect.TypeToken;
+import io.fiter.ff4j.validators.SavingsAccountFeatureValidator;
 import java.lang.reflect.Type;
 import java.math.BigDecimal;
 import java.time.LocalDate;
@@ -81,6 +84,8 @@ import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
 import org.apache.fineract.infrastructure.core.exception.InvalidJsonException;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
+import org.apache.fineract.portfolio.charge.domain.Charge;
+import org.apache.fineract.portfolio.charge.domain.ChargeRepositoryWrapper;
 import org.apache.fineract.portfolio.savings.DepositAccountOnClosureType;
 import org.apache.fineract.portfolio.savings.DepositAccountType;
 import org.apache.fineract.portfolio.savings.DepositsApiConstants;
@@ -90,7 +95,18 @@ import org.apache.fineract.portfolio.savings.SavingsInterestCalculationDaysInYea
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationType;
 import org.apache.fineract.portfolio.savings.SavingsPeriodFrequencyType;
 import org.apache.fineract.portfolio.savings.SavingsPostingInterestPeriodType;
+import org.apache.fineract.portfolio.savings.domain.DepositProductRecurringDetail;
+import org.apache.fineract.portfolio.savings.domain.DepositProductTermAndPreClosure;
+import org.apache.fineract.portfolio.savings.domain.FixedDepositProduct;
+import org.apache.fineract.portfolio.savings.domain.FixedDepositProductRepository;
+import org.apache.fineract.portfolio.savings.domain.RecurringDepositProduct;
+import org.apache.fineract.portfolio.savings.domain.RecurringDepositProductRepository;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccount;
+import org.apache.fineract.portfolio.savings.domain.SavingsProduct;
+import org.apache.fineract.portfolio.savings.exception.DepositPeriodForAccountNotCompatibleWithChargeAddedForFreeWithdrawalException;
+import org.apache.fineract.portfolio.savings.exception.FixedDepositProductNotFoundException;
+import org.apache.fineract.portfolio.savings.exception.RecurringDepositProductNotFoundException;
+import org.jfree.util.Log;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -99,11 +115,29 @@ public class DepositAccountDataValidator {
 
     private final FromJsonHelper fromApiJsonHelper;
     private final DepositProductDataValidator productDataValidator;
+    /**
+     *
+     * This is a fiter only feature, it should not be committed in the event that it this is merged upstream
+     */
+    private final SavingsAccountFeatureValidator featureValidator;
+
+    private final ChargeRepositoryWrapper chargeRepository;
+
+    private final RecurringDepositProductRepository recurringDepositProductRepository;
+
+    private final FixedDepositProductRepository fixedDepositProductRepository;
 
     @Autowired
-    public DepositAccountDataValidator(final FromJsonHelper fromApiJsonHelper, final DepositProductDataValidator productDataValidator) {
+    public DepositAccountDataValidator(final FromJsonHelper fromApiJsonHelper, final DepositProductDataValidator productDataValidator,
+            final SavingsAccountFeatureValidator featureValidator, ChargeRepositoryWrapper chargeRepository,
+            RecurringDepositProductRepository recurringDepositProductRepository,
+            FixedDepositProductRepository fixedDepositProductRepository) {
         this.fromApiJsonHelper = fromApiJsonHelper;
         this.productDataValidator = productDataValidator;
+        this.featureValidator = featureValidator;
+        this.chargeRepository = chargeRepository;
+        this.recurringDepositProductRepository = recurringDepositProductRepository;
+        this.fixedDepositProductRepository = fixedDepositProductRepository;
     }
 
     public void validateFixedDepositForSubmit(final String json) {
@@ -125,7 +159,8 @@ public class DepositAccountDataValidator {
         validateDepositTermDeatilForSubmit(element, baseDataValidator, DepositAccountType.FIXED_DEPOSIT);
         validateSavingsCharges(element, baseDataValidator);
         validateWithHoldTax(element, baseDataValidator);
-
+        validatePartialLiquidationSetting(element, baseDataValidator);
+        validateDepositAmountAgainstMinDepositAmount(element, baseDataValidator, DepositAccountType.FIXED_DEPOSIT);
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }
 
@@ -148,7 +183,8 @@ public class DepositAccountDataValidator {
         validateDepositTermDeatilForUpdate(element, baseDataValidator, DepositAccountType.FIXED_DEPOSIT);
         // validateSavingsCharges(element, baseDataValidator);
         validateWithHoldTax(element, baseDataValidator);
-
+        validatePartialLiquidationSetting(element, baseDataValidator);
+        validateDepositAmountAgainstMinDepositAmount(element, baseDataValidator, DepositAccountType.FIXED_DEPOSIT);
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }
 
@@ -171,8 +207,11 @@ public class DepositAccountDataValidator {
         validateDepositTermDeatilForSubmit(element, baseDataValidator, DepositAccountType.RECURRING_DEPOSIT);
         validateRecurringDetailForSubmit(element, baseDataValidator);
         validateSavingsCharges(element, baseDataValidator);
+        validateFreeWithdrawalCharges(element, baseDataValidator, DepositAccountType.RECURRING_DEPOSIT);
         validateWithHoldTax(element, baseDataValidator);
-
+        // featureValidator.validateDepositDetailsForUpdate(element, baseDataValidator,
+        // DepositAccountType.RECURRING_DEPOSIT);
+        validateDepositAmountAgainstMinDepositAmount(element, baseDataValidator, DepositAccountType.RECURRING_DEPOSIT);
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }
 
@@ -195,8 +234,11 @@ public class DepositAccountDataValidator {
         validateDepositTermDeatilForUpdate(element, baseDataValidator, DepositAccountType.RECURRING_DEPOSIT);
         validateRecurringDetailForUpdate(element, baseDataValidator);
         // validateSavingsCharges(element, baseDataValidator);
+        validateFreeWithdrawalCharges(element, baseDataValidator, DepositAccountType.RECURRING_DEPOSIT);
         validateWithHoldTax(element, baseDataValidator);
-
+        // featureValidator.validateDepositDetailsForUpdate(element, baseDataValidator,
+        // DepositAccountType.RECURRING_DEPOSIT);
+        validateDepositAmountAgainstMinDepositAmount(element, baseDataValidator, DepositAccountType.RECURRING_DEPOSIT);
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
 
     }
@@ -727,8 +769,11 @@ public class DepositAccountDataValidator {
                     final Long chargeId = this.fromApiJsonHelper.extractLongNamed(chargeIdParamName, savingsChargeElement);
                     baseDataValidator.reset().parameter(chargeIdParamName).value(chargeId).longGreaterThanZero();
 
-                    final BigDecimal amount = this.fromApiJsonHelper.extractBigDecimalNamed(amountParamName, savingsChargeElement, locale);
-                    baseDataValidator.reset().parameter(amountParamName).value(amount).notNull().positiveAmount();
+                    if (this.fromApiJsonHelper.parameterExists(amountParamName, savingsChargeElement)) {
+                        final BigDecimal amount = this.fromApiJsonHelper.extractBigDecimalNamed(amountParamName, savingsChargeElement,
+                                locale);
+                        baseDataValidator.reset().parameter(amountParamName).value(amount).notNull().positiveAmount();
+                    }
 
                     if (this.fromApiJsonHelper.parameterExists(feeOnMonthDayParamName, savingsChargeElement)) {
                         final MonthDay monthDay = this.fromApiJsonHelper.extractMonthDayNamed(feeOnMonthDayParamName, savingsChargeElement,
@@ -753,9 +798,114 @@ public class DepositAccountDataValidator {
         }
     }
 
+    private void validateFreeWithdrawalCharges(final JsonElement element, final DataValidatorBuilder baseDataValidator,
+            final DepositAccountType depositType) {
+
+        if (element.isJsonObject()) {
+            final Long productId = this.fromApiJsonHelper.extractLongNamed(productIdParamName, element);
+            SavingsProduct product = this.recurringDepositProductRepository.findById(productId)
+                    .orElseThrow(() -> new RecurringDepositProductNotFoundException(productId));
+            final DepositProductRecurringDetail prodRecurringDetail = ((RecurringDepositProduct) product).depositRecurringDetail();
+            if (prodRecurringDetail.recurringDetail().allowFreeWithdrawal()) {
+                final JsonObject topLevelJsonElement = element.getAsJsonObject();
+                if (topLevelJsonElement.has(chargesParamName) && topLevelJsonElement.get(chargesParamName).isJsonArray()) {
+                    final JsonArray array = topLevelJsonElement.get(chargesParamName).getAsJsonArray();
+                    for (int i = 0; i < array.size(); i++) {
+
+                        final JsonObject savingsChargeElement = array.get(i).getAsJsonObject();
+
+                        final Long chargeId = this.fromApiJsonHelper.extractLongNamed(chargeIdParamName, savingsChargeElement);
+                        baseDataValidator.reset().parameter(chargeIdParamName).value(chargeId).longGreaterThanZero();
+
+                        if (chargeId != null && depositType.isRecurringDeposit()) {
+                            Charge charge = this.chargeRepository.findOneWithNotFoundDetection(chargeId);
+                            if (charge.isActive() && charge.isEnableFreeWithdrawal()) {
+                                final Integer depositPeriod = fromApiJsonHelper.extractIntegerSansLocaleNamed(depositPeriodParamName,
+                                        element);
+                                final Integer depositPeriodFrequencyId = fromApiJsonHelper
+                                        .extractIntegerSansLocaleNamed(depositPeriodFrequencyIdParamName, element);
+                                Integer freeWithdrawalCount = charge.getFrequencyFreeWithdrawalCharge();
+                                if ((depositPeriod < 3 && SavingsPeriodFrequencyType.fromInt(depositPeriodFrequencyId)
+                                        .equals(SavingsPeriodFrequencyType.MONTHS)) && !freeWithdrawalCount.equals(1)) {
+                                    Log.info("charge is wrong " + depositPeriod);
+                                    throw new DepositPeriodForAccountNotCompatibleWithChargeAddedForFreeWithdrawalException(depositPeriod,
+                                            freeWithdrawalCount);
+                                } else if ((depositPeriod < 90 && SavingsPeriodFrequencyType.fromInt(depositPeriodFrequencyId)
+                                        .equals(SavingsPeriodFrequencyType.DAYS)) && !freeWithdrawalCount.equals(1)) {
+                                    Log.info("charge is wrong " + depositPeriod);
+                                    throw new DepositPeriodForAccountNotCompatibleWithChargeAddedForFreeWithdrawalException(depositPeriod,
+                                            freeWithdrawalCount);
+                                }
+
+                                if (((depositPeriod >= 3 && depositPeriod <= 12) && SavingsPeriodFrequencyType
+                                        .fromInt(depositPeriodFrequencyId).equals(SavingsPeriodFrequencyType.MONTHS))
+                                        && !freeWithdrawalCount.equals(2)) {
+                                    Log.info("charge is wrong " + depositPeriod);
+                                    throw new DepositPeriodForAccountNotCompatibleWithChargeAddedForFreeWithdrawalException(depositPeriod,
+                                            freeWithdrawalCount);
+                                } else if (((depositPeriod >= 90 && depositPeriod <= 365) && SavingsPeriodFrequencyType
+                                        .fromInt(depositPeriodFrequencyId).equals(SavingsPeriodFrequencyType.DAYS))
+                                        && !freeWithdrawalCount.equals(2)) {
+                                    Log.info("charge is wrong " + depositPeriod);
+                                    throw new DepositPeriodForAccountNotCompatibleWithChargeAddedForFreeWithdrawalException(depositPeriod,
+                                            freeWithdrawalCount);
+
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+    }
+
+    private void validatePartialLiquidationSetting(JsonElement element, DataValidatorBuilder baseDataValidator) {
+
+        boolean allowLiquidation = false;
+        if (this.fromApiJsonHelper.parameterExists(allowPartialLiquidation, element)) {
+            allowLiquidation = this.fromApiJsonHelper.extractBooleanNamed(depositAmountParamName, element);
+        }
+
+        if (allowLiquidation && this.fromApiJsonHelper.parameterExists(totalLiquidationAllowed, element)) {
+            Integer maxLiquidationTimes = this.fromApiJsonHelper.extractIntegerWithLocaleNamed(totalLiquidationAllowed, element);
+            baseDataValidator.reset().parameter(totalLiquidationAllowed).value(maxLiquidationTimes).notNull().positiveAmount();
+        }
+
+    }
+
     private void throwExceptionIfValidationWarningsExist(final List<ApiParameterError> dataValidationErrors) {
         if (!dataValidationErrors.isEmpty()) {
             throw new PlatformApiDataValidationException(dataValidationErrors);
+        }
+    }
+
+    public void validateDepositAmountAgainstMinDepositAmount(final JsonElement element, final DataValidatorBuilder baseDataValidator,
+            final DepositAccountType depositAccountType) {
+        final Long productId = this.fromApiJsonHelper.extractLongNamed(productIdParamName, element);
+        SavingsProduct product = null;
+        DepositProductTermAndPreClosure prodTermAndPreClosure = null;
+        BigDecimal amount = BigDecimal.ZERO;
+        if (depositAccountType.isFixedDeposit()) {
+            product = this.fixedDepositProductRepository.findById(productId)
+                    .orElseThrow(() -> new FixedDepositProductNotFoundException(productId));
+            prodTermAndPreClosure = ((FixedDepositProduct) product).depositProductTermAndPreClosure();
+            amount = fromApiJsonHelper.extractBigDecimalWithLocaleNamed(depositAmountParamName, element);
+        } else if (depositAccountType.isRecurringDeposit()) {
+            product = this.recurringDepositProductRepository.findById(productId)
+                    .orElseThrow(() -> new RecurringDepositProductNotFoundException(productId));
+            prodTermAndPreClosure = ((RecurringDepositProduct) product).depositProductTermAndPreClosure();
+            amount = fromApiJsonHelper.extractBigDecimalWithLocaleNamed(mandatoryRecommendedDepositAmountParamName, element);
+        }
+        final boolean isLessThanMin = prodTermAndPreClosure.depositProductAmountDetails().isLessThanMinDepositAmount(amount);
+        final boolean isGreaterThanMax = prodTermAndPreClosure.depositProductAmountDetails().isGreaterThanMaxDepositAmount(amount);
+        // deposit amount should be greater min deposit amount and less than max or equal set in product
+        if (isLessThanMin) {
+            baseDataValidator.reset().parameter(depositAmountParamName).value(amount)
+                    .failWithCodeNoParameterAddedToErrorCode("deposit.amount.lessthan.min.deposit.amount");
+        } else if (isGreaterThanMax) {
+            baseDataValidator.reset().parameter(depositAmountParamName).value(amount)
+                    .failWithCodeNoParameterAddedToErrorCode("deposit.amount.greaterthan.max.deposit.amount");
         }
     }
 

@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.portfolio.savings.service;
 
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.Set;
@@ -27,7 +28,9 @@ import org.apache.fineract.organisation.office.domain.Office;
 import org.apache.fineract.organisation.staff.domain.Staff;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountData;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccount;
+import org.apache.fineract.portfolio.savings.domain.SavingsAccountCharge;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountTransaction;
+import org.apache.fineract.useradministration.domain.AppUser;
 
 public interface SavingsAccountWritePlatformService {
 
@@ -44,7 +47,7 @@ public interface SavingsAccountWritePlatformService {
     CommandProcessingResult reverseTransaction(Long savingsId, Long transactionId, boolean allowAccountTransferModification,
             JsonCommand command);
 
-    CommandProcessingResult undoTransaction(Long savingsId, Long transactionId, boolean allowAccountTransferModification);
+    CommandProcessingResult undoAndUnRevokeTransaction(Long savingsId, Long transactionId, boolean allowAccountTransferModification);
 
     CommandProcessingResult adjustSavingsTransaction(Long savingsId, Long transactionId, JsonCommand command);
 
@@ -89,10 +92,7 @@ public interface SavingsAccountWritePlatformService {
 
     CommandProcessingResult postInterest(JsonCommand command);
 
-    void postInterest(SavingsAccount account, boolean postInterestAs, LocalDate transactionDate, boolean backdatedTxnsAllowedTill);
-
-    // SavingsAccountData postInterest(SavingsAccountData account, boolean postInterestAs, LocalDate transactionDate,
-    // boolean backdatedTxnsAllowedTill);
+    void postInterest(SavingsAccount account, boolean postInterestAs, LocalDate transactionDate);
 
     SavingsAccountData postInterest(SavingsAccountData account, boolean postInterestAs, LocalDate transactionDate,
             boolean backdatedTxnsAllowedTill);
@@ -105,11 +105,11 @@ public interface SavingsAccountWritePlatformService {
 
     CommandProcessingResult blockCredits(Long savingsId, JsonCommand command);
 
-    CommandProcessingResult unblockCredits(Long savingsId);
+    CommandProcessingResult unblockCredits(Long savingsId, JsonCommand command);
 
     CommandProcessingResult blockDebits(Long savingsId, JsonCommand command);
 
-    CommandProcessingResult unblockDebits(Long savingsId);
+    CommandProcessingResult unblockDebits(Long savingsId, JsonCommand command);
 
     CommandProcessingResult releaseAmount(Long savingsId, Long transactionId);
 
@@ -118,4 +118,17 @@ public interface SavingsAccountWritePlatformService {
     CommandProcessingResult gsimDeposit(Long gsimId, JsonCommand command);
 
     CommandProcessingResult bulkGSIMClose(Long gsimId, JsonCommand command);
+
+    CommandProcessingResult postAccrualInterest(Long savingAccountId, LocalDate postingDate, boolean isUserPosting);
+
+    void postAccrualInterest(SavingsAccount account, boolean postInterestAs, LocalDate transactionDate, boolean isUserPosting);
+
+    CommandProcessingResult postAccrualInterest(JsonCommand command);
+
+    void payCharge(SavingsAccountCharge savingsAccountCharge, LocalDate transactionDate, BigDecimal amountPaid, DateTimeFormatter formatter,
+            AppUser user);
+
+    CommandProcessingResult unlockAccount(Long savingsId, JsonCommand command);
+
+    CommandProcessingResult nextWithdrawalDateSavingsAccount(Long savingsId, JsonCommand command);
 }

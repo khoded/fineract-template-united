@@ -91,6 +91,23 @@ gradle clean bootRun'''
 
 ext['groovy.version'] = '3.0.10'
 ext['swaggerFile'] = "$rootDir/fineract-provider/build/classes/java/main/static/fineract.yaml".toString()
+def pentahoReportDir = System.properties['user.home'] + System.properties['file.separator'] + '.mifosx' + System.properties['file.separator'] + 'pentahoReports'
+def pentahoReportPostgrestDir = System.properties['user.home'] + System.properties['file.separator'] + '.mifosx' + System.properties['file.separator'] + 'pentahoReportsPostgres'
+copy {
+    from "fineract-provider/pentahoReports"
+    into pentahoReportDir
+}
+copy {
+    from "fineract-provider/pentahoReportsPostgres"
+    into pentahoReportPostgrestDir
+}
+
+def ff4jConfigDir = System.properties['user.home'] + System.properties['file.separator'] + '.fineract' + System.properties['file.separator'] + 'ff4j'
+copy {
+    from "fineract-provider/ff4j"
+    into ff4jConfigDir
+}
+
 
 allprojects  {
     group = 'org.apache.fineract'
@@ -110,6 +127,28 @@ allprojects  {
     apply plugin: 'org.nosphere.apache.rat'
     apply plugin: 'project-report'
     apply plugin: 'com.github.jk1.dependency-license-report'
+
+    dependencyManagement {
+        dependencies {
+            //Pentaho
+            dependency 'org.pentaho.reporting.engine:classic-core:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.engine:classic-extensions:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.engine:classic-extensions-scripting:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.engine:wizard-core:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.designer:wizard-xul:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.library:libbase:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.library:libdocbundle:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.library:libfonts:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.library:libformat:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.library:libformula:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.library:libloader:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.library:librepository:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.library:libserializer:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.library:libsparkline:9.2.0.0-SNAPSHOT'
+            dependency 'org.pentaho.reporting.library:libxml:9.2.0.0-SNAPSHOT'
+        }
+    }
+
 
     // Configuration for the sonarqube plugin is now in GitHub Actions
 
@@ -153,6 +192,7 @@ allprojects  {
             "**/banner.txt",
             "**/build.gradle.mustache",
             "**/pom.mustache",
+            "**/io/fiter/ff4j/**",
             '**/*.properties',
             '**/*.js'
         ])
@@ -248,7 +288,12 @@ allprojects  {
             // Git build info
             "**/git.properties",
             ".mailmap",
+            // Pentaho reports
+            '**/*.prpt',
+            '**/*.properties',
+            '**/*.PROPERTIES',
             '**/images/diag-*.svg',
+            '**/io/fiter/**',
             '**/*.properties',
             '**/*.js',
             '**/target/**'

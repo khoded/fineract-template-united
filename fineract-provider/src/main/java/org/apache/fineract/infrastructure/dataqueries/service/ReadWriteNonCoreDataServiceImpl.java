@@ -147,7 +147,8 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             final String appTableName = rowSet.getString("application_table_name");
             final String registeredDatatableName = rowSet.getString("registered_table_name");
             final String entitySubType = rowSet.getString("entity_subtype");
-            final List<ResultsetColumnHeaderData> columnHeaderData = genericDataService.fillResultsetColumnHeaders(registeredDatatableName);
+            final List<ResultsetColumnHeaderData> columnHeaderData = genericDataService.fillResultsetColumnHeaders(registeredDatatableName,
+                    true);
 
             datatables.add(DatatableData.create(appTableName, registeredDatatableName, entitySubType, columnHeaderData));
         }
@@ -175,7 +176,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             final String registeredDatatableName = rowSet.getString("registered_table_name");
             final String entitySubType = rowSet.getString("entity_subtype");
             final List<ResultsetColumnHeaderData> columnHeaderData = this.genericDataService
-                    .fillResultsetColumnHeaders(registeredDatatableName);
+                    .fillResultsetColumnHeaders(registeredDatatableName, true);
 
             datatableData = DatatableData.create(appTableName, registeredDatatableName, entitySubType, columnHeaderData);
         }
@@ -379,7 +380,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             final String appTable = queryForApplicationTableName(dataTableName);
             CommandProcessingResult commandProcessingResult = checkMainResourceExistsWithinScope(appTable, appTableId);
 
-            final List<ResultsetColumnHeaderData> columnHeaders = this.genericDataService.fillResultsetColumnHeaders(dataTableName);
+            final List<ResultsetColumnHeaderData> columnHeaders = this.genericDataService.fillResultsetColumnHeaders(dataTableName, false);
 
             final boolean multiRow = isMultirowDatatable(columnHeaders);
 
@@ -447,7 +448,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             final String appTable = queryForApplicationTableName(dataTableName);
             final CommandProcessingResult commandProcessingResult = checkMainResourceExistsWithinScope(appTable, appTableId);
 
-            final List<ResultsetColumnHeaderData> columnHeaders = this.genericDataService.fillResultsetColumnHeaders(dataTableName);
+            final List<ResultsetColumnHeaderData> columnHeaders = this.genericDataService.fillResultsetColumnHeaders(dataTableName, false);
 
             final Type typeOfMap = new TypeToken<Map<String, String>>() {}.getType();
             final Map<String, String> dataParams = this.fromJsonHelper.extractDataMap(typeOfMap, command.json());
@@ -486,7 +487,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
         }
     }
 
-    private boolean isRegisteredDataTable(final String name) {
+    public boolean isRegisteredDataTable(final String name) {
         // PERMITTED datatables
         final String sql = "select (CASE WHEN exists (select 1 from x_registered_table where registered_table_name = ?) THEN 'true' ELSE 'false' END)";
         final String isRegisteredDataTable = this.jdbcTemplate.queryForObject(sql, String.class, new Object[] { name });
@@ -951,7 +952,8 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
 
             validateDatatableName(datatableName);
             int rowCount = getRowCount(datatableName);
-            final List<ResultsetColumnHeaderData> columnHeaderData = this.genericDataService.fillResultsetColumnHeaders(datatableName);
+            final List<ResultsetColumnHeaderData> columnHeaderData = this.genericDataService.fillResultsetColumnHeaders(datatableName,
+                    false);
             final Map<String, ResultsetColumnHeaderData> mapColumnNameDefinition = new HashMap<>();
             for (final ResultsetColumnHeaderData columnHeader : columnHeaderData) {
                 mapColumnNameDefinition.put(columnHeader.getColumnName(), columnHeader);
@@ -1292,7 +1294,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
 
         checkMainResourceExistsWithinScope(appTable, appTableId);
 
-        final List<ResultsetColumnHeaderData> columnHeaders = this.genericDataService.fillResultsetColumnHeaders(dataTableName);
+        final List<ResultsetColumnHeaderData> columnHeaders = this.genericDataService.fillResultsetColumnHeaders(dataTableName, true);
 
         final boolean multiRow = isMultirowDatatable(columnHeaders);
 
@@ -1318,7 +1320,7 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
     private GenericResultsetData retrieveDataTableGenericResultSetForUpdate(final String appTable, final String dataTableName,
             final Long appTableId, final Long id) {
 
-        final List<ResultsetColumnHeaderData> columnHeaders = this.genericDataService.fillResultsetColumnHeaders(dataTableName);
+        final List<ResultsetColumnHeaderData> columnHeaders = this.genericDataService.fillResultsetColumnHeaders(dataTableName, false);
 
         final boolean multiRow = isMultirowDatatable(columnHeaders);
 
@@ -1946,6 +1948,40 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
         builder.append(" WHERE edc.x_registered_table_name = '" + datatableName + "'");
         final Long count = this.jdbcTemplate.queryForObject(builder.toString(), Long.class);
         return count > 0 ? true : false;
+    }
+
+    @Override
+    public BigDecimal getFxLatestRate(final String datatableName, final Long appTableId) {
+
+        final String sqlString = "SELECT " + sqlGenerator.escape("Rate") + " FROM " + sqlGenerator.escape(datatableName) + " WHERE "
+                + sqlGenerator.escape("updated_at") + " = (SELECT MAX( " + sqlGenerator.escape("updated_at") + ") FROM "
+                + sqlGenerator.escape(datatableName) + ") and " + sqlGenerator.escape("office_id") + " = " + appTableId;
+        final BigDecimal count = this.jdbcTemplate.queryForObject(sqlString, BigDecimal.class); // NOSONAR
+        return count;
+    }
+
+    @Override
+    public DatatableData checkDatatableExists(final String datatable) {
+
+        // PERMITTED datatables
+        SQLInjectionValidator.validateSQLInput(datatable);
+        final String sql = "select application_table_name, registered_table_name, entity_subtype from x_registered_table  \n"
+                + "where registered_table_name=?";
+
+        DatatableData datatableData = null;
+
+        final SqlRowSet rowSet = jdbcTemplate.queryForRowSet(sql, new Object[] { datatable }); // NOSONAR
+        if (rowSet.next()) {
+            final String appTableName = rowSet.getString("application_table_name");
+            final String registeredDatatableName = rowSet.getString("registered_table_name");
+            final String entitySubType = rowSet.getString("entity_subtype");
+            final List<ResultsetColumnHeaderData> columnHeaderData = this.genericDataService
+                    .fillResultsetColumnHeaders(registeredDatatableName, true);
+
+            datatableData = DatatableData.create(appTableName, registeredDatatableName, entitySubType, columnHeaderData);
+        }
+
+        return datatableData;
     }
 
 }

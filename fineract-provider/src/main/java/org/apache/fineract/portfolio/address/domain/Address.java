@@ -30,6 +30,8 @@ import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
 import javax.persistence.OneToMany;
 import javax.persistence.Table;
+import lombok.Getter;
+import lombok.Setter;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
@@ -97,10 +99,20 @@ public class Address extends AbstractPersistableCustom {
     @Column(name = "updated_on")
     private LocalDate updatedOn;
 
+    @ManyToOne
+    @JoinColumn(name = "lga_id")
+    private CodeValue lga;
+
+    @Getter
+    @Setter
+    @Column(name = "at_address_since")
+    private LocalDate atAddressSince;
+
     private Address(final String street, final String addressLine1, final String addressLine2, final String addressLine3,
             final String townVillage, final String city, final String countyDistrict, final CodeValue stateProvince,
             final CodeValue country, final String postalCode, final BigDecimal latitude, final BigDecimal longitude, final String createdBy,
-            final LocalDate createdOn, final String updatedBy, final LocalDate updatedOn) {
+            final LocalDate createdOn, final String updatedBy, final LocalDate updatedOn, final CodeValue lga,
+            final LocalDate atAddressSince) {
         this.street = street;
         this.addressLine1 = addressLine1;
         this.addressLine2 = addressLine2;
@@ -117,6 +129,7 @@ public class Address extends AbstractPersistableCustom {
         // this.createdOn = createdOn;
         this.updatedBy = updatedBy;
         // this.updatedOn = updatedOn;
+        this.lga = lga;
 
         if (createdOn != null) {
             this.createdOn = createdOn;
@@ -126,6 +139,8 @@ public class Address extends AbstractPersistableCustom {
         if (updatedOn != null) {
             this.updatedOn = updatedOn;
         }
+
+        this.atAddressSince = atAddressSince;
 
     }
 
@@ -163,11 +178,14 @@ public class Address extends AbstractPersistableCustom {
 
         final LocalDate updatedOn = command.localDateValueOfParameterNamed("updatedOn");
 
+        final LocalDate atAddressSince = command.localDateValueOfParameterNamed("atAddressSince");
+
         return new Address(street, addressLine1, addressLine2, addressLine3, townVillage, city, countyDistrict, stateProvince, country,
-                postalCode, latitude, longitude, createdBy, createdOn, updatedBy, updatedOn);
+                postalCode, latitude, longitude, createdBy, createdOn, updatedBy, updatedOn, null, atAddressSince);
     }
 
-    public static Address fromJsonObject(final JsonObject jsonObject, final CodeValue state_province, final CodeValue country) {
+    public static Address fromJsonObject(final JsonObject jsonObject, final CodeValue state_province, final CodeValue country,
+            final CodeValue lga) {
         String street = "";
         String addressLine1 = "";
         String addressLine2 = "";
@@ -182,6 +200,7 @@ public class Address extends AbstractPersistableCustom {
         String updatedBy = "";
         LocalDate updatedOnDate = null;
         LocalDate createdOnDate = null;
+        LocalDate atAddressSince = null;
 
         if (jsonObject.has("street")) {
             street = jsonObject.get("street").getAsString();
@@ -237,8 +256,14 @@ public class Address extends AbstractPersistableCustom {
             updatedOnDate = LocalDate.parse(updatedOn, formatter);
         }
 
+        if (jsonObject.has("atAddressSince")) {
+            String updatedOn = jsonObject.get("atAddressSince").getAsString();
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+            atAddressSince = LocalDate.parse(updatedOn, formatter);
+        }
+
         return new Address(street, addressLine1, addressLine2, addressLine3, townVillage, city, countyDistrict, state_province, country,
-                postalCode, latitude, longitude, createdBy, createdOnDate, updatedBy, updatedOnDate);
+                postalCode, latitude, longitude, createdBy, createdOnDate, updatedBy, updatedOnDate, lga, atAddressSince);
     }
 
     public Set<ClientAddress> getClientaddress() {
@@ -377,4 +402,11 @@ public class Address extends AbstractPersistableCustom {
         this.updatedOn = updatedOn;
     }
 
+    public CodeValue getLga() {
+        return lga;
+    }
+
+    public void setLga(CodeValue lga) {
+        this.lga = lga;
+    }
 }

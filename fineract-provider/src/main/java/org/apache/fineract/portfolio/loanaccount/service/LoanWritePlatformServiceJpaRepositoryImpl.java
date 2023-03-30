@@ -22,6 +22,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
@@ -34,8 +36,10 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.accounting.journalentry.service.JournalEntryWritePlatformService;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
@@ -58,12 +62,14 @@ import org.apache.fineract.infrastructure.jobs.annotation.CronTarget;
 import org.apache.fineract.infrastructure.jobs.exception.JobExecutionException;
 import org.apache.fineract.infrastructure.jobs.service.JobName;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
+import org.apache.fineract.notification.service.ActiveMqNotificationDomainServiceImpl;
 import org.apache.fineract.organisation.holiday.domain.Holiday;
 import org.apache.fineract.organisation.holiday.domain.HolidayRepositoryWrapper;
 import org.apache.fineract.organisation.monetary.domain.ApplicationCurrency;
 import org.apache.fineract.organisation.monetary.domain.ApplicationCurrencyRepositoryWrapper;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.Money;
+import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
 import org.apache.fineract.organisation.office.domain.Office;
 import org.apache.fineract.organisation.staff.domain.Staff;
 import org.apache.fineract.organisation.teller.data.CashierTransactionDataValidator;
@@ -194,6 +200,8 @@ import org.apache.fineract.portfolio.loanaccount.exception.LoanTransactionNotFou
 import org.apache.fineract.portfolio.loanaccount.exception.MultiDisbursementDataNotAllowedException;
 import org.apache.fineract.portfolio.loanaccount.exception.MultiDisbursementDataRequiredException;
 import org.apache.fineract.portfolio.loanaccount.guarantor.service.GuarantorDomainService;
+import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanRepaymentConfirmationData;
+import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanRepaymentScheduleData;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.OverdueLoanScheduleData;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.domain.DefaultScheduledDateGenerator;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.domain.LoanScheduleModel;
@@ -218,6 +226,8 @@ import org.apache.fineract.portfolio.repaymentwithpostdatedchecks.service.Repaym
 import org.apache.fineract.portfolio.savings.domain.SavingsAccount;
 import org.apache.fineract.portfolio.transfer.api.TransferApiConstants;
 import org.apache.fineract.useradministration.domain.AppUser;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.orm.jpa.JpaSystemException;
 import org.springframework.stereotype.Service;
@@ -269,6 +279,10 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     private final LoanRepository loanRepository;
     private final RepaymentWithPostDatedChecksAssembler repaymentWithPostDatedChecksAssembler;
     private final PostDatedChecksRepository postDatedChecksRepository;
+    @Autowired
+    private ActiveMqNotificationDomainServiceImpl activeMqNotificationDomainService;
+    @Autowired
+    private Environment env;
 
     private LoanLifecycleStateMachine defaultLoanLifecycleStateMachine() {
         final List<LoanStatus> allowedLoanStatuses = Arrays.asList(LoanStatus.values());
@@ -352,6 +366,12 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         if (loanProduct.syncExpectedWithDisbursementDate()) {
             syncExpectedDateWithActualDisbursementDate(loan, actualDisbursementDate);
         }
+
+        for (final LoanCharge loanCharge : loan.charges()) {
+            if (loanCharge.isDisburseToSavings()) {
+                loanCharge.setDueDate(actualDisbursementDate);
+            }
+        }
         checkClientOrGroupActive(loan);
 
         final LocalDate nextPossibleRepaymentDate = loan.getNextPossibleRepaymentDateForRescheduling();
@@ -424,7 +444,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 }
 
                 BigDecimal loanOutstanding = this.loanReadPlatformService
-                        .retrieveLoanPrePaymentTemplate(LoanTransactionType.REPAYMENT, loanIdToClose, actualDisbursementDate).getAmount();
+                        .retrieveLoanForeclosureTemplate(loanIdToClose, actualDisbursementDate).getAmount();
                 final BigDecimal firstDisbursalAmount = loan.getFirstDisbursalAmount();
                 if (loanOutstanding.compareTo(firstDisbursalAmount) > 0) {
                     throw new GeneralPlatformDomainRuleException("error.msg.loan.amount.less.than.outstanding.of.loan.to.be.closed",
@@ -806,6 +826,12 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
 
         final AppUser currentUser = getAppUserIfPresent();
         final Loan loan = this.loanAssembler.assembleFrom(loanId);
+
+        for (final LoanCharge loanCharge : loan.charges()) {
+            if (loanCharge.isDisburseToSavings()) {
+                loanCharge.setDueDate(loan.getExpectedDisbursedOnLocalDate());
+            }
+        }
         checkClientOrGroupActive(loan);
         businessEventNotifierService.notifyPreBusinessEvent(new LoanUndoDisbursalBusinessEvent(loan));
         removeLoanCycle(loan);
@@ -836,7 +862,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 loan.adjustNetDisbursalAmount(netDisbursalAmount);
             }
             saveAndFlushLoanWithDataIntegrityViolationChecks(loan);
-            this.accountTransfersWritePlatformService.reverseAllTransactions(loanId, PortfolioAccountType.LOAN);
+            this.accountTransfersWritePlatformService.reverseAllTransactions(loanId, PortfolioAccountType.LOAN, loan);
             String noteText = null;
             if (command.hasParameter("note")) {
                 noteText = command.stringValueOfParameterNamed("note");
@@ -894,7 +920,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
     @Override
     public CommandProcessingResult makeLoanRepayment(final LoanTransactionType repaymentTransactionType, final Long loanId,
             final JsonCommand command, final boolean isRecoveryRepayment) {
-
+        final AppUser currentUser = getAppUserIfPresent();
         this.loanUtilService.validateRepaymentTransactionType(repaymentTransactionType);
         this.loanEventApiJsonValidator.validateNewRepaymentTransaction(command.json());
 
@@ -938,6 +964,20 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 }
             }
             this.loanAccountDomainService.updateLoanCollateralTransaction(loanCollateralManagements);
+        }
+        try {
+            final LoanRepaymentConfirmationData repaymentConfirmationData = loanReadPlatformService
+                    .generateLoanPaymentReceipt(loanTransaction.getId());
+            List<LoanRepaymentScheduleData> scheduleDataList = loanReadPlatformService.getLoanRepaymentScheduleData(loanId);
+            repaymentConfirmationData.setScheduleDataList(scheduleDataList);
+
+            activeMqNotificationDomainService.buildNotification("ALL_FUNCTION", "LoanRepaymentConfirmation",
+                    repaymentConfirmationData.getTransactionId(), this.fromApiJsonHelper.toJson(repaymentConfirmationData), "PENDING",
+                    context.authenticatedUser().getId(), currentUser.getOffice().getId(),
+                    this.env.getProperty("fineract.activemq.loanRepaymentConfirmationQueue"));
+        } catch (Exception ex) {
+            throw ex;
+            // Don't react to this exception because If messaging fails, RpPayment Transaction shouldn't rollback
         }
 
         return commandProcessingResultBuilder.withCommandId(command.commandId()) //
@@ -2030,6 +2070,56 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 isRegularTransaction, isExceptionForBalanceCheck);
         this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
 
+        // for BNPL loan - transfer to vendor savings account as per bnpl configuration if there are any
+        if (loan.getBnplLoan()) {
+            // get the vendor savings account
+            final PortfolioAccountData vendorPortfolioAccountData = this.accountAssociationsReadPlatformService
+                    .retriveLoanLinkedVendorAssociation(loan.getId());
+            if (vendorPortfolioAccountData == null) {
+                final String errorMessage = "Disburse BNPL Loan with id:" + loan.getId()
+                        + " requires linked vendor savings account for payment";
+                throw new LinkedAccountRequiredException("loan.disburse.to.vendorSavings", errorMessage, loan.getId());
+            }
+
+            // get amount to transfer as per bnpl config
+            Money bnplVendorAmount = Money.zero(amount.getCurrency());
+            final RoundingMode roundingMode = MoneyHelper.getRoundingMode();
+            final MathContext mc = new MathContext(8, roundingMode);
+            if (Boolean.TRUE.equals(loan.getRequiresEquityContribution())) {
+                BigDecimal equityContributionLoanPercentage = loan.getEquityContributionLoanPercentage();
+                if (equityContributionLoanPercentage.compareTo(BigDecimal.ZERO) > 0) {
+                    BigDecimal hundredPercentage = new BigDecimal(100);
+                    BigDecimal disbursedPercentage = hundredPercentage.subtract(equityContributionLoanPercentage);
+                    BigDecimal originalDisbursedAmount = amount.getAmount().multiply(hundredPercentage, mc).divide(disbursedPercentage, mc);
+                    bnplVendorAmount = Money.of(loan.getCurrency(), originalDisbursedAmount);
+                } else {
+                    final String errorMessage = "Disburse BNPL Loan with id:" + loan.getId()
+                            + " requires percentage of loan which needs to be transfer to vendor if the loan RequiresEquityContribution has true";
+                    throw new LinkedAccountRequiredException("loan.disburse.to.vendorSavings", errorMessage, loan.getId());
+                }
+            } else {
+                // if equity contribution is false, it means full disbursal amount transfer to vendor
+                bnplVendorAmount = amount;
+            }
+
+            // deduct charge from vendor amount
+            BigDecimal pendingDisbursalCharges = BigDecimal.ZERO;
+            final Set<LoanCharge> loanCharges = loan.charges();
+            for (final LoanCharge loanCharge : loanCharges) {
+                if ((loanCharge.isDueAtDisbursement() || loanCharge.isDisburseToSavings()) && loanCharge.isChargePending()) {
+                    pendingDisbursalCharges = pendingDisbursalCharges.add(loanCharge.amountOutstanding(), mc);
+                }
+            }
+            Money pendingDisbursalChargeMoney = Money.of(loan.getCurrency(), pendingDisbursalCharges);
+            bnplVendorAmount = bnplVendorAmount.minus(pendingDisbursalChargeMoney);
+
+            final AccountTransferDTO vendorAccountTransferDTO = new AccountTransferDTO(transactionDate, bnplVendorAmount.getAmount(),
+                    PortfolioAccountType.SAVINGS, PortfolioAccountType.SAVINGS, portfolioAccountData.accountId(),
+                    vendorPortfolioAccountData.accountId(), "BNPL Loan amount transfer to vendor", locale, fmt, paymentDetail,
+                    LoanTransactionType.BNPL_VENDOR_TRANSFER.getValue(), null, null, null, AccountTransferType.ACCOUNT_TRANSFER.getValue(),
+                    null, null, txnExternalId, loan, null, null, isRegularTransaction, isExceptionForBalanceCheck);
+            this.accountTransfersWritePlatformService.transferFunds(vendorAccountTransferDTO);
+        }
     }
 
     @Override
@@ -2583,6 +2673,29 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         }
     }
 
+    private Collection<OverdueLoanScheduleData> applyMaxOccurrenceWhileApplyingOverdueChargesForLoan(
+            Collection<OverdueLoanScheduleData> overdueLoanScheduleDatas) {
+        if (CollectionUtils.isNotEmpty(overdueLoanScheduleDatas)) {
+            Integer maxOccurrenceToApply = 0;
+            Collection<OverdueLoanScheduleData> modifiedOverdueLoanScheduleDatas = null;
+            OverdueLoanScheduleData firstElement = overdueLoanScheduleDatas.stream().findFirst().orElse(null);
+            if (firstElement != null && firstElement.getMaxOccurrenceTillChargeApplies() != null
+                    && firstElement.getMaxOccurrenceTillChargeApplies() > 0) {
+                maxOccurrenceToApply = firstElement.getMaxOccurrenceTillChargeApplies();
+            }
+
+            // create the sub collection and return if maxOccurrence is set to less than no. if installments
+            if (maxOccurrenceToApply > 0 && maxOccurrenceToApply < CollectionUtils.size(overdueLoanScheduleDatas)) {
+                final Integer maxOccurrenceForCharge = maxOccurrenceToApply;
+                modifiedOverdueLoanScheduleDatas = overdueLoanScheduleDatas.stream()
+                        .filter(loanScheduleData -> loanScheduleData.getPeriodNumber() <= maxOccurrenceForCharge)
+                        .collect(Collectors.toList());
+                return modifiedOverdueLoanScheduleDatas;
+            }
+        }
+        return overdueLoanScheduleDatas;
+    }
+
     @Override
     @Transactional
     public void applyOverdueChargesForLoan(final Long loanId, Collection<OverdueLoanScheduleData> overdueLoanScheduleDatas) {
@@ -2593,6 +2706,9 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         boolean runInterestRecalculation = false;
         LocalDate recalculateFrom = DateUtils.getBusinessLocalDate();
         LocalDate lastChargeDate = null;
+
+        overdueLoanScheduleDatas = applyMaxOccurrenceWhileApplyingOverdueChargesForLoan(overdueLoanScheduleDatas);
+
         for (final OverdueLoanScheduleData overdueInstallment : overdueLoanScheduleDatas) {
 
             final JsonElement parsedCommand = this.fromApiJsonHelper.parse(overdueInstallment.toString());
@@ -2689,16 +2805,25 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         final Long penaltyWaitPeriodValue = this.configurationDomainService.retrievePenaltyWaitPeriod();
         final Long penaltyPostingWaitPeriodValue = this.configurationDomainService.retrieveGraceOnPenaltyPostingPeriod();
         final LocalDate dueDate = command.localDateValueOfParameterNamed("dueDate");
+
         Long diff = penaltyWaitPeriodValue + 1 - penaltyPostingWaitPeriodValue;
         if (diff < 1) {
             diff = 1L;
         }
         LocalDate startDate = dueDate.plusDays(penaltyWaitPeriodValue.intValue() + 1);
+        Loan loanData = this.loanAssembler.assembleFrom(loanId);
+        LocalDate endDate = DateUtils.getBusinessLocalDate();
+        if (dueDate.isBefore(loanData.getMaturityDate())) {
+            if (chargeDefinition.feeInterval() != null) {
+                endDate = scheduledDateGenerator.getRepaymentPeriodDate(PeriodFrequencyType.fromInt(feeFrequency),
+                        chargeDefinition.feeInterval(), startDate);
+            }
+        }
         Integer frequencyNunber = 1;
         if (feeFrequency == null) {
             scheduleDates.put(frequencyNunber++, startDate.minusDays(diff));
         } else {
-            while (!startDate.isAfter(DateUtils.getBusinessLocalDate())) {
+            while (!startDate.isAfter(endDate) && !startDate.isEqual(endDate)) {
                 scheduleDates.put(frequencyNunber++, startDate.minusDays(diff));
                 LocalDate scheduleDate = scheduledDateGenerator.getRepaymentPeriodDate(PeriodFrequencyType.fromInt(feeFrequency),
                         chargeDefinition.feeInterval(), startDate);
@@ -2724,6 +2849,19 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
             lastChargeAppliedDate = installment.getDueDate();
         }
         LocalDate recalculateFrom = DateUtils.getBusinessLocalDate();
+        if (loan != null && loan.getLoanProduct().isAccountLevelArrearsToleranceEnable()
+                && loan.getLoanProductRelatedDetail().getGraceOnArrearsAgeing() != null
+                && loan.getLoanProductRelatedDetail().getGraceOnArrearsAgeing() > 0) {
+            LocalDate dateWithGrace = dueDate.plusDays(loan.getLoanProductRelatedDetail().getGraceOnArrearsAgeing());
+            if (dateWithGrace.isAfter(DateUtils.getBusinessLocalDate()) || dateWithGrace.isEqual(DateUtils.getBusinessLocalDate())) {
+
+                return new LoanOverdueDTO(null, false, DateUtils.getBusinessLocalDate(), null);
+            } else if (dateWithGrace.isBefore(DateUtils.getBusinessLocalDate())) {
+                loan.setGraceOnArrearsAging(0);
+                this.loanRepositoryWrapper.saveAndFlush(loan);
+            }
+
+        }
 
         if (loan != null) {
             businessEventNotifierService.notifyPreBusinessEvent(new LoanApplyOverdueChargeBusinessEvent(loan));

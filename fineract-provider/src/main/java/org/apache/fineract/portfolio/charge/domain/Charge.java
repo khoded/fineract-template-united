@@ -18,18 +18,29 @@
  */
 package org.apache.fineract.portfolio.charge.domain;
 
+import static org.apache.fineract.portfolio.interestratechart.InterestRateChartApiConstants.deleteParamName;
+import static org.apache.fineract.portfolio.interestratechart.InterestRateChartApiConstants.idParamName;
+
+import com.google.gson.JsonArray;
+import com.google.gson.JsonObject;
 import java.math.BigDecimal;
 import java.time.MonthDay;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Set;
+import javax.persistence.CascadeType;
 import javax.persistence.Column;
 import javax.persistence.Entity;
 import javax.persistence.FetchType;
 import javax.persistence.JoinColumn;
 import javax.persistence.ManyToOne;
+import javax.persistence.OneToMany;
 import javax.persistence.Table;
 import javax.persistence.UniqueConstraint;
 import org.apache.fineract.accounting.glaccount.data.GLAccountData;
@@ -63,6 +74,12 @@ public class Charge extends AbstractPersistableCustom {
 
     @Column(name = "amount", scale = 6, precision = 19, nullable = false)
     private BigDecimal amount;
+
+    @Column(name = "min_amount", scale = 6, precision = 19)
+    private BigDecimal minAmount;
+
+    @Column(name = "max_amount", scale = 6, precision = 19)
+    private BigDecimal maxAmount;
 
     @Column(name = "currency_code", length = 3)
     private String currencyCode;
@@ -133,11 +150,22 @@ public class Charge extends AbstractPersistableCustom {
     @JoinColumn(name = "tax_group_id")
     private TaxGroup taxGroup;
 
+    @Column(name = "has_varying_charge")
+    private Boolean hasVaryingCharge;
+
+    @Column(name = "max_occurrence", nullable = true)
+    private Integer maxOccurrence;
+
+    @OneToMany(mappedBy = "charge", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
+    private Set<ChargeSlab> chargeSlabs = new HashSet<>();
+
     public static Charge fromJson(final JsonCommand command, final GLAccount account, final TaxGroup taxGroup,
-            final PaymentType paymentType) {
+            final PaymentType paymentType, final Boolean chargeVarying) {
 
         final String name = command.stringValueOfParameterNamed("name");
-        final BigDecimal amount = command.bigDecimalValueOfParameterNamed("amount");
+        BigDecimal amount = command.bigDecimalValueOfParameterNamed("amount");
+        final BigDecimal minAmount = command.bigDecimalValueOfParameterNamed("minAmount");
+        final BigDecimal maxAmount = command.bigDecimalValueOfParameterNamed("maxAmount");
         final String currencyCode = command.stringValueOfParameterNamed("currencyCode");
 
         final ChargeAppliesTo chargeAppliesTo = ChargeAppliesTo.fromInt(command.integerValueOfParameterNamed("chargeAppliesTo"));
@@ -173,9 +201,17 @@ public class Charge extends AbstractPersistableCustom {
             countFrequencyType = PeriodFrequencyType.fromInt(command.integerValueOfParameterNamed("countFrequencyType"));
         }
 
+        if (chargeVarying) {
+            amount = BigDecimal.ZERO;
+
+        }
+
+        final Integer maxOccurrence = command.integerValueOfParameterNamed("maxOccurrence");
+
         return new Charge(name, amount, currencyCode, chargeAppliesTo, chargeTimeType, chargeCalculationType, penalty, active, paymentMode,
                 feeOnMonthDay, feeInterval, minCap, maxCap, feeFrequency, enableFreeWithdrawalCharge, freeWithdrawalFrequency,
-                restartCountFrequency, countFrequencyType, account, taxGroup, enablePaymentType, paymentType);
+                restartCountFrequency, countFrequencyType, account, taxGroup, enablePaymentType, paymentType, minAmount, maxAmount,
+                chargeVarying, maxOccurrence);
     }
 
     protected Charge() {}
@@ -185,9 +221,12 @@ public class Charge extends AbstractPersistableCustom {
             final ChargePaymentMode paymentMode, final MonthDay feeOnMonthDay, final Integer feeInterval, final BigDecimal minCap,
             final BigDecimal maxCap, final Integer feeFrequency, final boolean enableFreeWithdrawalCharge,
             final Integer freeWithdrawalFrequency, final Integer restartFrequency, final PeriodFrequencyType restartFrequencyEnum,
-            final GLAccount account, final TaxGroup taxGroup, final boolean enablePaymentType, final PaymentType paymentType) {
+            final GLAccount account, final TaxGroup taxGroup, final boolean enablePaymentType, final PaymentType paymentType,
+            final BigDecimal minAmount, final BigDecimal maxAmount, Boolean hasVaryingCharge, Integer maxOccurrence) {
         this.name = name;
         this.amount = amount;
+        this.minAmount = minAmount;
+        this.maxAmount = maxAmount;
         this.currencyCode = currencyCode;
         this.chargeAppliesTo = chargeAppliesTo.getValue();
         this.chargeTimeType = chargeTime.getValue();
@@ -222,8 +261,9 @@ public class Charge extends AbstractPersistableCustom {
                         .failWithCodeNoParameterAddedToErrorCode("not.allowed.charge.calculation.type.for.savings");
             }
 
-            if (!(ChargeTimeType.fromInt(getChargeTimeType()).isWithdrawalFee()
-                    || ChargeTimeType.fromInt(getChargeTimeType()).isSavingsNoActivityFee())
+            ChargeTimeType chargeTimeType = ChargeTimeType.fromInt(getChargeTimeType());
+            if (!(chargeTimeType.isWithdrawalFee() || chargeTimeType.isSavingsNoActivityFee() || chargeTimeType.isOverdraftFee()
+                    || chargeTimeType.isFdaPreclosureFee() || chargeTimeType.isFdaPartialLiquidationFee())
                     && ChargeCalculationType.fromInt(getChargeCalculation()).isPercentageOfAmount()) {
                 baseDataValidator.reset().parameter("chargeCalculationType").value(this.chargeCalculation)
                         .failWithCodeNoParameterAddedToErrorCode(
@@ -269,6 +309,8 @@ public class Charge extends AbstractPersistableCustom {
         if (!dataValidationErrors.isEmpty()) {
             throw new PlatformApiDataValidationException(dataValidationErrors);
         }
+        this.hasVaryingCharge = hasVaryingCharge;
+        this.maxOccurrence = maxOccurrence;
     }
 
     public String getName() {
@@ -387,6 +429,14 @@ public class Charge extends AbstractPersistableCustom {
         return paymentTypeId;
     }
 
+    public BigDecimal getMinAmount() {
+        return minAmount;
+    }
+
+    public BigDecimal getMaxAmount() {
+        return maxAmount;
+    }
+
     public Map<String, Object> update(final JsonCommand command) {
         final Map<String, Object> actualChanges = new LinkedHashMap<>(7);
 
@@ -415,6 +465,21 @@ public class Charge extends AbstractPersistableCustom {
             actualChanges.put(amountParamName, newValue);
             actualChanges.put("locale", localeAsInput);
             this.amount = newValue;
+        }
+        final String minAmountParamName = "minAmount";
+        if (command.isChangeInBigDecimalParameterNamed(minAmountParamName, this.minAmount)) {
+            final BigDecimal newValue = command.bigDecimalValueOfParameterNamed(minAmountParamName);
+            actualChanges.put(minAmountParamName, newValue);
+            actualChanges.put("locale", localeAsInput);
+            this.minAmount = newValue;
+        }
+
+        final String maxAmountParamName = "maxAmount";
+        if (command.isChangeInBigDecimalParameterNamed(maxAmountParamName, this.maxAmount)) {
+            final BigDecimal newValue = command.bigDecimalValueOfParameterNamed(maxAmountParamName);
+            actualChanges.put(maxAmountParamName, newValue);
+            actualChanges.put("locale", localeAsInput);
+            this.maxAmount = newValue;
         }
 
         final String chargeTimeParamName = "chargeTimeType";
@@ -470,6 +535,14 @@ public class Charge extends AbstractPersistableCustom {
             final Integer countFrequencyTypeNewValue = command.integerValueOfParameterNamed(countFrequencyTypeParamName);
             actualChanges.put(countFrequencyTypeParamName, countFrequencyTypeNewValue);
             this.restartFrequencyEnum = ChargeTimeType.fromInt(countFrequencyTypeNewValue).getValue();
+        }
+
+        command.integerValueOfParameterNamed("maxOccurrence");
+        final String maxOccurrenceParamName = "maxOccurrence";
+        if (command.isChangeInIntegerParameterNamed(maxOccurrenceParamName, this.maxOccurrence)) {
+            final Integer maxOccurrenceNewValue = command.integerValueOfParameterNamed(maxOccurrenceParamName);
+            actualChanges.put(maxOccurrenceParamName, maxOccurrenceNewValue);
+            this.maxOccurrence = maxOccurrenceNewValue;
         }
 
         final String enableFreeWithdrawalChargeParamName = "enableFreeWithdrawalCharge";
@@ -635,6 +708,11 @@ public class Charge extends AbstractPersistableCustom {
             }
         }
 
+        if (command.hasParameter("chart")) {
+            this.setHasVaryingCharge(true);
+            updateChargeSlabs(command, actualChanges, baseDataValidator, currencyCode);
+        }
+
         if (!dataValidationErrors.isEmpty()) {
             throw new PlatformApiDataValidationException(dataValidationErrors);
         }
@@ -676,7 +754,102 @@ public class Charge extends AbstractPersistableCustom {
         return ChargeData.instance(getId(), this.name, this.amount, currency, chargeTimeType, chargeAppliesTo, chargeCalculationType,
                 chargePaymentmode, getFeeOnMonthDay(), this.feeInterval, this.penalty, this.active, this.enableFreeWithdrawal,
                 this.freeWithdrawalFrequency, this.restartFrequency, this.restartFrequencyEnum, this.enablePaymentType, paymentTypeData,
-                this.minCap, this.maxCap, feeFrequencyType, accountData, taxGroupData);
+                this.minCap, this.maxCap, feeFrequencyType, accountData, taxGroupData, this.minAmount, this.maxAmount,
+                this.hasVaryingCharge, null);
+    }
+
+    public void updateChargeSlabs(JsonCommand command, final Map<String, Object> actualChanges,
+            final DataValidatorBuilder baseDataValidator, String currencyCode) {
+
+        final Map<String, Object> deletechargeSlabs = new HashMap<>();
+        final Map<String, Object> chargeSlabsChanges = new HashMap<>();
+        final Locale locale = command.extractLocale();
+        if (command.hasParameter("chart")) {
+            final JsonArray array = command.jsonElement("chart").getAsJsonObject().getAsJsonArray("chartSlabs");
+
+            Set<ChargeSlab> existing = new HashSet<>(this.setOfChargeSlabs());
+            Set<Long> existingIds = new HashSet<>();
+            array.forEach(t -> {
+                JsonCommand chartSlabsCommand = JsonCommand.fromExistingCommand(command, t);
+                if (chartSlabsCommand.parameterExists(idParamName)) {
+                    existingIds.add(chartSlabsCommand.longValueOfParameterNamed(idParamName));
+                }
+            });
+
+            // Remove non existing
+            existing.forEach(t -> {
+                if (!existingIds.contains(t.getId())) {
+                    this.removeChargeSlab(t);
+                    deletechargeSlabs.put(idParamName, t.getId());
+                }
+            });
+
+            if (array != null) {
+                for (int i = 0; i < array.size(); i++) {
+                    final JsonObject chargeSlabsElement = array.get(i).getAsJsonObject();
+                    JsonCommand chargeSlabsCommand = JsonCommand.fromExistingCommand(command, chargeSlabsElement);
+                    if (chargeSlabsCommand.parameterExists(idParamName)) {
+                        final Long chartSlabId = chargeSlabsCommand.longValueOfParameterNamed(idParamName);
+                        final ChargeSlab chargeSlab = this.findChargeSlab(chartSlabId);
+                        if (chargeSlab == null) {
+                            baseDataValidator.parameter(idParamName).value(chartSlabId).failWithCode("no.chart.slab.associated.with.id");
+                        } else if (chargeSlabsCommand.parameterExists(deleteParamName)) {
+                            if (this.removeChargeSlab(chargeSlab)) {
+                                deletechargeSlabs.put(idParamName, chartSlabId);
+                            }
+                        } else {
+                            chargeSlab.update(chargeSlabsCommand, chargeSlabsChanges, baseDataValidator, locale);
+                        }
+                    } else {
+
+                        final ChargeSlab chargeSlab = ChargeSlab.assembleFrom(chargeSlabsCommand, this, locale);
+
+                        this.addChargeSlabs(chargeSlab);
+                    }
+                }
+            }
+        }
+
+        // add chart slab changes to actual changes list.
+        if (!chargeSlabsChanges.isEmpty()) {
+            actualChanges.put("chargeSlabs", chargeSlabsChanges);
+        }
+
+        // add deleted chart Slabs to actual changes
+        if (!deletechargeSlabs.isEmpty()) {
+            actualChanges.put("deletedchargeSlabs", deletechargeSlabs);
+        }
+    }
+
+    public void addChargeSlabs(ChargeSlab chargeSlabs) {
+        this.setOfChargeSlabs().add(chargeSlabs);
+    }
+
+    private boolean removeChargeSlab(ChargeSlab chartSlab) {
+        final Set<ChargeSlab> chargeSlabs = setOfChargeSlabs();
+        return chargeSlabs.remove(chartSlab);
+    }
+
+    public Set<ChargeSlab> setOfChargeSlabs() {
+        this.chargeSlabs.isEmpty();
+        if (this.chargeSlabs == null) {
+            this.chargeSlabs = new HashSet<>();
+        } else {
+
+            this.chargeSlabs.size();
+        }
+        return this.chargeSlabs;
+    }
+
+    public ChargeSlab findChargeSlab(Long chartSlabId) {
+        final Set<ChargeSlab> chargeSlabs = setOfChargeSlabs();
+
+        for (ChargeSlab chargeSlab : chargeSlabs) {
+            if (chargeSlab.getId().equals(chartSlabId)) {
+                return chargeSlab;
+            }
+        }
+        return null;
     }
 
     public Integer getChargePaymentMode() {
@@ -752,6 +925,14 @@ public class Charge extends AbstractPersistableCustom {
         this.taxGroup = taxGroup;
     }
 
+    public boolean isPartialLiquidationCharge() {
+        return ChargeTimeType.fromInt(this.chargeTimeType).equals(ChargeTimeType.FDA_PARTIAL_LIQUIDATION_FEE);
+    }
+
+    public void setHasVaryingCharge(Boolean hasVaryingCharge) {
+        this.hasVaryingCharge = hasVaryingCharge;
+    }
+
     @Override
     public boolean equals(Object o) {
         if (this == o) {
@@ -775,5 +956,14 @@ public class Charge extends AbstractPersistableCustom {
     public int hashCode() {
         return Objects.hash(name, amount, currencyCode, chargeAppliesTo, chargeTimeType, chargeCalculation, chargePaymentMode, feeOnDay,
                 feeInterval, feeOnMonth, penalty, active, deleted, minCap, maxCap, feeFrequency, account, taxGroup);
+    }
+
+    public Boolean getHasVaryingCharge() {
+        if (this.hasVaryingCharge == null) {
+            return false;
+        } else {
+            return this.hasVaryingCharge;
+        }
+
     }
 }

@@ -31,6 +31,7 @@ import org.apache.fineract.infrastructure.entityaccess.service.FineractEntityAcc
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
 import org.apache.fineract.organisation.monetary.data.CurrencyData;
 import org.apache.fineract.portfolio.savings.DepositAccountType;
+import org.apache.fineract.portfolio.savings.WithdrawalFrequency;
 import org.apache.fineract.portfolio.savings.data.SavingsProductData;
 import org.apache.fineract.portfolio.savings.exception.SavingsProductNotFoundException;
 import org.apache.fineract.portfolio.tax.data.TaxGroupData;
@@ -102,7 +103,8 @@ public class SavingsProductReadPlatformServiceImpl implements SavingsProductRead
 
         SavingProductMapper() {
             final StringBuilder sqlBuilder = new StringBuilder(400);
-            sqlBuilder.append("sp.id as id, sp.name as name, sp.short_name as shortName, sp.description as description, ");
+            sqlBuilder.append(
+                    "sp.id as id, sp.name as name,sp.product_type_id productTypeId, sp.product_category_id productCategoryId, sp.short_name as shortName, sp.description as description, ");
             sqlBuilder.append(
                     "sp.currency_code as currencyCode, sp.currency_digits as currencyDigits, sp.currency_multiplesof as inMultiplesOf, ");
             sqlBuilder.append("curr.name as currencyName, curr.internationalized_name_code as currencyNameCode, ");
@@ -131,7 +133,14 @@ public class SavingsProductReadPlatformServiceImpl implements SavingsProductRead
             sqlBuilder.append("sp.is_dormancy_tracking_active as isDormancyTrackingActive,");
             sqlBuilder.append("sp.days_to_inactive as daysToInactive,");
             sqlBuilder.append("sp.days_to_dormancy as daysToDormancy,");
-            sqlBuilder.append("sp.days_to_escheat as daysToEscheat ");
+            sqlBuilder.append("sp.days_to_escheat as daysToEscheat, ");
+            sqlBuilder.append("sp.is_interest_posting_config_update as isInterestPostingConfigUpdate, ");
+            sqlBuilder.append("sp.use_floating_interest_rate as useFloatingInterestRate, ");
+            sqlBuilder.append("sp.num_of_credit_transaction as numOfCreditTransaction, ");
+            sqlBuilder.append("sp.num_of_debit_transaction as numOfDebitTransaction ,");
+            sqlBuilder.append("sp.withdrawal_frequency as withdrawalFrequency, ");
+            sqlBuilder.append("sp.withdrawal_frequency_enum as withdrawalFrequencyEnum, ");
+            sqlBuilder.append("sp.post_overdraft_interest_on_deposit as postOverdraftInterestOnDeposit ");
             sqlBuilder.append("from m_savings_product sp ");
             sqlBuilder.append("join m_currency curr on curr.code = sp.currency_code ");
             sqlBuilder.append("left join m_tax_group tg on tg.id = sp.tax_group_id  ");
@@ -150,6 +159,8 @@ public class SavingsProductReadPlatformServiceImpl implements SavingsProductRead
             final String name = rs.getString("name");
             final String shortName = rs.getString("shortName");
             final String description = rs.getString("description");
+            final Long productCategoryId = rs.getLong("productCategoryId");
+            final Long productTypeId = rs.getLong("productTypeId");
 
             final String currencyCode = rs.getString("currencyCode");
             final String currencyName = rs.getString("currencyName");
@@ -195,6 +206,7 @@ public class SavingsProductReadPlatformServiceImpl implements SavingsProductRead
             final BigDecimal overdraftLimit = rs.getBigDecimal("overdraftLimit");
             final BigDecimal nominalAnnualInterestRateOverdraft = rs.getBigDecimal("nominalAnnualInterestRateOverdraft");
             final BigDecimal minOverdraftForInterestCalculation = rs.getBigDecimal("minOverdraftForInterestCalculation");
+            final boolean postOverdraftInterestOnDeposit = rs.getBoolean("postOverdraftInterestOnDeposit");
 
             final BigDecimal minRequiredBalance = rs.getBigDecimal("minRequiredBalance");
             final boolean enforceMinRequiredBalance = rs.getBoolean("enforceMinRequiredBalance");
@@ -215,12 +227,29 @@ public class SavingsProductReadPlatformServiceImpl implements SavingsProductRead
             final Long daysToDormancy = JdbcSupport.getLong(rs, "daysToDormancy");
             final Long daysToEscheat = JdbcSupport.getLong(rs, "daysToEscheat");
 
-            return SavingsProductData.instance(id, name, shortName, description, currency, nominalAnnualInterestRate,
+            final Boolean isInterestPostingConfigUpdate = rs.getBoolean("isInterestPostingConfigUpdate");
+            final Long numOfCreditTransaction = JdbcSupport.getLong(rs, "numOfCreditTransaction");
+            final Long numOfDebitTransaction = JdbcSupport.getLong(rs, "numOfDebitTransaction");
+            final boolean useFloatingInterestRate = rs.getBoolean("useFloatingInterestRate");
+            final Integer withdrawalFrequency = JdbcSupport.getInteger(rs, "withdrawalFrequency");
+
+            EnumOptionData withdrawalFrequencyEnum = null;
+            final Integer withdrawalFrequencyEnumValue = JdbcSupport.getInteger(rs, "withdrawalFrequencyEnum");
+            if (withdrawalFrequencyEnumValue != null) {
+                withdrawalFrequencyEnum = SavingsEnumerations
+                        .withdrawalFrequency(WithdrawalFrequency.fromInt(withdrawalFrequencyEnumValue));
+            }
+
+            SavingsProductData product = SavingsProductData.instance(id, name, shortName, description, currency, nominalAnnualInterestRate,
                     compoundingInterestPeriodType, interestPostingPeriodType, interestCalculationType, interestCalculationDaysInYearType,
                     minRequiredOpeningBalance, lockinPeriodFrequency, lockinPeriodFrequencyType, withdrawalFeeForTransfers,
                     accountingRuleType, allowOverdraft, overdraftLimit, minRequiredBalance, enforceMinRequiredBalance, maxAllowedLienLimit,
                     lienAllowed, minBalanceForInterestCalculation, nominalAnnualInterestRateOverdraft, minOverdraftForInterestCalculation,
-                    withHoldTax, taxGroupData, isDormancyTrackingActive, daysToInactive, daysToDormancy, daysToEscheat);
+                    withHoldTax, taxGroupData, isDormancyTrackingActive, daysToInactive, daysToDormancy, daysToEscheat,
+                    isInterestPostingConfigUpdate, numOfCreditTransaction, numOfDebitTransaction, useFloatingInterestRate,
+                    withdrawalFrequency, withdrawalFrequencyEnum, productCategoryId, productTypeId);
+            product.setPostOverdraftInterestOnDeposit(postOverdraftInterestOnDeposit);
+            return product;
         }
     }
 

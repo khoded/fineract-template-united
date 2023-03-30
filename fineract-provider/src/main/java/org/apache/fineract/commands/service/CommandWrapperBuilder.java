@@ -1491,6 +1491,15 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder savingsAccountLimitWithdrawal(final Long accountId) {
+        this.actionName = "LIMITWITHDRAWAL";
+        this.entityName = "SAVINGSACCOUNT";
+        this.savingsId = accountId;
+        this.entityId = null;
+        this.href = "/savingsaccounts/" + accountId + "/transactions";
+        return this;
+    }
+
     public CommandWrapperBuilder undoSavingsAccountTransaction(final Long accountId, final Long transactionId) {
         this.actionName = "UNDOTRANSACTION";
         this.entityName = "SAVINGSACCOUNT";
@@ -2372,6 +2381,15 @@ public class CommandWrapperBuilder {
         this.savingsId = accountId;
         this.entityId = accountId;
         this.href = "/fixeddepositaccounts/" + accountId + "?command=postInterest";
+        return this;
+    }
+
+    public CommandWrapperBuilder fixedDepositAccountAccrualInterestPosting(final Long accountId) {
+        this.actionName = "POSTACCRUALINTEREST";
+        this.entityName = "FIXEDDEPOSITACCOUNT";
+        this.savingsId = accountId;
+        this.entityId = accountId;
+        this.href = "/fixeddepositaccounts/" + accountId + "?command=postAccrualInterest";
         return this;
     }
 
@@ -3485,4 +3503,132 @@ public class CommandWrapperBuilder {
         return this;
     }
 
+    public CommandWrapperBuilder addBusinessOwner(final long clientId) {
+        this.actionName = "CREATE";
+        this.entityName = "CLIENTBUSINESSOWNERS";
+        this.href = "/clients/" + clientId + "/businessOwners";
+        this.clientId = clientId;
+        return this;
+    }
+
+    public CommandWrapperBuilder updateBusinessOwner(final Long businessOwnerId, final Long clientId) {
+        this.actionName = "UPDATE";
+        this.entityName = "CLIENTBUSINESSOWNERS";
+        this.href = "/clients/" + clientId + "/businessOwners";
+        this.clientId = clientId;
+        this.entityId = businessOwnerId;
+        return this;
+    }
+
+    public CommandWrapperBuilder addSavingsProductFloatingInterestRate(final long savingsProductId) {
+        this.actionName = "CREATE";
+        this.entityName = "SAVINGSPRODUCTFLOATINGINTERESTRATE";
+        this.href = "/savingsproducts/" + savingsProductId + "/floatinginterestrates";
+        this.productId = savingsProductId;
+        return this;
+    }
+
+    public CommandWrapperBuilder updateSavingsProductFloatingInterestRate(final Long savingsProductfloatingInterestRateId,
+            final Long savingsProductId) {
+        this.actionName = "UPDATE";
+        this.entityName = "SAVINGSPRODUCTFLOATINGINTERESTRATE";
+        this.href = "/savingsproducts/" + savingsProductId + "/floatinginterestrates" + savingsProductfloatingInterestRateId;
+        this.productId = savingsProductId;
+        this.entityId = savingsProductfloatingInterestRateId;
+        return this;
+    }
+
+    public CommandWrapperBuilder deleteSavingsProductFloatingInterestRate(final Long savingsProductfloatingInterestRateId,
+            final Long savingsProductId) {
+        this.actionName = "DELETE";
+        this.entityName = "SAVINGSPRODUCTFLOATINGINTERESTRATE";
+        this.href = "/savingsproducts/" + savingsProductId + "/floatinginterestrates" + savingsProductfloatingInterestRateId;
+        this.entityId = savingsProductfloatingInterestRateId;
+        return this;
+    }
+
+    public CommandWrapperBuilder savingsAccountAccrualInterestPosting(final Long accountId) {
+        this.actionName = "POSTACCRUALINTEREST";
+        this.entityName = "SAVINGSACCOUNT";
+        this.savingsId = accountId;
+        this.entityId = accountId;
+        this.href = "/savingsaccounts/" + accountId + "?command=postAccrualInterest";
+        return this;
+    }
+
+    public CommandWrapperBuilder unlockSavingsAccount(final Long accountId) {
+        this.actionName = "UNLOCK";
+        this.entityName = "SAVINGSACCOUNT";
+        this.savingsId = accountId;
+        this.entityId = accountId;
+        this.href = "/savingsaccounts/" + accountId + "?command=unlock";
+        return this;
+    }
+
+    public CommandWrapperBuilder topUpFixedDepositAccount(final Long accountId) {
+        this.actionName = "TOP_UP";
+        this.entityName = "FIXEDDEPOSITACCOUNT";
+        this.entityId = accountId;
+        this.href = "/fixeddepositaccounts/" + accountId + "?command=topUp";
+        return this;
+    }
+
+    public CommandWrapperBuilder partiallyLiquidateFD(final Long accountId) {
+        this.actionName = "PARTIALLY_LIQUIDATE";
+        this.entityName = "FIXEDDEPOSITACCOUNT";
+        this.entityId = accountId;
+        this.href = "/fixeddepositaccounts/partiallyliquidate";
+        return this;
+    }
+
+    public CommandWrapperBuilder recurringDepositAccountAccrualInterestPosting(final Long accountId) {
+        this.actionName = "POSTACCRUALINTEREST";
+        this.entityName = "RECURRINGDEPOSITACCOUNT";
+        this.savingsId = accountId;
+        this.entityId = accountId;
+        this.href = "/recurringdepositaccounts/" + accountId + "?command=postAccrualInterest";
+        return this;
+    }
+
+    public CommandWrapperBuilder addMoreMembersToGSIMApplication(final Long accountId) {
+        this.actionName = "ADDMEMBER";
+        this.entityName = "GSIMACCOUNT";
+        this.entityId = accountId;
+        this.href = "/savingsaccounts/addmember/" + accountId;
+        return this;
+    }
+
+    public CommandWrapperBuilder createValidationLimit() {
+        this.actionName = "CREATE";
+        this.entityName = "VALIDATIONLIMIT";
+        this.entityId = null;
+        this.href = "/validationlimit/template";
+        return this;
+    }
+
+    public CommandWrapperBuilder updateValidationLimit(final Long validationLimitId) {
+        this.actionName = "UPDATE";
+        this.entityName = "VALIDATIONLIMIT";
+        this.entityId = validationLimitId;
+        this.href = "/validationlimit/" + validationLimitId;
+        return this;
+    }
+
+    public CommandWrapperBuilder updateArrearsTolerance(final Long loanId) {
+        this.actionName = "UPDATEARREARSTOLERANCE";
+        this.entityName = "LOAN";
+        this.entityId = loanId;
+        this.loanId = loanId;
+        this.href = "/loans/" + loanId + "?command=updateArrearsTolerance";
+        return this;
+    }
+
+    public CommandWrapperBuilder nextWithdrawalDateSavingsAccount(final Long accountId) {
+        this.actionName = "NEXTWITHDRAWALDATE";
+        this.entityName = "SAVINGSACCOUNT";
+        this.savingsId = accountId;
+        this.entityId = accountId;
+        this.href = "/savingsaccounts/" + accountId + "?command=nextWithdrawalDate";
+        return this;
+    }
 }

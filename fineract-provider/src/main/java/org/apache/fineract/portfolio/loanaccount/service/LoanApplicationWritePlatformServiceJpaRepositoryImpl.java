@@ -22,8 +22,11 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import java.math.BigDecimal;
+import java.math.MathContext;
+import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.temporal.ChronoField;
+import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -51,6 +54,7 @@ import org.apache.fineract.infrastructure.core.exception.GeneralPlatformDomainRu
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.exception.PlatformDataIntegrityException;
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
+import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.dataqueries.data.EntityTables;
 import org.apache.fineract.infrastructure.dataqueries.data.StatusEnum;
 import org.apache.fineract.infrastructure.dataqueries.service.EntityDatatableChecksWritePlatformService;
@@ -62,10 +66,14 @@ import org.apache.fineract.infrastructure.entityaccess.domain.FineractEntityToEn
 import org.apache.fineract.infrastructure.entityaccess.domain.FineractEntityToEntityMappingRepository;
 import org.apache.fineract.infrastructure.entityaccess.exception.NotOfficeSpecificProductException;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
+import org.apache.fineract.organisation.monetary.domain.Money;
+import org.apache.fineract.organisation.monetary.domain.MoneyHelper;
 import org.apache.fineract.organisation.staff.domain.Staff;
+import org.apache.fineract.portfolio.account.data.PortfolioAccountData;
 import org.apache.fineract.portfolio.account.domain.AccountAssociationType;
 import org.apache.fineract.portfolio.account.domain.AccountAssociations;
 import org.apache.fineract.portfolio.account.domain.AccountAssociationsRepository;
+import org.apache.fineract.portfolio.account.service.AccountAssociationsReadPlatformService;
 import org.apache.fineract.portfolio.accountdetails.domain.AccountType;
 import org.apache.fineract.portfolio.businessevent.domain.loan.LoanApprovedBusinessEvent;
 import org.apache.fineract.portfolio.businessevent.domain.loan.LoanCreatedBusinessEvent;
@@ -107,6 +115,7 @@ import org.apache.fineract.portfolio.loanaccount.domain.LoanCollateralManagement
 import org.apache.fineract.portfolio.loanaccount.domain.LoanCollateralManagementRepository;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanDisbursementDetails;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanLifecycleStateMachine;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallment;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleInstallmentRepository;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepaymentScheduleTransactionProcessorFactory;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanRepository;
@@ -114,7 +123,6 @@ import org.apache.fineract.portfolio.loanaccount.domain.LoanRepositoryWrapper;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanStatus;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanSummaryWrapper;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTopupDetails;
-import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
 import org.apache.fineract.portfolio.loanaccount.exception.LoanApplicationDateException;
 import org.apache.fineract.portfolio.loanaccount.exception.LoanApplicationNotInSubmittedAndPendingApprovalStateCannotBeDeleted;
 import org.apache.fineract.portfolio.loanaccount.exception.LoanApplicationNotInSubmittedAndPendingApprovalStateCannotBeModified;
@@ -201,6 +209,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
     private final GSIMReadPlatformService gsimReadPlatformService;
     private final LoanCollateralManagementRepository loanCollateralManagementRepository;
     private final ClientCollateralManagementRepository clientCollateralManagementRepository;
+    private final AccountAssociationsReadPlatformService accountAssociationsReadPlatformService;
 
     @Autowired
     public LoanApplicationWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context, final FromJsonHelper fromJsonHelper,
@@ -229,7 +238,8 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             final LoanRepository loanRepository, final GSIMReadPlatformService gsimReadPlatformService, final RateAssembler rateAssembler,
             final LoanProductReadPlatformService loanProductReadPlatformService,
             final LoanCollateralManagementRepository loanCollateralManagementRepository,
-            final ClientCollateralManagementRepository clientCollateralManagementRepository) {
+            final ClientCollateralManagementRepository clientCollateralManagementRepository,
+            final AccountAssociationsReadPlatformService accountAssociationsReadPlatformService) {
         this.context = context;
         this.fromJsonHelper = fromJsonHelper;
         this.loanApplicationTransitionApiJsonValidator = loanApplicationTransitionApiJsonValidator;
@@ -272,6 +282,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
         this.gsimReadPlatformService = gsimReadPlatformService;
         this.loanCollateralManagementRepository = loanCollateralManagementRepository;
         this.clientCollateralManagementRepository = clientCollateralManagementRepository;
+        this.accountAssociationsReadPlatformService = accountAssociationsReadPlatformService;
     }
 
     private LoanLifecycleStateMachine defaultLoanLifecycleStateMachine() {
@@ -344,22 +355,33 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             if (loanProduct.getLoanProductConfigurableAttributes() != null) {
                 updateProductRelatedDetails(productRelatedDetail, newLoanApplication);
             }
+            final Boolean isTopup = command.booleanObjectValueOfParameterNamed(LoanApiConstants.isTopup);
+            final Boolean loanTermIncludesToppedUpLoanTerm = command
+                    .booleanObjectValueOfParameterNamed(LoanApiConstants.LOAN_TERM_INCLUDES_TOPPED_UP_LOAN_TERM);
+            final Long loanIdToClose = command.longValueOfParameterNamed(LoanApiConstants.loanIdToClose);
+            final Integer numberOfRepaymentsToCarryForward = command
+                    .integerValueOfParameterNamedDefaultToNullIfZero(LoanApiConstants.NUMBER_OF_REPAYMENT_TO_CARRY_FORWARD);
 
             this.fromApiJsonDeserializer.validateLoanTermAndRepaidEveryValues(newLoanApplication.getTermFrequency(),
                     newLoanApplication.getTermPeriodFrequencyType(), productRelatedDetail.getNumberOfRepayments(),
                     productRelatedDetail.getRepayEvery(), productRelatedDetail.getRepaymentPeriodFrequencyType().getValue(),
-                    newLoanApplication);
+                    newLoanApplication, numberOfRepaymentsToCarryForward);
 
             if (loanProduct.canUseForTopup() && clientId != null) {
-                final Boolean isTopup = command.booleanObjectValueOfParameterNamed(LoanApiConstants.isTopup);
+
                 if (null == isTopup) {
                     newLoanApplication.setIsTopup(false);
                 } else {
                     newLoanApplication.setIsTopup(isTopup);
                 }
 
+                if (null == loanTermIncludesToppedUpLoanTerm) {
+                    newLoanApplication.setLoanTermIncludesToppedUpLoanTerm(false);
+                } else {
+                    newLoanApplication.setLoanTermIncludesToppedUpLoanTerm(loanTermIncludesToppedUpLoanTerm);
+                }
+
                 if (newLoanApplication.isTopup()) {
-                    final Long loanIdToClose = command.longValueOfParameterNamed(LoanApiConstants.loanIdToClose);
                     final Loan loanToClose = this.loanRepositoryWrapper.findNonClosedLoanThatBelongsToClient(loanIdToClose, clientId);
                     if (loanToClose == null) {
                         throw new GeneralPlatformDomainRuleException(
@@ -390,8 +412,8 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                                         + " should be after last transaction date of loan to be closed "
                                         + lastUserTransactionOnLoanToClose);
                     }
-                    BigDecimal loanOutstanding = this.loanReadPlatformService.retrieveLoanPrePaymentTemplate(LoanTransactionType.REPAYMENT,
-                            loanIdToClose, newLoanApplication.getDisbursementDate()).getAmount();
+                    BigDecimal loanOutstanding = this.loanReadPlatformService
+                            .retrieveLoanForeclosureTemplate(loanIdToClose, newLoanApplication.getDisbursementDate()).getAmount();
                     final BigDecimal firstDisbursalAmount = newLoanApplication.getFirstDisbursalAmount();
                     if (loanOutstanding.compareTo(firstDisbursalAmount) > 0) {
                         throw new GeneralPlatformDomainRuleException("error.msg.loan.amount.less.than.outstanding.of.loan.to.be.closed",
@@ -586,7 +608,21 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                     this.accountAssociationsRepository.save(accountAssociations);
 
                 }
+
+                // Save linked vendor savings account information for bnpl loan
+                SavingsAccount vendorSavingsAccount;
+                AccountAssociations vendorAccountAssociations;
+                final Long vendorSavingsAccountId = command.longValueOfParameterNamed("linkVendorAccountId");
+                if (vendorSavingsAccountId != null) {
+                    vendorSavingsAccount = this.savingsAccountAssembler.assembleFrom(vendorSavingsAccountId, backdatedTxnsAllowedTill);
+                    this.fromApiJsonDeserializer.validateLinkedVendorSavingsAccountForBnplLoan(vendorSavingsAccount, savingsAccount);
+                    boolean isActive = true;
+                    vendorAccountAssociations = AccountAssociations.associateSavingsAccount(newLoanApplication, vendorSavingsAccount,
+                            AccountAssociationType.BNPL_LINKED_ACCOUNT_ASSOCIATION.getValue(), isActive);
+                    this.accountAssociationsRepository.save(vendorAccountAssociations);
+                }
             }
+
             if (command.parameterExists(LoanApiConstants.datatables)) {
                 this.entityDatatableChecksWritePlatformService.saveDatatables(StatusEnum.CREATE.getCode().longValue(),
                         EntityTables.LOAN.getName(), newLoanApplication.getId(), newLoanApplication.productId(),
@@ -830,7 +866,8 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 } else {
                     LoanChargeData chargeData = chargesMap.get(loanCharge.getId());
                     if (loanCharge.amountOrPercentage().compareTo(chargeData.amountOrPercentage()) != 0
-                            || (loanCharge.isSpecifiedDueDate() && !loanCharge.getDueLocalDate().equals(chargeData.getDueDate()))) {
+                            || ((loanCharge.isSpecifiedDueDate() || loanCharge.isDisburseToSavings())
+                                    && !loanCharge.getDueLocalDate().equals(chargeData.getDueDate()))) {
                         isChargeModified = true;
                     }
                 }
@@ -967,8 +1004,8 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                                             + " should be after last transaction date of loan to be closed "
                                             + lastUserTransactionOnLoanToClose);
                         }
-                        BigDecimal loanOutstanding = this.loanReadPlatformService.retrieveLoanPrePaymentTemplate(
-                                LoanTransactionType.REPAYMENT, loanIdToClose, existingLoanApplication.getDisbursementDate()).getAmount();
+                        BigDecimal loanOutstanding = this.loanReadPlatformService
+                                .retrieveLoanForeclosureTemplate(loanIdToClose, existingLoanApplication.getDisbursementDate()).getAmount();
                         final BigDecimal firstDisbursalAmount = existingLoanApplication.getFirstDisbursalAmount();
                         if (loanOutstanding.compareTo(firstDisbursalAmount) > 0) {
                             throw new GeneralPlatformDomainRuleException("error.msg.loan.amount.less.than.outstanding.of.loan.to.be.closed",
@@ -1058,10 +1095,13 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 existingLoanApplication.updateLoanRates(rateAssembler.fromParsedJson(command.parsedJson()));
             }
 
+            final Integer numberOfRepaymentsToCarryForward = command
+                    .integerValueOfParameterNamedDefaultToNullIfZero(LoanApiConstants.NUMBER_OF_REPAYMENT_TO_CARRY_FORWARD);
+
             this.fromApiJsonDeserializer.validateLoanTermAndRepaidEveryValues(existingLoanApplication.getTermFrequency(),
                     existingLoanApplication.getTermPeriodFrequencyType(), productRelatedDetail.getNumberOfRepayments(),
                     productRelatedDetail.getRepayEvery(), productRelatedDetail.getRepaymentPeriodFrequencyType().getValue(),
-                    existingLoanApplication);
+                    existingLoanApplication, numberOfRepaymentsToCarryForward);
 
             saveAndFlushLoanWithDataIntegrityViolationChecks(existingLoanApplication);
 
@@ -1175,11 +1215,13 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             AccountAssociations accountAssociations = this.accountAssociationsRepository.findByLoanIdAndType(loanId,
                     AccountAssociationType.LINKED_ACCOUNT_ASSOCIATION.getValue());
             boolean isLinkedAccPresent = false;
+            SavingsAccount customerSavingsAccount = accountAssociations != null ? accountAssociations.linkedSavingsAccount() : null;
             if (savingsAccountId == null) {
                 if (accountAssociations != null) {
                     if (this.fromJsonHelper.parameterExists(linkAccountIdParamName, command.parsedJson())) {
                         this.accountAssociationsRepository.delete(accountAssociations);
                         changes.put(linkAccountIdParamName, null);
+                        customerSavingsAccount = null;
                     } else {
                         isLinkedAccPresent = true;
                     }
@@ -1191,6 +1233,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                     isModified = true;
                 } else {
                     final SavingsAccount savingsAccount = accountAssociations.linkedSavingsAccount();
+                    customerSavingsAccount = savingsAccount;
                     if (savingsAccount == null || !savingsAccount.getId().equals(savingsAccountId)) {
                         isModified = true;
                     }
@@ -1198,6 +1241,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 if (isModified) {
                     final SavingsAccount savingsAccount = this.savingsAccountAssembler.assembleFrom(savingsAccountId,
                             backdatedTxnsAllowedTill);
+                    customerSavingsAccount = savingsAccount;
                     this.fromApiJsonDeserializer.validatelinkedSavingsAccount(savingsAccount, existingLoanApplication);
                     if (accountAssociations == null) {
                         boolean isActive = true;
@@ -1210,6 +1254,45 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                     this.accountAssociationsRepository.save(accountAssociations);
                 }
             }
+
+            // Save vendor linked account information
+            final Long vendorSavingsAccountId = command.longValueOfParameterNamed(LoanApiConstants.linkVendorAccountIdParamName);
+            AccountAssociations vendorAccountAssociations = this.accountAssociationsRepository.findByLoanIdAndType(loanId,
+                    AccountAssociationType.BNPL_LINKED_ACCOUNT_ASSOCIATION.getValue());
+            if (vendorSavingsAccountId == null) {
+                if (vendorAccountAssociations != null) {
+                    if (this.fromJsonHelper.parameterExists(LoanApiConstants.linkVendorAccountIdParamName, command.parsedJson())) {
+                        this.accountAssociationsRepository.delete(vendorAccountAssociations);
+                        changes.put(LoanApiConstants.linkVendorAccountIdParamName, null);
+                    }
+                }
+            } else {
+                boolean isModified = false;
+                if (vendorAccountAssociations == null) {
+                    isModified = true;
+                } else {
+                    final SavingsAccount vendorSavingsAccount = vendorAccountAssociations.linkedSavingsAccount();
+                    if (vendorSavingsAccount == null || !vendorSavingsAccount.getId().equals(vendorSavingsAccountId)) {
+                        isModified = true;
+                    }
+                }
+                if (isModified) {
+                    final SavingsAccount vendorSavingsAccount = this.savingsAccountAssembler.assembleFrom(vendorSavingsAccountId,
+                            backdatedTxnsAllowedTill);
+                    this.fromApiJsonDeserializer.validateLinkedVendorSavingsAccountForBnplLoan(vendorSavingsAccount,
+                            customerSavingsAccount);
+                    if (vendorAccountAssociations == null) {
+                        boolean isActive = true;
+                        vendorAccountAssociations = AccountAssociations.associateSavingsAccount(existingLoanApplication,
+                                vendorSavingsAccount, AccountAssociationType.BNPL_LINKED_ACCOUNT_ASSOCIATION.getValue(), isActive);
+                    } else {
+                        vendorAccountAssociations.updateLinkedSavingsAccount(vendorSavingsAccount);
+                    }
+                    changes.put(LoanApiConstants.linkVendorAccountIdParamName, vendorSavingsAccountId);
+                    this.accountAssociationsRepository.save(vendorAccountAssociations);
+                }
+            }
+            //
 
             if (!isLinkedAccPresent) {
                 final Set<LoanCharge> charges = existingLoanApplication.charges();
@@ -1399,6 +1482,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
         this.loanApplicationTransitionApiJsonValidator.validateApproval(command.json());
 
         final Loan loan = retrieveLoanBy(loanId);
+        this.validateActiveLoanCount(loan.getClientId());
 
         final JsonArray disbursementDataArray = command.arrayOfParameterNamed(LoanApiConstants.disbursementDataParameterName);
 
@@ -1411,6 +1495,42 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
         }
 
         checkClientOrGroupActive(loan);
+
+        // if bnpl loan and equity contribution, the check client's savings account for client's contribution for bnpl
+        // vendor payment
+        BigDecimal amountToDisburseForBnplEquityContributionLoan = BigDecimal.ZERO;
+        Boolean isBnplEquityContributionLoan = loan.getBnplLoan() != null && loan.getBnplLoan()
+                && loan.getRequiresEquityContribution() != null && loan.getRequiresEquityContribution();
+        if (isBnplEquityContributionLoan) {
+            Money disburseAmount = loan.adjustDisburseAmount(command, expectedDisbursementDate);
+            Money amountToDisburse = disburseAmount.copy();
+            // get amount to transfer as equity
+            Money equityAmount = Money.zero(amountToDisburse.getCurrency());
+            BigDecimal equityContributionLoanPercentage = loan.getEquityContributionLoanPercentage();
+            if (equityContributionLoanPercentage.compareTo(BigDecimal.ZERO) > 0) {
+                final RoundingMode roundingMode = MoneyHelper.getRoundingMode();
+                final MathContext mc = new MathContext(8, roundingMode);
+                equityAmount = disburseAmount.percentageOf(equityContributionLoanPercentage, mc.getRoundingMode());
+            } else {
+                final String errorMessage = "Approval BNPL Loan with id:" + loan.getId()
+                        + " requires percentage of loan which needs to be transfer to vendor if the loan RequiresEquityContribution has true";
+                throw new LinkedAccountRequiredException("loan.approval.link.Savings", errorMessage, loan.getId());
+            }
+
+            // get client savings account
+            final PortfolioAccountData clientPortfolioAccountData = this.accountAssociationsReadPlatformService
+                    .retriveLoanLinkedAssociation(loan.getId());
+            if (clientPortfolioAccountData == null) {
+                final String errorMessage = "Approval BNPL Loan with id:" + loan.getId()
+                        + " requires linked savings account for disbursement";
+                throw new LinkedAccountRequiredException("loan.approval.links.savings", errorMessage, loan.getId());
+            }
+            final SavingsAccount clientSavingsAccount = this.savingsAccountAssembler.assembleFrom(clientPortfolioAccountData.accountId(),
+                    false);
+            clientSavingsAccount.validateAccountBalanceForBnplLoanWithEquityContribution(equityAmount.getAmount(), false);
+            amountToDisburseForBnplEquityContributionLoan = amountToDisburse.getAmount().subtract(equityAmount.getAmount());
+        }
+
         Boolean isSkipRepaymentOnFirstMonth = false;
         Integer numberOfDays = 0;
         // validate expected disbursement date against meeting date
@@ -1431,11 +1551,10 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
             }
             this.loanScheduleAssembler.validateDisbursementDateWithMeetingDates(expectedDisbursementDate, calendar,
                     isSkipRepaymentOnFirstMonth, numberOfDays);
-
         }
 
         final Map<String, Object> changes = loan.loanApplicationApproval(currentUser, command, disbursementDataArray,
-                defaultLoanLifecycleStateMachine());
+                defaultLoanLifecycleStateMachine(), isBnplEquityContributionLoan, amountToDisburseForBnplEquityContributionLoan);
 
         entityDatatableChecksWritePlatformService.runTheCheckForProduct(loanId, EntityTables.LOAN.getName(),
                 StatusEnum.APPROVE.getCode().longValue(), EntityTables.LOAN.getForeignKeyColumnNameOnDatatable(), loan.productId());
@@ -1467,7 +1586,7 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                                     + " should be after last transaction date of loan to be closed " + lastUserTransactionOnLoanToClose);
                 }
                 BigDecimal loanOutstanding = this.loanReadPlatformService
-                        .retrieveLoanPrePaymentTemplate(LoanTransactionType.REPAYMENT, loanIdToClose, expectedDisbursementDate).getAmount();
+                        .retrieveLoanForeclosureTemplate(loanIdToClose, expectedDisbursementDate).getAmount();
                 final BigDecimal firstDisbursalAmount = loan.getFirstDisbursalAmount();
                 if (loanOutstanding.compareTo(firstDisbursalAmount) > 0) {
                     throw new GeneralPlatformDomainRuleException("error.msg.loan.amount.less.than.outstanding.of.loan.to.be.closed",
@@ -1498,6 +1617,20 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 .withLoanId(loanId) //
                 .with(changes) //
                 .build();
+    }
+
+    private void validateActiveLoanCount(Long clientId) {
+        if (this.configurationDomainService.isMaxActiveLoansEnabled()) {
+            final int activeLoanCount = this.loanReadPlatformService.retrieveNumberOfActiveLoansByClientId(clientId);
+            final int maxActiveLoans = this.configurationDomainService.getMaxActiveLoans().intValue();
+            if (maxActiveLoans > 0 && ((activeLoanCount + 1) > maxActiveLoans)) {
+                final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+                final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("loanapplication");
+                baseDataValidator.reset().parameter("loanId").value(clientId).failWithCode("max.active.loans.exceeded");
+                throw new PlatformApiDataValidationException("validation.msg.validation.errors.exist", "Validation errors exist.",
+                        dataValidationErrors);
+            }
+        }
     }
 
     @Transactional
@@ -1781,6 +1914,71 @@ public class LoanApplicationWritePlatformServiceJpaRepositoryImpl implements Loa
                 throw new NotOfficeSpecificProductException(productId, officeId);
             }
 
+        }
+    }
+
+    @Transactional
+    @Override
+    public CommandProcessingResult updateArrearsTolerance(final Long loanId, final JsonCommand command) {
+
+        try {
+            final Loan existingLoanApplication = this.loanRepositoryWrapper.findOneWithNotFoundDetection(loanId);
+            final Map<String, Object> changes = new HashMap<>();
+            if (existingLoanApplication.loanProduct().isAccountLevelArrearsToleranceEnable()) {
+                if (existingLoanApplication.getLoanProductRelatedDetail().getGraceOnArrearsAgeing() != null
+                        && existingLoanApplication.getLoanProductRelatedDetail().getGraceOnArrearsAgeing() == 0) {
+                    throw new GeneralPlatformDomainRuleException("error.msg.arrears.tolerance.limit.exceed",
+                            "Arrears Tolerance Limit Has Exceed.");
+                }
+                final Integer graceOnArrearsAging = command.integerValueOfParameterNamed("graceOnArrearsAging");
+                final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+                final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors).resource("loan");
+                baseDataValidator.reset().parameter("graceOnArrearsAging").value(graceOnArrearsAging).ignoreIfNull().positiveAmount();
+                if (!dataValidationErrors.isEmpty()) {
+                    throw new PlatformApiDataValidationException("validation.msg.validation.errors.exist", "Validation errors exist.",
+                            dataValidationErrors);
+                }
+                LocalDate fromDate = null;
+                LocalDate dueDate = null;
+                for (LoanRepaymentScheduleInstallment inst : existingLoanApplication.getRepaymentScheduleInstallments()) {
+                    if (inst.getDueDate().isAfter(DateUtils.getBusinessLocalDate())) {
+                        if (fromDate == null) {
+                            fromDate = inst.getDueDate();
+                        } else if (dueDate == null) {
+                            dueDate = inst.getDueDate();
+                            break;
+                        }
+                    }
+                }
+                int daysInPeriod = Math.toIntExact(ChronoUnit.DAYS.between(fromDate, dueDate));
+                if (daysInPeriod < graceOnArrearsAging) {
+                    throw new GeneralPlatformDomainRuleException(
+                            "error.grace.on.arrears.aging.days.should.not.be.greater.than.days.in.installment.period",
+                            "Grace on Arrears aging days should be less than from period for installment available days ." + daysInPeriod);
+                }
+                existingLoanApplication.setGraceOnArrearsAging(graceOnArrearsAging);
+
+                changes.put("graceOnArrearsAging", graceOnArrearsAging);
+                this.loanRepositoryWrapper.saveAndFlush(existingLoanApplication);
+            } else {
+                throw new GeneralPlatformDomainRuleException(
+                        "error.msg.account.level.arrears.tolerance.not.enabled,can't.update.that.value",
+                        "Account level Arrears Tolerance checkbox not checked in product can't update the value for parameter GraceOnArrearsAging.");
+            }
+            return new CommandProcessingResultBuilder() //
+                    .withEntityId(loanId) //
+                    .withOfficeId(existingLoanApplication.getOfficeId()) //
+                    .withClientId(existingLoanApplication.getClientId()) //
+                    .withGroupId(existingLoanApplication.getGroupId()) //
+                    .withLoanId(existingLoanApplication.getId()) //
+                    .with(changes).build();
+        } catch (final JpaSystemException | DataIntegrityViolationException dve) {
+            handleDataIntegrityIssues(command, dve.getMostSpecificCause(), dve);
+            return CommandProcessingResult.empty();
+        } catch (final PersistenceException dve) {
+            Throwable throwable = ExceptionUtils.getRootCause(dve.getCause());
+            handleDataIntegrityIssues(command, throwable, dve);
+            return CommandProcessingResult.empty();
         }
     }
 

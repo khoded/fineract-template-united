@@ -120,7 +120,13 @@ public class AddressWritePlatformServiceImpl implements AddressWritePlatformServ
             countryIdCodeValue = codeValueRepository.getReferenceById(countryId);
         }
 
-        final Address address = Address.fromJsonObject(jsonObject, stateIdCodeValue, countryIdCodeValue);
+        CodeValue lgaIdCodeValue = null;
+        if (jsonObject.get("lgaId") != null) {
+            long lgaId = jsonObject.get("lgaId").getAsLong();
+            lgaIdCodeValue = codeValueRepository.getReferenceById(lgaId);
+        }
+
+        final Address address = Address.fromJsonObject(jsonObject, stateIdCodeValue, countryIdCodeValue, lgaIdCodeValue);
         address.setCreatedOn(LocalDate.now(DateUtils.getDateTimeZoneOfTenant()));
         address.setUpdatedOn(LocalDate.now(DateUtils.getDateTimeZoneOfTenant()));
         return address;
@@ -137,6 +143,10 @@ public class AddressWritePlatformServiceImpl implements AddressWritePlatformServ
         CodeValue stateIdobj;
 
         CodeValue countryIdObj;
+
+        long lgaId;
+
+        CodeValue lgaIdobj;
 
         boolean is_address_update = false;
 
@@ -212,6 +222,15 @@ public class AddressWritePlatformServiceImpl implements AddressWritePlatformServ
             }
 
         }
+        if (command.longValueOfParameterNamed("lgaId") != null) {
+            if (command.longValueOfParameterNamed("lgaId") != 0) {
+                is_address_update = true;
+                lgaId = command.longValueOfParameterNamed("lgaId");
+                lgaIdobj = this.codeValueRepository.getReferenceById(lgaId);
+                addobj.setLga(lgaIdobj);
+            }
+
+        }
 
         if (!command.stringValueOfParameterNamed("postalCode").isEmpty()) {
             is_address_update = true;
@@ -230,6 +249,14 @@ public class AddressWritePlatformServiceImpl implements AddressWritePlatformServ
             is_address_update = true;
             final BigDecimal longitude = command.bigDecimalValueOfParameterNamed("longitude");
             addobj.setLongitude(longitude);
+
+        }
+
+        if (command.isChangeInLocalDateParameterNamed("atAddressSince", addobj.getAtAddressSince())) {
+
+            is_address_update = true;
+            final LocalDate addressLine1 = command.localDateValueOfParameterNamed("atAddressSince");
+            addobj.setAtAddressSince(addressLine1);
 
         }
 

@@ -1,0 +1,124 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements. See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership. The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License. You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+    KIND, either express or implied. See the License for the
+    specific language governing permissions and limitations
+    under the License.
+
+-->
+<databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
+    <changeSet author="naphlin@fiter.io" id="MON-93_add_partial_liquidation_permission_2">
+        <preConditions onFail="MARK_RAN">
+            <sqlCheck expectedResult="0">
+                Select count(1) from m_permission where code = 'PARTIALLY_LIQUIDATE_FIXEDDEPOSITACCOUNT';
+            </sqlCheck>
+        </preConditions>
+        <insert tableName="m_permission">
+            <column name="grouping" value="transaction_savings" />
+            <column name="code" value="PARTIALLY_LIQUIDATE_FIXEDDEPOSITACCOUNT" />
+            <column name="entity_name" value="FIXEDDEPOSITACCOUNT" />
+            <column name="action_name" value="PARTIALLY_LIQUIDATE" />
+            <column name="can_maker_checker" valueBoolean="false" />
+        </insert>
+
+    </changeSet>
+    <changeSet author="naphlin@fiter.io" id="MON-93_add_preclosure_charge_id_2">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_deposit_product_term_and_preclosure" columnName="pre_closure_charge_id"/>
+            </not>
+        </preConditions>
+        <sql>
+            ALTER TABLE m_deposit_product_term_and_preclosure ADD pre_closure_charge_id BIGINT NULL DEFAULT NULL;
+            ALTER TABLE m_deposit_product_term_and_preclosure ADD CONSTRAINT m_deposit_product_term_and_preclosure_charge_ibfk_1 FOREIGN KEY (pre_closure_charge_id) REFERENCES m_charge (id);
+
+        </sql>
+    </changeSet>
+
+    <changeSet author="naphlin@fiter.io" id="MON-93_add_partial_liq_acct_config">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_deposit_account_term_and_preclosure" columnName="allow_partial_liquidation"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_deposit_account_term_and_preclosure">
+            <column name="allow_partial_liquidation" type="boolean"/>
+            <column name="total_liquidation_allowed" type="integer"/>
+        </addColumn>
+
+    </changeSet>
+
+    <changeSet author="naphlin@fiter.io" id="MON-93_add_partial_liq_pdt_config">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_deposit_product_term_and_preclosure" columnName="allow_partial_liquidation"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_deposit_product_term_and_preclosure">
+            <column name="allow_partial_liquidation" type="boolean"/>
+            <column name="total_liquidation_allowed" type="integer"/>
+        </addColumn>
+
+    </changeSet>
+
+    <changeSet author="naphlin@fiter.io" id="MON-93_link_partially_liq_acct">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_deposit_account_term_and_preclosure" columnName="linked_origin_account_id"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_deposit_account_term_and_preclosure">
+            <column name="linked_origin_account_id" type="bigint">
+                <constraints references="m_savings_account(id)" foreignKeyName="FK_linked_origin_m_savings"/>
+            </column>
+        </addColumn>
+
+    </changeSet>
+
+    <changeSet author="naphlin@fiter.io" id="MON-93_add_varying_charge_slab_1">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <tableExists tableName="m_fee_charge_slab"/>
+            </not>
+        </preConditions>
+     <createTable tableName="m_fee_charge_slab">
+         <column name="id"  type="BIGINT" autoIncrement="true">
+            <constraints primaryKey="true"/>
+         </column>
+         <column name="charge_id" type="BIGINT">
+             <constraints references="m_charge(id)" foreignKeyName="FK_charge_id_charge_slab_id" nullable="false"/>
+         </column>
+         <column name="description" type="text"></column>
+         <column name="period_type_enum" type="integer"></column>
+         <column name="from_period" type="integer"></column>
+         <column name="to_period" type="integer"></column>
+         <column name="value" type="decimal(19,6)"></column>
+     </createTable>
+
+    </changeSet>
+
+    <changeSet author="naphlin@fiter.io" id="MON-93_add_varying_charge_slab_flag">
+        <preConditions onFail="MARK_RAN">
+            <not>
+                <columnExists tableName="m_charge" columnName="has_varying_charge"/>
+            </not>
+        </preConditions>
+        <addColumn tableName="m_charge">
+            <column name="has_varying_charge" type="boolean"></column>
+        </addColumn>
+
+    </changeSet>
+</databaseChangeLog>

@@ -65,6 +65,7 @@ public class SavingsApiConstants {
     public static final String COMMAND_BLOCK_DEBIT = "blockDebit";
     public static final String COMMAND_UNBLOCK_DEBIT = "unblockDebit";
     public static final String COMMAND_UNBLOCK_CREDIT = "unblockCredit";
+    public static final String COMMAND_UNLOCK = "unlock";
 
     // general
     public static final String localeParamName = "locale";
@@ -131,6 +132,7 @@ public class SavingsApiConstants {
     public static final String bankNumberParamName = "bankNumber";
     public static final String allowOverdraftParamName = "allowOverdraft";
     public static final String overdraftLimitParamName = "overdraftLimit";
+    public static final String postOverdraftInterestOnDepositParamName = "postOverdraftInterestOnDeposit";
     public static final String nominalAnnualInterestRateOverdraftParamName = "nominalAnnualInterestRateOverdraft";
     public static final String minOverdraftForInterestCalculationParamName = "minOverdraftForInterestCalculation";
     public static final String minRequiredBalanceParamName = "minRequiredBalance";
@@ -143,6 +145,8 @@ public class SavingsApiConstants {
     public static final String savingsAmountOnHold = "savingsAmountOnHold";
     public static final String withHoldTaxParamName = "withHoldTax";
     public static final String taxGroupIdParamName = "taxGroupId";
+    public static final String blockNarrationOptionsParamName = "blockNarrationOptions";// blockNarrationsOptions
+    public static final String blockNarrationParamName = "blockNarration";
 
     // transaction parameters
     public static final String transactionDateParamName = "transactionDate";
@@ -173,13 +177,17 @@ public class SavingsApiConstants {
     public static final String amountPaidParamName = "amountPaid";
     public static final String chargeOptionsParamName = "chargeOptions";
     public static final String chargePaymentModeParamName = "chargePaymentMode";
+    public static final String nicknameParamName = "nickname";
 
     public static final String noteParamName = "note";
 
     // Savings account associations
     public static final String transactions = "transactions";
+    public static final String accrualTransactions = "accrualTransactions";
     public static final String charges = "charges";
     public static final String linkedAccount = "linkedAccount";
+    public static final String blockNarrations = "blockNarrationOptions";
+    public static final String floatingInterestRates = "floatingInterestRates";
 
     // Savings on hold transaction
     public static final String onHoldTransactionTypeParamName = "transactionType";
@@ -188,6 +196,8 @@ public class SavingsApiConstants {
 
     // Savings Dormancy
     public static final String isDormancyTrackingActiveParamName = "isDormancyTrackingActive";
+    public static final String isInterestPostingConfigUpdateParamName = "isInterestPostingConfigUpdate";
+
     public static final String daysToInactiveParamName = "daysToInactive";
     public static final String daysToDormancyParamName = "daysToDormancy";
     public static final String daysToEscheatParamName = "daysToEscheat";
@@ -199,4 +209,33 @@ public class SavingsApiConstants {
     public static final String ERROR_MSG_SAVINGS_ACCOUNT_NOT_ACTIVE = "not.in.active.state";
 
     public static final String accountMappingForPaymentParamName = "accountMappingForPayment";
+
+    public static final String numberOfDebitTransactionsParamName = "numOfDebitTransaction";
+
+    public static final String numberOfCreditTransactionsParamName = "numOfCreditTransaction";
+
+    public static final String isUSDProductParamName = "isUSDProduct";
+    public static final String VAULT_TARGET_AMOUNT = "vaultTargetAmount";
+    public static final String VAULT_TARGET_DATE = "vaultTargetDate";
+    // FD Parital Liquidation
+    public static final String allowPartialLiquidation = "allowPartialLiquidation";
+    public static final String totalLiquidationAllowed = "totalLiquidationAllowed";
+
+    public static final String allowManuallyEnterInterestRateParamName = "allowManuallyEnterInterestRate";
+
+    public static final String useFloatingInterestRateParamName = "useFloatingInterestRate";
+    public static final String floatingInterestRatesParamName = "floatingInterestRates";
+    public static final String floatingInterestRateValueParamName = "floatingInterestRateValue";
+    public static final String ADD_PENALTY_ON_MISSED_TARGET_SAVINGS = "addPenaltyOnMissedTargetSavings";
+    public static final String WITHDRAWAL_FREQUENCY = "withdrawalFrequency";
+    public static final String WITHDRAWAL_FREQUENCY_ENUM = "withdrawalFrequencyEnum";
+    public static final String WITHDRAWAL_FREQUENCY_OPTIONS = "withdrawalFrequencyOptions";
+
+    public static String savingsProductCategoryIdParamName = "productCategoryId";
+
+    public static String savingsProductTypeIdParamName = "productTypeId";
+
+    public static String SAVINGS_PRODUCT_CATEGORY = "SavingsProductCategory";
+
+    public static String SAVINGS_PRODUCT_TYPE = "SavingsProductType";
 }

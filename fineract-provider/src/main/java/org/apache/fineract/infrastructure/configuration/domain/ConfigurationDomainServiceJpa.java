@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.infrastructure.configuration.domain;
 
+import io.fiter.ff4j.validators.FeatureList;
 import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +31,7 @@ import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
 import org.apache.fineract.useradministration.domain.Permission;
 import org.apache.fineract.useradministration.domain.PermissionRepository;
 import org.apache.fineract.useradministration.exception.PermissionNotFoundException;
+import org.ff4j.FF4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
@@ -40,17 +42,27 @@ public class ConfigurationDomainServiceJpa implements ConfigurationDomainService
 
     public static final String ENABLE_BUSINESS_DATE = "enable_business_date";
     public static final String ENABLE_AUTOMATIC_COB_DATE_ADJUSTMENT = "enable_automatic_cob_date_adjustment";
+    public static final String ENFORCE_OVERDUE_LOANS_FOR_MIN_BALANCE = "enforce_loan_overdue_amount_min_balance_check";
     private final PermissionRepository permissionRepository;
     private final GlobalConfigurationRepositoryWrapper globalConfigurationRepository;
     private final PlatformCacheRepository cacheTypeRepository;
     private static Map<String, GlobalConfigurationPropertyData> configurations = new HashMap<>();
 
+    private final FF4j ff4j;
+
     @Autowired
     public ConfigurationDomainServiceJpa(final PermissionRepository permissionRepository,
-            final GlobalConfigurationRepositoryWrapper globalConfigurationRepository, final PlatformCacheRepository cacheTypeRepository) {
+            final GlobalConfigurationRepositoryWrapper globalConfigurationRepository, final PlatformCacheRepository cacheTypeRepository,
+            final FF4j ff4j) {
         this.permissionRepository = permissionRepository;
         this.globalConfigurationRepository = globalConfigurationRepository;
         this.cacheTypeRepository = cacheTypeRepository;
+        this.ff4j = ff4j;
+    }
+
+    @Override
+    public boolean enforceOverdueLoansForMinBalance() {
+        return getGlobalConfigurationPropertyData(ENFORCE_OVERDUE_LOANS_FOR_MIN_BALANCE).isEnabled();
     }
 
     @Override
@@ -450,5 +462,30 @@ public class ConfigurationDomainServiceJpa implements ConfigurationDomainService
         final String propertyName = "enable-post-reversal-txns-for-reverse-transactions";
         final GlobalConfigurationPropertyData property = getGlobalConfigurationPropertyData(propertyName);
         return property.isEnabled();
+    }
+
+    @Override
+    public boolean isClientLevelValidationEnabled() {
+        return this.ff4j.check(FeatureList.CLIENT_LEVEL_LIMIT_VALIDATION);
+    }
+
+    @Override
+    public boolean isPostOverdraftInterestOnDepositEnabled() {
+        return getGlobalConfigurationPropertyData("post-overdraft-interest-on-deposit").isEnabled();
+    }
+
+    @Override
+    public boolean isMaxActiveLoansEnabled() {
+        return getGlobalConfigurationPropertyData("max-active-loans").isEnabled();
+    }
+
+    @Override
+    public Long getMaxActiveLoans() {
+        final String propertyName = "max-active-loans";
+        final GlobalConfigurationPropertyData property = getGlobalConfigurationPropertyData(propertyName);
+        if (property.getValue() == null) {
+            return 0L;
+        }
+        return property.getValue();
     }
 }

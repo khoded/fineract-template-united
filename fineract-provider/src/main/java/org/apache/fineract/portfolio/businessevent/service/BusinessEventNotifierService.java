@@ -18,8 +18,11 @@
  */
 package org.apache.fineract.portfolio.businessevent.service;
 
+import java.util.Map;
 import org.apache.fineract.portfolio.businessevent.BusinessEventListener;
 import org.apache.fineract.portfolio.businessevent.domain.BusinessEvent;
+import org.apache.fineract.portfolio.common.domain.BusinessEventNotificationConstants.BusinessEntity;
+import org.apache.fineract.portfolio.common.domain.BusinessEventNotificationConstants.BusinessEvents;
 
 /**
  * Implemented class is responsible for notifying the business event to registered listeners.
@@ -46,5 +49,10 @@ public interface BusinessEventNotifierService {
      * Method is to register a class as listener for post-processing of any Business event
      */
     <T extends BusinessEvent<?>> void addPostBusinessEventListener(Class<T> eventType, BusinessEventListener<T> listener);
+
+    /**
+     * Method should be called to notify listeners after Business event execution for any post-processing of event
+     */
+    void notifyBusinessEventWasExecuted(BusinessEvents businessEvent, Map<BusinessEntity, Object> businessEventEntity);
 
 }

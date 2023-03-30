@@ -26,10 +26,13 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 import org.apache.fineract.accounting.glaccount.domain.TrialBalance;
 import org.apache.fineract.accounting.glaccount.domain.TrialBalanceRepositoryWrapper;
 import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.apache.fineract.infrastructure.core.data.ApiParameterError;
+import org.apache.fineract.infrastructure.core.domain.FineractPlatformTenant;
+import org.apache.fineract.infrastructure.core.exception.ExceptionHelper;
 import org.apache.fineract.infrastructure.core.exception.PlatformApiDataValidationException;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.infrastructure.core.service.RoutingDataSourceServiceFactory;
@@ -40,15 +43,20 @@ import org.apache.fineract.infrastructure.jobs.annotation.CronTarget;
 import org.apache.fineract.infrastructure.jobs.domain.ScheduledJobDetail;
 import org.apache.fineract.infrastructure.jobs.domain.ScheduledJobDetailRepository;
 import org.apache.fineract.infrastructure.jobs.exception.JobExecutionException;
+import org.apache.fineract.infrastructure.jobs.service.JobExecuter;
 import org.apache.fineract.infrastructure.jobs.service.JobName;
 import org.apache.fineract.infrastructure.jobs.service.JobRegisterService;
-import org.apache.fineract.portfolio.savings.DepositAccountType;
+import org.apache.fineract.infrastructure.jobs.service.JobRunner;
 import org.apache.fineract.portfolio.savings.DepositAccountUtils;
+import org.apache.fineract.portfolio.savings.WithdrawalFrequency;
 import org.apache.fineract.portfolio.savings.data.DepositAccountData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountAnnualFeeData;
+import org.apache.fineract.portfolio.savings.domain.SavingsAccount;
+import org.apache.fineract.portfolio.savings.domain.SavingsAccountRepositoryWrapper;
 import org.apache.fineract.portfolio.savings.service.DepositAccountReadPlatformService;
 import org.apache.fineract.portfolio.savings.service.DepositAccountWritePlatformService;
 import org.apache.fineract.portfolio.savings.service.SavingsAccountChargeReadPlatformService;
+import org.apache.fineract.portfolio.savings.service.SavingsAccountReadPlatformService;
 import org.apache.fineract.portfolio.savings.service.SavingsAccountWritePlatformService;
 import org.apache.fineract.portfolio.shareaccounts.service.ShareAccountDividendReadPlatformService;
 import org.apache.fineract.portfolio.shareaccounts.service.ShareAccountSchedularService;
@@ -56,7 +64,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
+import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
@@ -79,6 +91,9 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
     private final FineractProperties fineractProperties;
     private final DatabaseSpecificSQLGenerator sqlGenerator;
     private final DatabaseTypeResolver databaseTypeResolver;
+    private final SavingsAccountReadPlatformService savingsAccountReadPlatformService;
+    private final JobExecuter jobExecuter;
+    private final SavingsAccountRepositoryWrapper savingAccountRepositoryWrapper;
 
     @Autowired
     public ScheduledJobRunnerServiceImpl(final RoutingDataSourceServiceFactory dataSourceServiceFactory,
@@ -90,7 +105,9 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
             final ShareAccountSchedularService shareAccountSchedularService,
             final TrialBalanceRepositoryWrapper trialBalanceRepositoryWrapper, @Lazy final JobRegisterService jobRegisterService,
             final ScheduledJobDetailRepository scheduledJobDetailsRepository, final FineractProperties fineractProperties,
-            DatabaseSpecificSQLGenerator sqlGenerator, DatabaseTypeResolver databaseTypeResolver) {
+            DatabaseSpecificSQLGenerator sqlGenerator, DatabaseTypeResolver databaseTypeResolver,
+            final SavingsAccountReadPlatformService savingsAccountReadPlatformService, final JobExecuter jobExecuter,
+            SavingsAccountRepositoryWrapper savingAccountRepositoryWrapper) {
         this.dataSourceServiceFactory = dataSourceServiceFactory;
         this.savingsAccountWritePlatformService = savingsAccountWritePlatformService;
         this.savingsAccountChargeReadPlatformService = savingsAccountChargeReadPlatformService;
@@ -104,6 +121,9 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
         this.fineractProperties = fineractProperties;
         this.sqlGenerator = sqlGenerator;
         this.databaseTypeResolver = databaseTypeResolver;
+        this.savingsAccountReadPlatformService = savingsAccountReadPlatformService;
+        this.jobExecuter = jobExecuter;
+        this.savingAccountRepositoryWrapper = savingAccountRepositoryWrapper;
     }
 
     @Override
@@ -211,8 +231,7 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
 
         for (final DepositAccountData depositAccount : depositAccounts) {
             try {
-                final DepositAccountType depositAccountType = DepositAccountType.fromInt(depositAccount.depositType().getId().intValue());
-                this.depositAccountWritePlatformService.updateMaturityDetails(depositAccount.id(), depositAccountType);
+                this.depositAccountWritePlatformService.updateMaturityDetails(depositAccount);
             } catch (final PlatformApiDataValidationException e) {
                 final List<ApiParameterError> errors = e.getErrors();
                 for (final ApiParameterError error : errors) {
@@ -392,4 +411,159 @@ public class ScheduledJobRunnerServiceImpl implements ScheduledJobRunnerService 
         }
     }
 
+    @Override
+    @CronTarget(jobName = JobName.POST_ACCRUAL_INTEREST_FOR_SAVINGS)
+    public void postAccrualInterestForSavings() throws JobExecutionException {
+
+        List<Throwable> errors = new ArrayList<>();
+        try {
+            Thread nonInterestRecalculationThread = new Thread(new SavingsAccrualInterestRunnable(errors));
+            nonInterestRecalculationThread.start();
+            nonInterestRecalculationThread.join();
+        } catch (InterruptedException e) {
+            errors.add(e);
+        }
+
+    }
+
+    private class SavingsAccrualInterestRunnable implements Runnable {
+
+        final FineractPlatformTenant tenant;
+        final Authentication auth;
+        final Map<String, Object> jobParams;
+        final LocalDate jobRunDate;
+
+        public SavingsAccrualInterestRunnable(List<Throwable> errors) {
+            this.tenant = ThreadLocalContextUtil.getTenant();
+            if (SecurityContextHolder.getContext() == null) {
+                this.auth = null;
+            } else {
+                this.auth = SecurityContextHolder.getContext().getAuthentication();
+            }
+            this.jobParams = ThreadLocalContextUtil.getJobParams();
+            this.jobRunDate = DateUtils.getLocalDateOfTenant();
+        }
+
+        @Override
+        public void run() {
+            ThreadLocalContextUtil.setTenant(tenant);
+            ThreadLocalContextUtil.setJobParams(jobParams);
+            if (this.auth != null) {
+                SecurityContextHolder.getContext().setAuthentication(this.auth);
+            }
+            applyAccrualInterestForSavings(jobRunDate);
+        }
+    }
+
+    public void applyAccrualInterestForSavings(LocalDate jobRunDate) {
+        final List<Long> activeSavingsAccounts = new ArrayList<>();
+
+        activeSavingsAccounts.addAll(this.savingsAccountReadPlatformService.retrieveActiveSavingsAccrualAccounts(100l));
+        activeSavingsAccounts.addAll(this.savingsAccountReadPlatformService.retrieveActiveSavingsAccrualAccounts(200l));
+        activeSavingsAccounts.addAll(this.savingsAccountReadPlatformService.retrieveActiveSavingsAccrualAccounts(300l));
+
+        JobRunner<List<Long>> runner = new SavingsAccrualInterestJobRunner(jobRunDate);
+        this.jobExecuter.executeJob(activeSavingsAccounts, runner);
+    }
+
+    private class SavingsAccrualInterestJobRunner implements JobRunner<List<Long>> {
+
+        final Integer maxNumberOfRetries;
+        final Integer maxIntervalBetweenRetries;
+        final LocalDate jobRunDate;
+
+        public SavingsAccrualInterestJobRunner(final LocalDate jobRunDate) {
+            this.jobRunDate = jobRunDate;
+            maxNumberOfRetries = ThreadLocalContextUtil.getTenant().getConnection().getMaxRetriesOnDeadlock();
+            maxIntervalBetweenRetries = ThreadLocalContextUtil.getTenant().getConnection().getMaxIntervalBetweenRetries();
+        }
+
+        @Override
+        public void runJob(final List<Long> savingIds, StringBuilder sb) {
+            postAccrualInterest(sb, this.maxNumberOfRetries, this.maxIntervalBetweenRetries, savingIds, this.jobRunDate);
+        }
+
+    }
+
+    // WIP On Posting Interest here
+    private void postAccrualInterest(final StringBuilder sb, Integer maxNumberOfRetries, Integer maxIntervalBetweenRetries,
+            List<Long> savingIds, LocalDate jobRunDate) {
+        final String errorMessage = "Post Accruals failed for account:";
+
+        for (Long savingAccount : savingIds) {
+            if (savingAccount == 0) {
+                continue;
+            }
+            LOG.info("Accruals Saving ID " + savingAccount + " which is " + savingIds.indexOf(savingAccount) + " of " + savingIds.size());
+            Integer numberOfRetries = 0;
+            while (numberOfRetries <= maxNumberOfRetries) {
+                try {
+                    this.savingsAccountWritePlatformService.postAccrualInterest(savingAccount, jobRunDate, false);
+                    numberOfRetries = maxNumberOfRetries + 1;
+                } catch (CannotAcquireLockException | ObjectOptimisticLockingFailureException exception) {
+                    LOG.info("Recalulate interest job has been retried  " + numberOfRetries + " time(s)");
+                    /***
+                     * Fail if the transaction has been retired for maxNumberOfRetries
+                     **/
+                    if (numberOfRetries >= maxNumberOfRetries) {
+                        LOG.warn("Recalulate interest job has been retried for the max allowed attempts of " + numberOfRetries
+                                + " and will be rolled back");
+                        sb.append("Recalulate interest job has been retried for the max allowed attempts of " + numberOfRetries
+                                + " and will be rolled back");
+                        break;
+                    }
+                    /***
+                     * Else sleep for a random time (between 1 to 10 seconds) and continue
+                     **/
+                    try {
+                        Random random = new Random();
+                        int randomNum = random.nextInt(maxIntervalBetweenRetries + 1);
+                        Thread.sleep(1000 + (randomNum * 1000));
+                        numberOfRetries = numberOfRetries + 1;
+                    } catch (InterruptedException e) {
+                        sb.append("Interest recalculation for loans failed " + exception.getMessage());
+                        break;
+                    }
+                } catch (Exception e) {
+                    ExceptionHelper.handleExceptions(e, sb, errorMessage, savingAccount, LOG);
+                    numberOfRetries = maxNumberOfRetries + 1;
+                }
+            }
+        }
+    }
+
+    @Override
+    @CronTarget(jobName = JobName.UPDATE_NEXT_WITHDRAWAL_DATE_ON_SAVINGS_ACCOUNT)
+    public void updateNextWithdrawalDateOnSavingsAccount() throws JobExecutionException {
+        final List<SavingsAccount> savingsAccounts = this.savingAccountRepositoryWrapper.findSavingAccountToUpdateNextFlexWithdrawalDate();
+        List<Throwable> exceptions = new ArrayList<>();
+        for (final SavingsAccount account : savingsAccounts) {
+            try {
+                if (account.getWithdrawalFrequency() != null && account.getWithdrawalFrequencyEnum() != null
+                        && DateUtils.getBusinessLocalDate().isAfter(account.getNextFlexWithdrawalDate())) {
+
+                    if (account.getWithdrawalFrequencyEnum().equals(WithdrawalFrequency.MONTH.getValue())) {
+                        LocalDate nextWithDrawDate = account.getNextFlexWithdrawalDate().plusMonths(account.getWithdrawalFrequency());
+                        account.setNextFlexWithdrawalDate(nextWithDrawDate);
+                        this.savingAccountRepositoryWrapper.saveAndFlush(account);
+                    }
+                }
+            } catch (final PlatformApiDataValidationException e) {
+                exceptions.add(e);
+                final List<ApiParameterError> errors = e.getErrors();
+                for (final ApiParameterError error : errors) {
+                    LOG.error("Apply nextFlexWithdrawalDate for savings failed for account {} with message: {}", account.getId(),
+                            error.getDeveloperMessage(), e);
+                }
+            } catch (final Exception ex) {
+                exceptions.add(ex);
+                LOG.error("Apply nextFlexWithdrawalDate for savings failed for account: {}", account.getId(), ex);
+            }
+        }
+        LOG.info("{}: Records affected by updateNextWithdrawalDateOnSavingsAccount: {}", ThreadLocalContextUtil.getTenant().getName(),
+                savingsAccounts.size());
+        if (!exceptions.isEmpty()) {
+            throw new JobExecutionException(exceptions);
+        }
+    }
 }

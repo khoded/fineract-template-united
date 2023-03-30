@@ -46,6 +46,10 @@ public class SavingsAccountTransactionEnumData implements Serializable {
     private final boolean escheat;
     private final boolean amountHold;
     private final boolean amountRelease;
+    private final boolean accrualInterestPosting;
+    private final boolean overdraftAccrualInterest;
+    private final boolean writtenOff;
+    private final boolean revokedInterest;
 
     public SavingsAccountTransactionEnumData(final Long id, final String code, final String value) {
         this.id = id;
@@ -68,6 +72,10 @@ public class SavingsAccountTransactionEnumData implements Serializable {
         this.escheat = Long.valueOf(SavingsAccountTransactionType.ESCHEAT.getValue()).equals(this.id);
         this.amountHold = Long.valueOf(SavingsAccountTransactionType.AMOUNT_HOLD.getValue()).equals(this.id);
         this.amountRelease = Long.valueOf(SavingsAccountTransactionType.AMOUNT_RELEASE.getValue()).equals(this.id);
+        this.accrualInterestPosting = Long.valueOf(SavingsAccountTransactionType.ACCRUAL_INTEREST_POSTING.getValue()).equals(this.id);
+        this.overdraftAccrualInterest = Long.valueOf(SavingsAccountTransactionType.OVERDRAFT_ACCRUAL_INTEREST.getValue()).equals(this.id);
+        this.writtenOff = Long.valueOf(SavingsAccountTransactionType.WRITTEN_OFF.getValue()).equals(this.id);
+        this.revokedInterest = Long.valueOf(SavingsAccountTransactionType.REVOKED_INTEREST.getValue()).equals(this.id);
         // this.overdraftFee =
         // Long.valueOf(SavingsAccountTransactionType.OVERDRAFT_INTEREST.getValue()).equals(this.id);
     }
@@ -165,15 +173,30 @@ public class SavingsAccountTransactionEnumData implements Serializable {
     }
 
     public boolean isAnnualFee() {
-        return this.value.equals(SavingsAccountTransactionType.ANNUAL_FEE.getValue().toString());
+        return Long.valueOf(SavingsAccountTransactionType.ANNUAL_FEE.getValue()).equals(this.id);
     }
 
     public boolean isPayCharge() {
-        return this.value.equals(SavingsAccountTransactionType.PAY_CHARGE.getValue().toString());
+        return Long.valueOf(SavingsAccountTransactionType.PAY_CHARGE.getValue()).equals(this.id);
     }
 
     public boolean isWithdrawalFee() {
-        return this.value.equals(SavingsAccountTransactionType.WITHDRAWAL_FEE.getValue().toString());
+        return Long.valueOf(SavingsAccountTransactionType.WITHDRAWAL_FEE.getValue()).equals(this.id);
     }
 
+    public boolean isAccrualInterestPosting() {
+        return this.accrualInterestPosting;
+    }
+
+    public boolean isOverdraftAccrualInterest() {
+        return this.overdraftAccrualInterest;
+    }
+
+    public boolean isWrittenOff() {
+        return this.writtenOff;
+    }
+
+    public boolean isRevokedInterest() {
+        return revokedInterest;
+    }
 }

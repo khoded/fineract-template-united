@@ -88,6 +88,12 @@ public class LoanCharge extends AbstractPersistableCustom {
     @Column(name = "amount", scale = 6, precision = 19, nullable = false)
     private BigDecimal amount;
 
+    @Column(name = "min_amount", scale = 6, precision = 19)
+    private BigDecimal minAmount;
+
+    @Column(name = "max_amount", scale = 6, precision = 19)
+    private BigDecimal maxAmount;
+
     @Column(name = "amount_paid_derived", scale = 6, precision = 19, nullable = true)
     private BigDecimal amountPaid;
 
@@ -192,7 +198,8 @@ public class LoanCharge extends AbstractPersistableCustom {
         // loan.
         // Then we need to get as of this loan charge due date how much amount
         // disbursed.
-        if (chargeDefinition.getChargeTimeType().equals(ChargeTimeType.SPECIFIED_DUE_DATE.getValue()) && loan.isMultiDisburmentLoan()) {
+        if ((chargeDefinition.getChargeTimeType().equals(ChargeTimeType.SPECIFIED_DUE_DATE.getValue()) && loan.isMultiDisburmentLoan())
+                || chargeDefinition.getChargeTimeType().equals(ChargeTimeType.DISBURSE_TO_SAVINGS.getValue())) {
             amountPercentageAppliedTo = BigDecimal.ZERO;
             for (final LoanDisbursementDetails loanDisbursementDetails : loan.getDisbursementDetails()) {
                 if (!loanDisbursementDetails.expectedDisbursementDate().isAfter(dueDate)) {
@@ -237,6 +244,7 @@ public class LoanCharge extends AbstractPersistableCustom {
         }
 
         if (ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.SPECIFIED_DUE_DATE)
+                || ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.DISBURSE_TO_SAVINGS)
                 || ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.OVERDUE_INSTALLMENT)) {
 
             if (dueDate == null) {
@@ -264,13 +272,16 @@ public class LoanCharge extends AbstractPersistableCustom {
         if (chargePaymentMode != null) {
             this.chargePaymentMode = chargePaymentMode.getValue();
         }
+        this.minAmount = chargeDefinition.getMinAmount();
+        this.maxAmount = chargeDefinition.getMaxAmount();
 
-        populateDerivedFields(loanPrincipal, chargeAmount, numberOfRepayments, loanCharge);
+        populateDerivedFields(loanPrincipal, chargeAmount, numberOfRepayments, loanCharge, this.minAmount, this.maxAmount);
         this.paid = determineIfFullyPaid();
+
     }
 
     private void populateDerivedFields(final BigDecimal amountPercentageAppliedTo, final BigDecimal chargeAmount,
-            Integer numberOfRepayments, BigDecimal loanCharge) {
+            Integer numberOfRepayments, BigDecimal loanCharge, BigDecimal minAmount, BigDecimal maxAmount) {
 
         switch (ChargeCalculationType.fromInt(this.chargeCalculation)) {
             case INVALID:
@@ -302,6 +313,8 @@ public class LoanCharge extends AbstractPersistableCustom {
             case PERCENT_OF_AMOUNT_AND_INTEREST:
             case PERCENT_OF_INTEREST:
             case PERCENT_OF_DISBURSEMENT_AMOUNT:
+                this.minAmount = minAmount;
+                this.maxAmount = maxAmount;
                 this.percentage = chargeAmount;
                 this.amountPercentageAppliedTo = amountPercentageAppliedTo;
                 if (loanCharge.compareTo(BigDecimal.ZERO) == 0) {
@@ -439,7 +452,8 @@ public class LoanCharge extends AbstractPersistableCustom {
                     // disburment loan.
                     // Then we need to get as of this loan charge due date how
                     // much amount disbursed.
-                    if (this.loan.isMultiDisburmentLoan() && this.isSpecifiedDueDate()) {
+                    if ((this.loan.isMultiDisburmentLoan() && this.isSpecifiedDueDate())
+                            || (this.loan.isMultiDisburmentLoan() && isDisburseToSavings())) {
                         for (final LoanDisbursementDetails loanDisbursementDetails : this.loan.getDisbursementDetails()) {
                             if (!loanDisbursementDetails.expectedDisbursementDate().isAfter(this.getDueDate())) {
                                 amountPercentageAppliedTo = amountPercentageAppliedTo.add(loanDisbursementDetails.principal());
@@ -595,6 +609,10 @@ public class LoanCharge extends AbstractPersistableCustom {
         return this.dueDate;
     }
 
+    public void setDueDate(LocalDate dueDate) {
+        this.dueDate = dueDate;
+    }
+
     private boolean determineIfFullyPaid() {
         if (this.amount == null) {
             return true;
@@ -627,11 +645,11 @@ public class LoanCharge extends AbstractPersistableCustom {
     }
 
     public BigDecimal percentageOf(final BigDecimal value) {
-        return percentageOf(value, this.percentage);
+        BigDecimal newValue = percentageOf(value, this.percentage);
+        return extracted(newValue);
     }
 
     public static BigDecimal percentageOf(final BigDecimal value, final BigDecimal percentage) {
-
         BigDecimal percentageOf = BigDecimal.ZERO;
 
         if (isGreaterThanZero(value)) {
@@ -640,6 +658,24 @@ public class LoanCharge extends AbstractPersistableCustom {
             percentageOf = value.multiply(multiplicand, mc);
         }
         return percentageOf;
+    }
+
+    private BigDecimal extracted(BigDecimal percentageOf) {
+        /**
+         * Logic to determine which value to use in the computation if a transaction amount is greater than min amount
+         * then use min amount and if max if greater that the transaction amount amount then use max amount else use the
+         * transaction amount
+         *
+         **/
+        BigDecimal transactionAmountToConsider;
+        if (this.maxAmount != null && percentageOf.compareTo(this.maxAmount) > 0) {
+            transactionAmountToConsider = this.maxAmount;
+        } else if (this.minAmount != null && percentageOf.compareTo(this.minAmount) != 0) {
+            transactionAmountToConsider = this.minAmount;
+        } else {
+            transactionAmountToConsider = percentageOf;
+        }
+        return transactionAmountToConsider;
     }
 
     /**
@@ -699,6 +735,15 @@ public class LoanCharge extends AbstractPersistableCustom {
     private boolean occursOnDayFromAndUpToAndIncluding(final LocalDate fromNotInclusive, final LocalDate upToAndInclusive,
             final LocalDate target) {
         return target != null && target.isAfter(fromNotInclusive) && !target.isAfter(upToAndInclusive);
+    }
+
+    public boolean isDueForCollectionForDisburseToSavingsAndIncluding(final LocalDate fromNotInclusive) {
+        final LocalDate dueDate = getDueLocalDate();
+        return occursOnDayFromAndUpToAndIncluding(fromNotInclusive, dueDate);
+    }
+
+    private boolean occursOnDayFromAndUpToAndIncluding(final LocalDate fromNotInclusive, final LocalDate target) {
+        return target != null && !target.isAfter(fromNotInclusive) && !target.isBefore(fromNotInclusive);
     }
 
     public boolean isFeeCharge() {
@@ -813,21 +858,6 @@ public class LoanCharge extends AbstractPersistableCustom {
     public Charge getCharge() {
         return this.charge;
     }
-
-    /*
-     * @Override public boolean equals(final Object obj) { if (obj == null) { return false; } if (obj == this) { return
-     * true; } if (obj.getClass() != getClass()) { return false; } final LoanCharge rhs = (LoanCharge) obj; return new
-     * EqualsBuilder().appendSuper(super.equals(obj)) // .append(getId(), rhs.getId()) // .append(this.charge.getId(),
-     * rhs.charge.getId()) // .append(this.amount, rhs.amount) // .append(getDueLocalDate(), rhs.getDueLocalDate()) //
-     * .isEquals(); }
-     *
-     * @Override public int hashCode() { return 1;
-     *
-     * return new HashCodeBuilder(3, 5) // .append(getId()) // .append(this.charge.getId()) //
-     * .append(this.amount).append(getDueLocalDate()) // .toHashCode();
-     *
-     * }
-     */
 
     public ChargePaymentMode getChargePaymentMode() {
         return ChargePaymentMode.fromInt(this.chargePaymentMode);
@@ -1073,6 +1103,10 @@ public class LoanCharge extends AbstractPersistableCustom {
 
     public void setExternalId(String externalId) {
         this.externalId = externalId;
+    }
+
+    public boolean isDisburseToSavings() {
+        return ChargeTimeType.fromInt(this.chargeTime).equals(ChargeTimeType.DISBURSE_TO_SAVINGS);
     }
 
 }

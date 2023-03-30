@@ -19,12 +19,14 @@
 package org.apache.fineract.portfolio.client.service;
 
 import com.google.gson.JsonElement;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 import javax.persistence.PersistenceException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.exception.ExceptionUtils;
@@ -61,10 +63,14 @@ import org.apache.fineract.portfolio.client.api.ClientApiConstants;
 import org.apache.fineract.portfolio.client.data.ClientDataValidator;
 import org.apache.fineract.portfolio.client.domain.AccountNumberGenerator;
 import org.apache.fineract.portfolio.client.domain.Client;
+import org.apache.fineract.portfolio.client.domain.ClientAdditionalInfo;
+import org.apache.fineract.portfolio.client.domain.ClientAdditionalInfoRepository;
 import org.apache.fineract.portfolio.client.domain.ClientNonPerson;
 import org.apache.fineract.portfolio.client.domain.ClientNonPersonRepositoryWrapper;
 import org.apache.fineract.portfolio.client.domain.ClientRepositoryWrapper;
 import org.apache.fineract.portfolio.client.domain.ClientStatus;
+import org.apache.fineract.portfolio.client.domain.ClientTransactionLimit;
+import org.apache.fineract.portfolio.client.domain.ClientTransactionLimitRepository;
 import org.apache.fineract.portfolio.client.domain.LegalForm;
 import org.apache.fineract.portfolio.client.exception.ClientActiveForUpdateException;
 import org.apache.fineract.portfolio.client.exception.ClientHasNoStaffException;
@@ -120,6 +126,11 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
     private final BusinessEventNotifierService businessEventNotifierService;
     private final EntityDatatableChecksWritePlatformService entityDatatableChecksWritePlatformService;
 
+    private final BusinessOwnerWritePlatformService businessOwnerWritePlatformService;
+
+    private final ClientTransactionLimitRepository clientTransactionLimitRepository;
+    private ClientAdditionalInfoRepository clientAdditionalInfoRepository;
+
     @Autowired
     public ClientWritePlatformServiceJpaRepositoryImpl(final PlatformSecurityContext context,
             final ClientRepositoryWrapper clientRepository, final ClientNonPersonRepositoryWrapper clientNonPersonRepository,
@@ -135,7 +146,10 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
             final AddressWritePlatformService addressWritePlatformService,
             final ClientFamilyMembersWritePlatformService clientFamilyMembersWritePlatformService,
             final BusinessEventNotifierService businessEventNotifierService,
-            final EntityDatatableChecksWritePlatformService entityDatatableChecksWritePlatformService) {
+            final EntityDatatableChecksWritePlatformService entityDatatableChecksWritePlatformService,
+            BusinessOwnerWritePlatformService businessOwnerWritePlatformService,
+            final ClientTransactionLimitRepository clientTransactionLimitRepository,
+            ClientAdditionalInfoRepository clientAdditionalInfoRepository) {
         this.context = context;
         this.clientRepository = clientRepository;
         this.clientNonPersonRepository = clientNonPersonRepository;
@@ -159,6 +173,9 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
         this.clientFamilyMembersWritePlatformService = clientFamilyMembersWritePlatformService;
         this.businessEventNotifierService = businessEventNotifierService;
         this.entityDatatableChecksWritePlatformService = entityDatatableChecksWritePlatformService;
+        this.businessOwnerWritePlatformService = businessOwnerWritePlatformService;
+        this.clientTransactionLimitRepository = clientTransactionLimitRepository;
+        this.clientAdditionalInfoRepository = clientAdditionalInfoRepository;
     }
 
     @Transactional
@@ -230,7 +247,11 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
             final GlobalConfigurationPropertyData configuration = this.configurationReadPlatformService
                     .retrieveGlobalConfiguration("Enable-Address");
 
+            final GlobalConfigurationPropertyData businessOwner = this.configurationReadPlatformService
+                    .retrieveGlobalConfiguration("Enable-businessOwners");
+
             final Boolean isAddressEnabled = configuration.isEnabled();
+            final Boolean isBusinessOwnerEnabled = businessOwner.isEnabled();
 
             final Boolean isStaff = command.booleanObjectValueOfParameterNamed(ClientApiConstants.isStaffParamName);
 
@@ -291,6 +312,8 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
             final Client newClient = Client.createNew(currentUser, clientOffice, clientParentGroup, staff, savingsProductId, gender,
                     clientType, clientClassification, legalFormValue, command);
             this.clientRepository.saveAndFlush(newClient);
+
+            createClientAdditionalInfo(newClient, command);
             boolean rollbackTransaction = false;
             if (newClient.isActive()) {
                 validateParentGroupRulesBeforeClientActivation(newClient);
@@ -299,6 +322,7 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
                 rollbackTransaction = this.commandProcessingService.validateCommand(commandWrapper, currentUser);
             }
 
+            createClientTransactionLimits(command, newClient);
             this.clientRepository.saveAndFlush(newClient);
             if (newClient.isActive()) {
                 businessEventNotifierService.notifyPostBusinessEvent(new ClientActivateBusinessEvent(newClient));
@@ -329,6 +353,10 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
                 this.clientFamilyMembersWritePlatformService.addClientFamilyMember(newClient, command);
             }
 
+            if (isBusinessOwnerEnabled) {
+                this.businessOwnerWritePlatformService.addNewBusinessOwner(newClient, command);
+            }
+
             if (command.parameterExists(ClientApiConstants.datatables)) {
                 this.entityDatatableChecksWritePlatformService.saveDatatables(StatusEnum.CREATE.getCode().longValue(),
                         EntityTables.CLIENT.getName(), newClient.getId(), null,
@@ -357,6 +385,73 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
             handleDataIntegrityIssues(command, throwable, dve);
             return CommandProcessingResult.empty();
         }
+    }
+
+    private void createClientAdditionalInfo(Client newClient, JsonCommand command) {
+
+        final Long maritalStatusId = command.longValueOfParameterNamed(ClientApiConstants.maritalStatusIdParamName);
+        CodeValue maritalStatusCodeValue = null;
+        if (maritalStatusId != null) {
+
+            maritalStatusCodeValue = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.MARITALSTATUS,
+                    maritalStatusId);
+        }
+
+        final Long titleId = command.longValueOfParameterNamed(ClientApiConstants.titleParam);
+        CodeValue titleCodeValue = null;
+        if (titleId != null) {
+
+            titleCodeValue = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.TITLE, titleId);
+        }
+
+        final ClientAdditionalInfo clientAdditionalInfo = ClientAdditionalInfo.fromJson(newClient, maritalStatusCodeValue, titleCodeValue,
+                command);
+
+        this.clientAdditionalInfoRepository.save(clientAdditionalInfo);
+
+    }
+
+    private void updateClientAdditionalInfo(Client newClient, JsonCommand command) {
+
+        Optional<ClientAdditionalInfo> clientAdditionalInfo = this.clientAdditionalInfoRepository.findByClient(newClient);
+
+        if (clientAdditionalInfo.isPresent()) {
+
+            final ClientAdditionalInfo clientAdditionalInfoForUpdate = clientAdditionalInfo.get();
+            Map<String, Object> changes = clientAdditionalInfoForUpdate.update(command);
+
+            if (!changes.isEmpty()) {
+
+                if (changes.containsKey(ClientApiConstants.maritalStatusIdParamName)) {
+                    final Long maritalStatusId = command.longValueOfParameterNamed(ClientApiConstants.maritalStatusIdParamName);
+                    CodeValue maritalStatusCodeValue = null;
+                    if (maritalStatusId != null) {
+
+                        maritalStatusCodeValue = this.codeValueRepository
+                                .findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.MARITALSTATUS, maritalStatusId);
+                    }
+                    clientAdditionalInfoForUpdate.setMaritalStatus(maritalStatusCodeValue);
+                }
+
+                if (changes.containsKey(ClientApiConstants.titleParam)) {
+                    final Long titleId = command.longValueOfParameterNamed(ClientApiConstants.titleParam);
+                    CodeValue titleCodeValue = null;
+                    if (titleId != null) {
+
+                        titleCodeValue = this.codeValueRepository.findOneByCodeNameAndIdWithNotFoundDetection(ClientApiConstants.TITLE,
+                                titleId);
+                    }
+                    clientAdditionalInfoForUpdate.setTitle(titleCodeValue);
+                }
+
+                this.clientAdditionalInfoRepository.save(clientAdditionalInfoForUpdate);
+
+            }
+
+        } else {
+            createClientAdditionalInfo(newClient, command);
+        }
+
     }
 
     /**
@@ -395,8 +490,16 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
                         ClientApiConstants.CLIENT_NON_PERSON_MAIN_BUSINESS_LINE, clientNonPersonMainBusinessLineId);
             }
 
+            final String dateFormatAsInput = command.dateFormat();
+            final String localeAsInput = command.locale();
+            final LocalDate inBusinessSince = this.fromApiJsonHelper.extractLocalDateNamed(ClientApiConstants.inBusinessSinceParamName,
+                    clientNonPersonElement, dateFormatAsInput, Locale.forLanguageTag(localeAsInput));
+
+            final Boolean isRegistered = this.fromApiJsonHelper.extractBooleanNamed(ClientApiConstants.isRegisteredParam,
+                    clientNonPersonElement);
+
             final ClientNonPerson newClientNonPerson = ClientNonPerson.createNew(client, clientNonPersonConstitution,
-                    clientNonPersonMainBusinessLine, incorpNumber, incorpValidityTill, remarks);
+                    clientNonPersonMainBusinessLine, incorpNumber, incorpValidityTill, remarks, inBusinessSince, isRegistered);
 
             this.clientNonPersonRepository.save(newClientNonPerson);
         }
@@ -412,13 +515,21 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
 
         try {
             this.fromApiJsonDeserializer.validateForUpdate(command.json());
-
             final Client clientForUpdate = this.clientRepository.findOneWithNotFoundDetection(clientId);
             final String clientHierarchy = clientForUpdate.getOffice().getHierarchy();
 
             this.context.validateAccessRights(clientHierarchy);
 
             final Map<String, Object> changes = clientForUpdate.update(command);
+            if (hasClientTransactionLimitParameter(command)) {
+                Optional<ClientTransactionLimit> clientTransactionLimitOptional = clientTransactionLimitRepository
+                        .findByClientId(clientForUpdate.getId());
+                if (clientTransactionLimitOptional.isPresent()) {
+                    updateClientTransactionLimits(command, clientTransactionLimitOptional);
+                } else {
+                    createClientTransactionLimits(command, clientForUpdate);
+                }
+            }
 
             if (changes.containsKey(ClientApiConstants.staffIdParamName)) {
 
@@ -432,7 +543,6 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
             }
 
             if (changes.containsKey(ClientApiConstants.genderIdParamName)) {
-
                 final Long newValue = command.longValueOfParameterNamed(ClientApiConstants.genderIdParamName);
                 CodeValue gender = null;
                 if (newValue != null) {
@@ -554,6 +664,8 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
                     extractAndCreateClientNonPerson(clientForUpdate, command);
                 }
             }
+
+            updateClientAdditionalInfo(clientForUpdate, command);
             return new CommandProcessingResultBuilder() //
                     .withCommandId(command.commandId()) //
                     .withOfficeId(clientForUpdate.officeId()) //
@@ -569,6 +681,29 @@ public class ClientWritePlatformServiceJpaRepositoryImpl implements ClientWriteP
             handleDataIntegrityIssues(command, throwable, dve);
             return CommandProcessingResult.empty();
         }
+    }
+
+    private void updateClientTransactionLimits(JsonCommand command, Optional<ClientTransactionLimit> clientTransactionLimitOptional) {
+        ClientTransactionLimit clientTransactionLimit = clientTransactionLimitOptional.get();
+        clientTransactionLimit.update(command);
+        clientTransactionLimitRepository.saveAndFlush(clientTransactionLimit);
+    }
+
+    private void createClientTransactionLimits(JsonCommand command, Client client) {
+        final Long clientLevelId = command.longValueOfParameterNamed(ClientApiConstants.clientLevelIdParamName);
+        final BigDecimal dailyWithDrawLimit = command
+                .bigDecimalValueOfParameterNamedDefaultToNullIfZero(ClientApiConstants.dailyWithdrawLimit);
+        final BigDecimal singleDailyWithDrawLimit = command
+                .bigDecimalValueOfParameterNamedDefaultToNullIfZero(ClientApiConstants.singleWithdrawLimit);
+        ClientTransactionLimit clientTransactionLimit = new ClientTransactionLimit(client, clientLevelId, dailyWithDrawLimit,
+                singleDailyWithDrawLimit);
+        clientTransactionLimitRepository.saveAndFlush(clientTransactionLimit);
+    }
+
+    private static boolean hasClientTransactionLimitParameter(JsonCommand command) {
+        return command.hasParameter(ClientApiConstants.clientLevelIdParamName)
+                || command.hasParameter(ClientApiConstants.dailyWithdrawLimit)
+                || command.hasParameter(ClientApiConstants.singleWithdrawLimit);
     }
 
     @Transactional

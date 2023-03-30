@@ -87,13 +87,14 @@ public class ChargeDropdownReadPlatformServiceImpl implements ChargeDropdownRead
     public List<EnumOptionData> retrieveLoanCollectionTimeTypes() {
         return Arrays.asList(chargeTimeType(ChargeTimeType.DISBURSEMENT), chargeTimeType(ChargeTimeType.SPECIFIED_DUE_DATE),
                 chargeTimeType(ChargeTimeType.INSTALMENT_FEE), chargeTimeType(ChargeTimeType.OVERDUE_INSTALLMENT),
-                chargeTimeType(ChargeTimeType.TRANCHE_DISBURSEMENT));
+                chargeTimeType(ChargeTimeType.TRANCHE_DISBURSEMENT), chargeTimeType(ChargeTimeType.DISBURSE_TO_SAVINGS));
     }
 
     @Override
     public List<EnumOptionData> retrieveSavingsCalculationTypes() {
         return Arrays.asList(chargeCalculationType(ChargeCalculationType.FLAT),
-                chargeCalculationType(ChargeCalculationType.PERCENT_OF_AMOUNT));
+                chargeCalculationType(ChargeCalculationType.PERCENT_OF_AMOUNT),
+                chargeCalculationType(ChargeCalculationType.PERCENT_OF_INTEREST));
     }
 
     @Override
@@ -102,7 +103,8 @@ public class ChargeDropdownReadPlatformServiceImpl implements ChargeDropdownRead
                 // chargeTimeType(ChargeTimeType.SAVINGS_CLOSURE),
                 chargeTimeType(ChargeTimeType.WITHDRAWAL_FEE), chargeTimeType(ChargeTimeType.ANNUAL_FEE),
                 chargeTimeType(ChargeTimeType.MONTHLY_FEE), chargeTimeType(ChargeTimeType.WEEKLY_FEE),
-                chargeTimeType(ChargeTimeType.OVERDRAFT_FEE), chargeTimeType(ChargeTimeType.SAVINGS_NOACTIVITY_FEE));
+                chargeTimeType(ChargeTimeType.OVERDRAFT_FEE), chargeTimeType(ChargeTimeType.SAVINGS_NOACTIVITY_FEE),
+                chargeTimeType(ChargeTimeType.FDA_PARTIAL_LIQUIDATION_FEE), chargeTimeType(ChargeTimeType.INTEREST_FORFEITED));
     }
 
     @Override

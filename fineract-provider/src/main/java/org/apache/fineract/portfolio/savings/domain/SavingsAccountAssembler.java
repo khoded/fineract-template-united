@@ -18,13 +18,21 @@
  */
 package org.apache.fineract.portfolio.savings.domain;
 
+import static org.apache.fineract.portfolio.interestratechart.InterestRateChartApiConstants.endDateParamName;
+import static org.apache.fineract.portfolio.interestratechart.InterestRateChartApiConstants.fromDateParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.SAVINGS_ACCOUNT_RESOURCE_NAME;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.VAULT_TARGET_AMOUNT;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.VAULT_TARGET_DATE;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.WITHDRAWAL_FREQUENCY;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.WITHDRAWAL_FREQUENCY_ENUM;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.accountNoParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.allowOverdraftParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.clientIdParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.enforceMinRequiredBalanceParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.externalIdParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.fieldOfficerIdParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.floatingInterestRateValueParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.floatingInterestRatesParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.groupIdParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.interestCalculationDaysInYearTypeParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.interestCalculationTypeParamName;
@@ -40,18 +48,24 @@ import static org.apache.fineract.portfolio.savings.SavingsApiConstants.minRequi
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.nominalAnnualInterestRateOverdraftParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.nominalAnnualInterestRateParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.overdraftLimitParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.postOverdraftInterestOnDepositParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.productIdParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.submittedOnDateParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.useFloatingInterestRateParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.withHoldTaxParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.withdrawalFeeForTransfersParamName;
 
+import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.exception.UnsupportedParameterException;
@@ -99,6 +113,7 @@ public class SavingsAccountAssembler {
     private final FromJsonHelper fromApiJsonHelper;
     private final JdbcTemplate jdbcTemplate;
     private final ConfigurationDomainService configurationDomainService;
+    private final SavingsAccountTransactionRepository savingsAccountTransactionRepository;
 
     @Autowired
     public SavingsAccountAssembler(final SavingsAccountTransactionSummaryWrapper savingsAccountTransactionSummaryWrapper,
@@ -107,7 +122,8 @@ public class SavingsAccountAssembler {
             final SavingsAccountRepositoryWrapper savingsAccountRepository,
             final SavingsAccountChargeAssembler savingsAccountChargeAssembler, final FromJsonHelper fromApiJsonHelper,
             final AccountTransfersReadPlatformService accountTransfersReadPlatformService, final JdbcTemplate jdbcTemplate,
-            final ConfigurationDomainService configurationDomainService) {
+            final ConfigurationDomainService configurationDomainService,
+            SavingsAccountTransactionRepository savingsAccountTransactionRepository) {
         this.savingsAccountTransactionSummaryWrapper = savingsAccountTransactionSummaryWrapper;
         this.clientRepository = clientRepository;
         this.groupRepository = groupRepository;
@@ -119,6 +135,7 @@ public class SavingsAccountAssembler {
         savingsHelper = new SavingsHelper(accountTransfersReadPlatformService);
         this.jdbcTemplate = jdbcTemplate;
         this.configurationDomainService = configurationDomainService;
+        this.savingsAccountTransactionRepository = savingsAccountTransactionRepository;
     }
 
     /**
@@ -187,6 +204,11 @@ public class SavingsAccountAssembler {
             interestRate = command.bigDecimalValueOfParameterNamed(nominalAnnualInterestRateParamName);
         } else {
             interestRate = product.nominalAnnualInterestRate();
+        }
+
+        boolean useFloatingInterestRate = false;
+        if (command.parameterExists(useFloatingInterestRateParamName)) {
+            useFloatingInterestRate = command.booleanPrimitiveValueOfParameterNamed(useFloatingInterestRateParamName);
         }
 
         SavingsCompoundingInterestPeriodType interestCompoundingPeriodType = null;
@@ -283,6 +305,13 @@ public class SavingsAccountAssembler {
             minOverdraftForInterestCalculation = product.minOverdraftForInterestCalculation();
         }
 
+        boolean postOverdraftInterestOnDeposit = false;
+        if (command.parameterExists(postOverdraftInterestOnDepositParamName)) {
+            postOverdraftInterestOnDeposit = command.booleanPrimitiveValueOfParameterNamed(postOverdraftInterestOnDepositParamName);
+        } else {
+            postOverdraftInterestOnDeposit = ObjectUtils.defaultIfNull(product.getPostOverdraftInterestOnDeposit(), Boolean.FALSE);
+        }
+
         boolean enforceMinRequiredBalance = false;
         if (command.parameterExists(enforceMinRequiredBalanceParamName)) {
             enforceMinRequiredBalance = command.booleanPrimitiveValueOfParameterNamed(enforceMinRequiredBalanceParamName);
@@ -318,6 +347,16 @@ public class SavingsAccountAssembler {
                 throw new UnsupportedParameterException(Arrays.asList(withHoldTaxParamName));
             }
         }
+        BigDecimal vaultTargetAmount = null;
+        if (command.parameterExists(VAULT_TARGET_AMOUNT)) {
+            vaultTargetAmount = command.bigDecimalValueOfParameterNamed(VAULT_TARGET_AMOUNT);
+        }
+        LocalDate vaultTargetDate = null;
+        if (command.parameterExists(VAULT_TARGET_DATE)) {
+            vaultTargetDate = this.fromApiJsonHelper.extractLocalDateNamed(VAULT_TARGET_DATE, element);
+        }
+        final Integer withdrawalFrequency = command.integerValueOfParameterNamed(WITHDRAWAL_FREQUENCY);
+        final Integer withdrawalFrequencyEnum = command.integerValueOfParameterNamed(WITHDRAWAL_FREQUENCY_ENUM);
 
         final SavingsAccount account = SavingsAccount.createNewApplicationForSubmittal(client, group, product, fieldOfficer, accountNo,
                 externalId, accountType, submittedOnDate, submittedBy, interestRate, interestCompoundingPeriodType,
@@ -326,9 +365,12 @@ public class SavingsAccountAssembler {
                 overdraftLimit, enforceMinRequiredBalance, minRequiredBalance, maxAllowedLienLimit, lienAllowed,
                 nominalAnnualInterestRateOverdraft, minOverdraftForInterestCalculation, withHoldTax);
         account.setHelpers(this.savingsAccountTransactionSummaryWrapper, this.savingsHelper);
-
+        account.setVaultTribeDetails(vaultTargetAmount, vaultTargetDate);
+        account.setUseFloatingInterestRate(useFloatingInterestRate);
         account.validateNewApplicationState(DateUtils.getBusinessLocalDate(), SAVINGS_ACCOUNT_RESOURCE_NAME);
-
+        account.setWithdrawalFrequency(withdrawalFrequency);
+        account.setWithdrawalFrequencyEnum(withdrawalFrequencyEnum);
+        account.setPostOverdraftInterestOnDeposit(postOverdraftInterestOnDeposit);
         account.validateAccountValuesWithProduct();
 
         return account;
@@ -469,5 +511,177 @@ public class SavingsAccountAssembler {
 
     public void assignSavingAccountHelpers(final SavingsAccountData savingsAccountData) {
         savingsAccountData.setHelpers(this.savingsAccountTransactionSummaryWrapper, this.savingsHelper);
+    }
+
+    public SavingsAccount assembleFrom(final Long savingsId) {
+        final SavingsAccount account = this.savingsAccountRepository.findOneWithNotFoundDetection(savingsId);
+        populateTransactions(account, this.savingsAccountTransactionRepository.getTransactionsByAccountId(savingsId));
+        return setAccountHelpers(account);
+    }
+
+    private SavingsAccount setAccountHelpers(SavingsAccount account) {
+        account.setHelpers(this.savingsAccountTransactionSummaryWrapper, this.savingsHelper);
+        return account;
+    }
+
+    private void populateTransactions(SavingsAccount account, List<SavingsAccountTransaction> transactions) {
+        // We do this in case the passed transaction list is read-only
+        List<SavingsAccountTransaction> trans = account.getTransactions();
+        // Always clear the list first to avoid dups
+        trans.clear();
+        trans.addAll(transactions);
+    }
+
+    public SavingsAccount assembleFrom(final JsonCommand command, final AppUser submittedBy, SavingsAccount clonedParentSavingsAccount) {
+
+        final JsonElement element = command.parsedJson();
+
+        final Long productId = this.fromApiJsonHelper.extractLongNamed(productIdParamName, element);
+
+        final SavingsProduct product = this.savingProductRepository.findById(productId)
+                .orElseThrow(() -> new SavingsProductNotFoundException(productId));
+
+        Client client = null;
+        Group group = null;
+        Staff fieldOfficer = null;
+        AccountType accountType = AccountType.INVALID;
+
+        final Long clientId = this.fromApiJsonHelper.extractLongNamed(clientIdParamName, element);
+        if (clientId != null) {
+            client = this.clientRepository.findOneWithNotFoundDetection(clientId);
+            accountType = AccountType.INDIVIDUAL;
+            if (client.isNotActive()) {
+                throw new ClientNotActiveException(clientId);
+            }
+        }
+
+        final Long groupId = this.fromApiJsonHelper.extractLongNamed(groupIdParamName, element);
+        if (groupId != null) {
+            group = this.groupRepository.findOneWithNotFoundDetection(groupId);
+            accountType = AccountType.GROUP;
+            if (group.isNotActive()) {
+                if (group.isCenter()) {
+                    throw new CenterNotActiveException(groupId);
+                }
+                throw new GroupNotActiveException(groupId);
+            }
+        }
+
+        if (group != null && client != null) {
+            if (!group.hasClientAsMember(client)) {
+                throw new ClientNotInGroupException(clientId, groupId);
+            }
+            accountType = AccountType.JLG;
+        }
+
+        if ((Boolean) command.booleanPrimitiveValueOfParameterNamed("isGSIM") != null) {
+            if (command.booleanPrimitiveValueOfParameterNamed("isGSIM")) {
+                accountType = AccountType.GSIM;
+            }
+        }
+
+        final LocalDate submittedOnDate = clonedParentSavingsAccount.getSubmittedOnDate();
+
+        BigDecimal interestRate = null;
+        if (command.parameterExists(nominalAnnualInterestRateParamName)) {
+            interestRate = command.bigDecimalValueOfParameterNamed(nominalAnnualInterestRateParamName);
+        } else {
+            interestRate = product.nominalAnnualInterestRate();
+        }
+
+        SavingsCompoundingInterestPeriodType interestCompoundingPeriodType = SavingsCompoundingInterestPeriodType
+                .fromInt(clonedParentSavingsAccount.interestCalculationType);
+        SavingsPostingInterestPeriodType interestPostingPeriodType = SavingsPostingInterestPeriodType
+                .fromInt(clonedParentSavingsAccount.interestPostingPeriodType);
+        SavingsInterestCalculationType interestCalculationType = SavingsInterestCalculationType
+                .fromInt(clonedParentSavingsAccount.interestCalculationType);
+        SavingsInterestCalculationDaysInYearType interestCalculationDaysInYearType = SavingsInterestCalculationDaysInYearType
+                .fromInt(clonedParentSavingsAccount.interestCalculationDaysInYearType);
+
+        BigDecimal minRequiredOpeningBalance;
+        if (command.parameterExists(minRequiredOpeningBalanceParamName)) {
+            minRequiredOpeningBalance = command.bigDecimalValueOfParameterNamed(minRequiredOpeningBalanceParamName);
+        } else {
+            minRequiredOpeningBalance = product.minRequiredOpeningBalance();
+        }
+
+        Integer lockinPeriodFrequency;
+        if (command.parameterExists(lockinPeriodFrequencyParamName)) {
+            lockinPeriodFrequency = command.integerValueOfParameterNamed(lockinPeriodFrequencyParamName);
+        } else {
+            lockinPeriodFrequency = product.lockinPeriodFrequency();
+        }
+
+        SavingsPeriodFrequencyType lockinPeriodFrequencyType = null;
+        Integer lockinPeriodFrequencyTypeValue = null;
+        if (command.parameterExists(lockinPeriodFrequencyTypeParamName)) {
+            lockinPeriodFrequencyTypeValue = command.integerValueOfParameterNamed(lockinPeriodFrequencyTypeParamName);
+            if (lockinPeriodFrequencyTypeValue != null) {
+                lockinPeriodFrequencyType = SavingsPeriodFrequencyType.fromInt(lockinPeriodFrequencyTypeValue);
+            }
+        } else {
+            lockinPeriodFrequencyType = product.lockinPeriodFrequencyType();
+        }
+        BigDecimal vaultTargetAmount = null;
+        if (command.parameterExists(VAULT_TARGET_AMOUNT)) {
+            vaultTargetAmount = command.bigDecimalValueOfParameterNamed(VAULT_TARGET_AMOUNT);
+        }
+
+        boolean iswithdrawalFeeApplicableForTransfer = clonedParentSavingsAccount.isWithdrawalFeeApplicableForTransfer();
+        boolean allowOverdraft = clonedParentSavingsAccount.isAllowOverdraft();
+        BigDecimal overdraftLimit = BigDecimal.ZERO;
+        BigDecimal nominalAnnualInterestRateOverdraft = BigDecimal.ZERO;
+        BigDecimal minOverdraftForInterestCalculation = BigDecimal.ZERO;
+        boolean enforceMinRequiredBalance = false;
+        BigDecimal minRequiredBalance = BigDecimal.ZERO;
+        boolean lienAllowed = false;
+        BigDecimal maxAllowedLienLimit = BigDecimal.ZERO;
+        boolean withHoldTax = product.withHoldTax();
+
+        final SavingsAccount account = SavingsAccount.createNewApplicationForSubmittal(client, group, product, fieldOfficer, null, null,
+                accountType, submittedOnDate, submittedBy, interestRate, interestCompoundingPeriodType, interestPostingPeriodType,
+                interestCalculationType, interestCalculationDaysInYearType, minRequiredOpeningBalance, lockinPeriodFrequency,
+                lockinPeriodFrequencyType, iswithdrawalFeeApplicableForTransfer, null, allowOverdraft, overdraftLimit,
+                enforceMinRequiredBalance, minRequiredBalance, maxAllowedLienLimit, lienAllowed, nominalAnnualInterestRateOverdraft,
+                minOverdraftForInterestCalculation, withHoldTax);
+        account.setHelpers(this.savingsAccountTransactionSummaryWrapper, this.savingsHelper);
+        account.validateNewApplicationState(DateUtils.getBusinessLocalDate(), SAVINGS_ACCOUNT_RESOURCE_NAME);
+        account.setVaultTribeDetails(vaultTargetAmount, null);
+        return account;
+    }
+
+    public List<SavingsAccount> findSavingAccountByClientId(Long clientId) {
+        return this.savingsAccountRepository.findSavingAccountByClientId(clientId);
+    }
+
+    public Set<SavingsAccountFloatingInterestRate> assembleListOfFloatingInterestRates(final JsonCommand command,
+            SavingsAccount savingsAccount) {
+        final Set<SavingsAccountFloatingInterestRate> floatingInterestRates = new HashSet<>();
+        if (command.parameterExists(floatingInterestRatesParamName)) {
+            final JsonArray floatingInterestRatesArray = command.arrayOfParameterNamed(floatingInterestRatesParamName);
+            if (floatingInterestRatesArray != null) {
+                for (int i = 0; i < floatingInterestRatesArray.size(); i++) {
+                    final JsonObject floatingInterestRateElement = floatingInterestRatesArray.get(i).getAsJsonObject();
+                    SavingsAccountFloatingInterestRate floatingInterestRate = assembleSavingsAccountFloatingInterestRateFrom(
+                            floatingInterestRateElement, savingsAccount);
+                    floatingInterestRates.add(floatingInterestRate);
+                }
+            }
+        }
+        return floatingInterestRates;
+    }
+
+    public SavingsAccountFloatingInterestRate assembleSavingsAccountFloatingInterestRateFrom(final JsonElement element,
+            SavingsAccount savingsAccount) {
+
+        final LocalDate fromDate = this.fromApiJsonHelper.extractLocalDateNamed(fromDateParamName, element);
+        final LocalDate toDate = this.fromApiJsonHelper.extractLocalDateNamed(endDateParamName, element);
+        final BigDecimal floatingInterestRate = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(floatingInterestRateValueParamName,
+                element);
+
+        final SavingsAccountFloatingInterestRate savingsAccountFloatingInterestRate = SavingsAccountFloatingInterestRate.createNew(fromDate,
+                toDate, floatingInterestRate, savingsAccount);
+
+        return savingsAccountFloatingInterestRate;
     }
 }

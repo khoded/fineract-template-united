@@ -23,6 +23,7 @@ import static org.apache.fineract.portfolio.collectionsheet.CollectionSheetConst
 import static org.apache.fineract.portfolio.collectionsheet.CollectionSheetConstants.transactionAmountParamName;
 import static org.apache.fineract.portfolio.collectionsheet.CollectionSheetConstants.transactionDateParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.adjustAdvanceTowardsFuturePaymentsParamName;
+import static org.apache.fineract.portfolio.savings.DepositsApiConstants.allowFreeWithdrawalParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.allowWithdrawalParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.chartIdParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.depositAmountParamName;
@@ -50,6 +51,7 @@ import static org.apache.fineract.portfolio.savings.SavingsApiConstants.minRequi
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.nominalAnnualInterestRateParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.productIdParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.submittedOnDateParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.totalLiquidationAllowed;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.withHoldTaxParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.withdrawalFeeForTransfersParamName;
 
@@ -89,6 +91,7 @@ import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetailAssembler;
 import org.apache.fineract.portfolio.savings.DepositAccountOnClosureType;
 import org.apache.fineract.portfolio.savings.DepositAccountType;
+import org.apache.fineract.portfolio.savings.SavingsApiConstants;
 import org.apache.fineract.portfolio.savings.SavingsCompoundingInterestPeriodType;
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationDaysInYearType;
 import org.apache.fineract.portfolio.savings.SavingsInterestCalculationType;
@@ -98,6 +101,9 @@ import org.apache.fineract.portfolio.savings.data.SavingsAccountTransactionDTO;
 import org.apache.fineract.portfolio.savings.exception.FixedDepositProductNotFoundException;
 import org.apache.fineract.portfolio.savings.exception.RecurringDepositProductNotFoundException;
 import org.apache.fineract.portfolio.savings.exception.SavingsProductNotFoundException;
+import org.apache.fineract.portfolio.savings.request.FixedDepositApplicationReq;
+import org.apache.fineract.portfolio.savings.request.RecurringAccountDetailReq;
+import org.apache.fineract.portfolio.savings.service.SavingsAccountActionService;
 import org.apache.fineract.useradministration.domain.AppUser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -118,6 +124,7 @@ public class DepositAccountAssembler {
     private final FromJsonHelper fromApiJsonHelper;
     private final DepositProductAssembler depositProductAssembler;
     private final PaymentDetailAssembler paymentDetailAssembler;
+    private final SavingsAccountTransactionRepository savingsAccountTransactionRepository;
 
     @Autowired
     public DepositAccountAssembler(final SavingsAccountTransactionSummaryWrapper savingsAccountTransactionSummaryWrapper,
@@ -128,7 +135,7 @@ public class DepositAccountAssembler {
             final DepositProductAssembler depositProductAssembler,
             final RecurringDepositProductRepository recurringDepositProductRepository,
             final AccountTransfersReadPlatformService accountTransfersReadPlatformService, final PlatformSecurityContext context,
-            final PaymentDetailAssembler paymentDetailAssembler) {
+            final PaymentDetailAssembler paymentDetailAssembler, SavingsAccountTransactionRepository savingsAccountTransactionRepository) {
 
         this.savingsAccountTransactionSummaryWrapper = savingsAccountTransactionSummaryWrapper;
         this.clientRepository = clientRepository;
@@ -143,6 +150,7 @@ public class DepositAccountAssembler {
         this.savingsHelper = new SavingsHelper(accountTransfersReadPlatformService);
         this.context = context;
         this.paymentDetailAssembler = paymentDetailAssembler;
+        this.savingsAccountTransactionRepository = savingsAccountTransactionRepository;
     }
 
     /**
@@ -326,7 +334,7 @@ public class DepositAccountAssembler {
                     accountNo, externalId, accountType, submittedOnDate, submittedBy, interestRate, interestCompoundingPeriodType,
                     interestPostingPeriodType, interestCalculationType, interestCalculationDaysInYearType, minRequiredOpeningBalance,
                     lockinPeriodFrequency, lockinPeriodFrequencyType, iswithdrawalFeeApplicableForTransfer, charges,
-                    accountTermAndPreClosure, accountChart, withHoldTax);
+                    accountTermAndPreClosure, accountChart, withHoldTax, null);
             accountTermAndPreClosure.updateAccountReference(fdAccount);
             fdAccount.validateDomainRules();
             account = fdAccount;
@@ -357,12 +365,16 @@ public class DepositAccountAssembler {
             account.validateNewApplicationState(DateUtils.getBusinessLocalDate(), depositAccountType.resourceName());
         }
 
+        account.setUseFloatingInterestRate(false);
+
         return account;
     }
 
     public SavingsAccount assembleFrom(final Long savingsId, DepositAccountType depositAccountType) {
         final SavingsAccount account = this.savingsAccountRepository.findOneWithNotFoundDetection(savingsId, depositAccountType);
         account.setHelpers(this.savingsAccountTransactionSummaryWrapper, this.savingsHelper);
+        SavingsAccountActionService.populateTransactions(account,
+                this.savingsAccountTransactionRepository.getTransactionsByAccountId(savingsId));
         return account;
     }
 
@@ -370,11 +382,38 @@ public class DepositAccountAssembler {
         savingsAccount.setHelpers(this.savingsAccountTransactionSummaryWrapper, this.savingsHelper);
     }
 
+    public DepositAccountTermAndPreClosure assembleAccountTermAndPreClosure(FixedDepositApplicationReq fixedDepositApplicationReq,
+            final DepositProductTermAndPreClosure productTermAndPreclosure) {
+        final DepositPreClosureDetail productPreClosure = (productTermAndPreclosure == null) ? null
+                : productTermAndPreclosure.depositPreClosureDetail();
+        final DepositTermDetail productTerm = (productTermAndPreclosure == null) ? null : productTermAndPreclosure.depositTermDetail();
+
+        final DepositPreClosureDetail updatedProductPreClosure = this.depositProductAssembler
+                .assemblePreClosureDetail(fixedDepositApplicationReq.getFixedDepositApplicationPreClosureReq(), productPreClosure);
+        final DepositTermDetail updatedProductTerm = this.depositProductAssembler
+                .assembleDepositTermDetail(fixedDepositApplicationReq.getFixedDepositApplicationTermsReq(), productTerm);
+
+        final BigDecimal depositAmount = fixedDepositApplicationReq.getDepositAmount();
+        final Integer depositPeriod = fixedDepositApplicationReq.getDepositPeriod();
+        final SavingsPeriodFrequencyType depositPeriodFrequency = fixedDepositApplicationReq.getDepositPeriodFrequency();
+        final LocalDate expectedFirstDepositOnDate = fixedDepositApplicationReq.getExpectedFirstDepositOnDate();
+        final Boolean transferInterest = fixedDepositApplicationReq.getTransferInterest();
+        final Long transferToSavingsId = fixedDepositApplicationReq.getSavingsAccountId();
+
+        // maturityAmount and maturityDate are calculated and updated in the account
+        return DepositAccountTermAndPreClosure.createNew(updatedProductPreClosure, updatedProductTerm, null, depositAmount, null, null,
+                depositPeriod, depositPeriodFrequency, expectedFirstDepositOnDate, null, transferInterest, transferToSavingsId,
+                fixedDepositApplicationReq.getInterestCarriedForward(),
+                fixedDepositApplicationReq.getFixedDepositApplicationTermsReq().isAutoRollover());
+    }
+
     public DepositAccountTermAndPreClosure assembleAccountTermAndPreClosure(final JsonCommand command,
             final DepositProductTermAndPreClosure productTermAndPreclosure) {
         final DepositPreClosureDetail productPreClosure = (productTermAndPreclosure == null) ? null
                 : productTermAndPreclosure.depositPreClosureDetail();
         final DepositTermDetail productTerm = (productTermAndPreclosure == null) ? null : productTermAndPreclosure.depositTermDetail();
+        final DepositProductAmountDetails productAmountDetails = (productTermAndPreclosure == null) ? null
+                : productTermAndPreclosure.depositProductAmountDetails();
 
         final DepositPreClosureDetail updatedProductPreClosure = this.depositProductAssembler.assemblePreClosureDetail(command,
                 productPreClosure);
@@ -397,9 +436,43 @@ public class DepositAccountAssembler {
                 ? DepositAccountOnClosureType.fromInt(accountOnClosureTypeId)
                 : null;
         final Long transferToSavingsId = command.longValueOfParameterNamed(transferToSavingsIdParamName);
+
+        final Boolean allowPartialLiquidation = command.booleanObjectValueOfParameterNamed(SavingsApiConstants.allowPartialLiquidation);
+        final Integer totalPartialLiquidationsAllowed = command.integerValueOfParameterNamed(totalLiquidationAllowed);
+
         return DepositAccountTermAndPreClosure.createNew(updatedProductPreClosure, updatedProductTerm, account, depositAmount,
                 maturityAmount, maturityDate, depositPeriod, depositPeriodFrequency, expectedFirstDepositOnDate, accountOnClosureType,
-                trasferInterest, transferToSavingsId);
+                trasferInterest, transferToSavingsId, allowPartialLiquidation, totalPartialLiquidationsAllowed);
+    }
+
+    public DepositAccountRecurringDetail assembleAccountRecurringDetail(RecurringAccountDetailReq recurringAccountDetailReq,
+            final DepositRecurringDetail prodRecurringDetail) {
+
+        final BigDecimal recurringDepositAmount = recurringAccountDetailReq.getRecurringDepositAmount();
+        boolean isMandatoryDeposit;
+        boolean allowWithdrawal;
+        boolean adjustAdvanceTowardsFuturePayments;
+        boolean isCalendarInherited = recurringAccountDetailReq.isCalendarInherited();
+
+        if (recurringAccountDetailReq.isMandatoryDepositSet()) {
+            isMandatoryDeposit = recurringAccountDetailReq.isMandatoryDeposit();
+        } else {
+            isMandatoryDeposit = prodRecurringDetail.isMandatoryDeposit();
+        }
+        if (recurringAccountDetailReq.isAllowWithdrawalSet()) {
+            allowWithdrawal = recurringAccountDetailReq.isAllowWithdrawal();
+        } else {
+            allowWithdrawal = prodRecurringDetail.allowWithdrawal();
+        }
+        if (recurringAccountDetailReq.isAdjustAdvanceTowardsFuturePaymentsSet()) {
+            adjustAdvanceTowardsFuturePayments = recurringAccountDetailReq.isAdjustAdvanceTowardsFuturePayments();
+        } else {
+            adjustAdvanceTowardsFuturePayments = prodRecurringDetail.adjustAdvanceTowardsFuturePayments();
+        }
+
+        final DepositRecurringDetail depositRecurringDetail = DepositRecurringDetail.createFrom(isMandatoryDeposit, allowWithdrawal,
+                adjustAdvanceTowardsFuturePayments, false);
+        return DepositAccountRecurringDetail.createNew(recurringDepositAmount, depositRecurringDetail, null, isCalendarInherited);
     }
 
     public DepositAccountRecurringDetail assembleAccountRecurringDetail(final JsonCommand command,
@@ -408,6 +481,7 @@ public class DepositAccountAssembler {
         final BigDecimal recurringDepositAmount = command.bigDecimalValueOfParameterNamed(mandatoryRecommendedDepositAmountParamName);
         boolean isMandatoryDeposit;
         boolean allowWithdrawal;
+        boolean allowFreeWithdrawal;
         boolean adjustAdvanceTowardsFuturePayments;
         boolean isCalendarInherited;
 
@@ -435,8 +509,14 @@ public class DepositAccountAssembler {
             isCalendarInherited = false;
         }
 
+        if (command.parameterExists(allowFreeWithdrawalParamName)) {
+            allowFreeWithdrawal = command.booleanObjectValueOfParameterNamed(allowFreeWithdrawalParamName);
+        } else {
+            allowFreeWithdrawal = prodRecurringDetail.allowFreeWithdrawal();
+        }
+
         final DepositRecurringDetail depositRecurringDetail = DepositRecurringDetail.createFrom(isMandatoryDeposit, allowWithdrawal,
-                adjustAdvanceTowardsFuturePayments);
+                adjustAdvanceTowardsFuturePayments, allowFreeWithdrawal);
         final DepositAccountRecurringDetail depositAccountRecurringDetail = DepositAccountRecurringDetail.createNew(recurringDepositAmount,
                 depositRecurringDetail, null, isCalendarInherited);
         return depositAccountRecurringDetail;
@@ -489,6 +569,193 @@ public class DepositAccountAssembler {
             user = this.context.getAuthenticatedUserIfPresent();
         }
         return user;
+    }
+
+    /**
+     * Assembles a new {@link SavingsAccount} from JSON details passed in request inheriting details where relevant from
+     * chosen {@link SavingsProduct}.
+     */
+    public SavingsAccount assembleFrom(FixedDepositApplicationReq fixedDepositApplicationReq, SavingsProduct product,
+            DepositAccountType depositAccountType) {
+
+        final AppUser submittedBy = this.context.authenticatedUser();
+        final String accountNo = fixedDepositApplicationReq.getAccountNo();
+        final String externalId = fixedDepositApplicationReq.getExternalId();
+        // final String nickname = fixedDepositApplicationReq.getNickname();
+        final String closedFixedDepositAccountNumber = fixedDepositApplicationReq.getClosedFixedDepositAccountNumber();
+
+        Client client = null;
+        Group group = null;
+        Staff fieldOfficer = null;
+        AccountType accountType = AccountType.INVALID;
+        final Long clientId = fixedDepositApplicationReq.getClientId();
+        if (clientId != null) {
+            final boolean isCalendarInherited = fixedDepositApplicationReq.isCalendarInherited();
+            client = this.clientRepository.findOneWithNotFoundDetection(clientId, isCalendarInherited); // we need group
+            // collection if
+            // isCalendarInherited
+            // is true
+            accountType = AccountType.INDIVIDUAL;
+            if (client.isNotActive()) {
+                throw new ClientNotActiveException(clientId);
+            }
+        }
+
+        final Long groupId = fixedDepositApplicationReq.getGroupId();
+        if (groupId != null) {
+            group = this.groupRepository.findOneWithNotFoundDetection(groupId);
+            accountType = AccountType.GROUP;
+        }
+
+        if (group != null && client != null) {
+            if (!group.hasClientAsMember(client)) {
+                throw new ClientNotInGroupException(clientId, groupId);
+            }
+            accountType = AccountType.JLG;
+            if (group.isNotActive()) {
+                if (group.isCenter()) {
+                    throw new CenterNotActiveException(groupId);
+                }
+                throw new GroupNotActiveException(groupId);
+            }
+        }
+
+        final Long fieldOfficerId = fixedDepositApplicationReq.getFieldOfficerId();
+        if (fieldOfficerId != null) {
+            fieldOfficer = this.staffRepository.findOneWithNotFoundDetection(fieldOfficerId);
+        }
+
+        final LocalDate submittedOnDate = fixedDepositApplicationReq.getSubmittedOnDate();
+
+        BigDecimal interestRate;
+        if (fixedDepositApplicationReq.isInterestRateSet()) {
+            interestRate = fixedDepositApplicationReq.getInterestRate();
+        } else {
+            interestRate = product.nominalAnnualInterestRate();
+        }
+
+        SavingsCompoundingInterestPeriodType interestCompoundingPeriodType;
+        final Integer interestPeriodTypeValue = fixedDepositApplicationReq.getInterestPeriodTypeValue();
+        if (interestPeriodTypeValue != null) {
+            interestCompoundingPeriodType = SavingsCompoundingInterestPeriodType.fromInt(interestPeriodTypeValue);
+        } else {
+            interestCompoundingPeriodType = product.interestCompoundingPeriodType();
+        }
+
+        SavingsPostingInterestPeriodType interestPostingPeriodType;
+        final Integer interestPostingPeriodTypeValue = fixedDepositApplicationReq.getInterestPostingPeriodTypeValue();
+        if (interestPostingPeriodTypeValue != null) {
+            interestPostingPeriodType = SavingsPostingInterestPeriodType.fromInt(interestPostingPeriodTypeValue);
+        } else {
+            interestPostingPeriodType = product.interestPostingPeriodType();
+        }
+
+        SavingsInterestCalculationType interestCalculationType;
+        final Integer interestCalculationTypeValue = fixedDepositApplicationReq.getInterestCalculationTypeValue();
+        if (interestCalculationTypeValue != null) {
+            interestCalculationType = SavingsInterestCalculationType.fromInt(interestCalculationTypeValue);
+        } else {
+            interestCalculationType = product.interestCalculationType();
+        }
+
+        SavingsInterestCalculationDaysInYearType interestCalculationDaysInYearType;
+        final Integer interestCalculationDaysInYearTypeValue = fixedDepositApplicationReq.getInterestCalculationDaysInYearTypeValue();
+        if (interestCalculationDaysInYearTypeValue != null) {
+            interestCalculationDaysInYearType = SavingsInterestCalculationDaysInYearType.fromInt(interestCalculationDaysInYearTypeValue);
+        } else {
+            interestCalculationDaysInYearType = product.interestCalculationDaysInYearType();
+        }
+
+        BigDecimal minRequiredOpeningBalance;
+        if (fixedDepositApplicationReq.isMinRequiredOpeningBalanceSet()) {
+            minRequiredOpeningBalance = fixedDepositApplicationReq.getMinRequiredOpeningBalance();
+        } else {
+            minRequiredOpeningBalance = product.minRequiredOpeningBalance();
+        }
+
+        Integer lockinPeriodFrequency;
+        if (fixedDepositApplicationReq.isLockinPeriodFrequencySet()) {
+            lockinPeriodFrequency = fixedDepositApplicationReq.getLockinPeriodFrequency();
+        } else {
+            lockinPeriodFrequency = product.lockinPeriodFrequency();
+        }
+
+        SavingsPeriodFrequencyType lockinPeriodFrequencyType = null;
+
+        if (fixedDepositApplicationReq.isLockinPeriodFrequencyTypeValueSet()) {
+            Integer lockinPeriodFrequencyTypeValue;
+            lockinPeriodFrequencyTypeValue = fixedDepositApplicationReq.getLockinPeriodFrequencyTypeValue();
+            if (lockinPeriodFrequencyTypeValue != null) {
+                lockinPeriodFrequencyType = SavingsPeriodFrequencyType.fromInt(lockinPeriodFrequencyTypeValue);
+            }
+        } else {
+            lockinPeriodFrequencyType = product.lockinPeriodFrequencyType();
+        }
+        boolean isWithdrawalFeeApplicableForTransfer = fixedDepositApplicationReq.isWithdrawalFeeApplicableForTransfer();
+
+        DepositAccountInterestRateChart accountChart = null;
+        InterestRateChart productChart = null;
+
+        if (fixedDepositApplicationReq.isChartIdSet()) {
+            productChart = product.findChart(fixedDepositApplicationReq.getChartId());
+        } else {
+            productChart = product.applicableChart(submittedOnDate);
+        }
+
+        if (productChart != null) {
+            accountChart = DepositAccountInterestRateChart.from(productChart);
+        }
+
+        boolean withHoldTax = product.withHoldTax();
+        if (fixedDepositApplicationReq.isWithHoldTaxSet()) {
+            withHoldTax = fixedDepositApplicationReq.isWithHoldTax();
+            if (withHoldTax && product.getTaxGroup() == null) {
+                throw new UnsupportedParameterException(Arrays.asList(withHoldTaxParamName));
+            }
+        }
+
+        SavingsAccount account = null;
+        if (depositAccountType.isFixedDeposit()) {
+            final DepositProductTermAndPreClosure prodTermAndPreClosure = ((FixedDepositProduct) product).depositProductTermAndPreClosure();
+            final DepositAccountTermAndPreClosure accountTermAndPreClosure = this
+                    .assembleAccountTermAndPreClosure(fixedDepositApplicationReq, prodTermAndPreClosure);
+
+            FixedDepositAccount fdAccount = FixedDepositAccount.createNewApplicationForSubmittal(client, group, product, fieldOfficer,
+                    accountNo, externalId, accountType, submittedOnDate, submittedBy, interestRate, interestCompoundingPeriodType,
+                    interestPostingPeriodType, interestCalculationType, interestCalculationDaysInYearType, minRequiredOpeningBalance,
+                    lockinPeriodFrequency, lockinPeriodFrequencyType, isWithdrawalFeeApplicableForTransfer, null, accountTermAndPreClosure,
+                    accountChart, withHoldTax, closedFixedDepositAccountNumber); // nickname removed
+            accountTermAndPreClosure.updateAccountReference(fdAccount);
+            fdAccount.validateDomainRules();
+            account = fdAccount;
+        } else if (depositAccountType.isRecurringDeposit()) {
+            final DepositProductTermAndPreClosure prodTermAndPreClosure = ((RecurringDepositProduct) product)
+                    .depositProductTermAndPreClosure();
+            final DepositAccountTermAndPreClosure accountTermAndPreClosure = this
+                    .assembleAccountTermAndPreClosure(fixedDepositApplicationReq, prodTermAndPreClosure);
+
+            final DepositProductRecurringDetail prodRecurringDetail = ((RecurringDepositProduct) product).depositRecurringDetail();
+            final DepositAccountRecurringDetail accountRecurringDetail = this.assembleAccountRecurringDetail(
+                    fixedDepositApplicationReq.getRecurringAccountDetailReq(), prodRecurringDetail.recurringDetail());
+
+            RecurringDepositAccount rdAccount = RecurringDepositAccount.createNewApplicationForSubmittal(client, group, product,
+                    fieldOfficer, accountNo, externalId, accountType, submittedOnDate, submittedBy, interestRate,
+                    interestCompoundingPeriodType, interestPostingPeriodType, interestCalculationType, interestCalculationDaysInYearType,
+                    minRequiredOpeningBalance, lockinPeriodFrequency, lockinPeriodFrequencyType, isWithdrawalFeeApplicableForTransfer, null,
+                    accountTermAndPreClosure, accountRecurringDetail, accountChart, withHoldTax); // nickname removed
+
+            accountTermAndPreClosure.updateAccountReference(rdAccount);
+            accountRecurringDetail.updateAccountReference(rdAccount);
+            rdAccount.validateDomainRules();
+            account = rdAccount;
+        }
+
+        if (account != null) {
+            account.setHelpers(this.savingsAccountTransactionSummaryWrapper, this.savingsHelper);
+            account.validateNewApplicationState(DateUtils.getLocalDateOfTenant(), depositAccountType.resourceName());
+        }
+
+        return account;
     }
 
 }

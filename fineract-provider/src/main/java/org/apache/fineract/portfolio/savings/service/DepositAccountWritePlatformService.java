@@ -19,13 +19,17 @@
 package org.apache.fineract.portfolio.savings.service;
 
 import java.time.LocalDate;
+import java.util.List;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
+import org.apache.fineract.infrastructure.core.api.JsonQuery;
 import org.apache.fineract.infrastructure.core.data.CommandProcessingResult;
 import org.apache.fineract.infrastructure.jobs.exception.JobExecutionException;
 import org.apache.fineract.organisation.office.domain.Office;
 import org.apache.fineract.organisation.staff.domain.Staff;
 import org.apache.fineract.portfolio.savings.DepositAccountType;
+import org.apache.fineract.portfolio.savings.data.DepositAccountData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountTransactionDTO;
+import org.apache.fineract.portfolio.savings.domain.SavingsAccountCharge;
 import org.apache.fineract.portfolio.savings.domain.SavingsAccountTransaction;
 
 public interface DepositAccountWritePlatformService {
@@ -85,9 +89,19 @@ public interface DepositAccountWritePlatformService {
 
     void applyChargeDue(Long savingsAccountChargeId, Long accountId, DepositAccountType depositAccountType);
 
-    void updateMaturityDetails(Long depositAccountId, DepositAccountType depositAccountType);
+    void updateMaturityDetails(DepositAccountData depositAccount);
 
     void transferInterestToSavings() throws JobExecutionException;
 
     SavingsAccountTransaction mandatorySavingsAccountDeposit(SavingsAccountTransactionDTO accountTransactionDTO);
+
+    CommandProcessingResult topUpAccount(Long accountId, JsonCommand command);
+
+    CommandProcessingResult postAccrualInterest(JsonCommand command, DepositAccountType depositAccountType);
+
+    CommandProcessingResult partiallyLiquidateAccount(Long accountId, JsonCommand command);
+
+    List<SavingsAccountCharge> generateDepositAccountPreMatureClosureCharges(Long savingsId, DepositAccountType type, JsonQuery query);
+
+    List<SavingsAccountTransaction> getTaxTransactions(Long savingsId, DepositAccountType type, JsonQuery query);
 }

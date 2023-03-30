@@ -43,6 +43,7 @@ import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.data.DataValidatorBuilder;
 import org.apache.fineract.infrastructure.core.domain.AbstractPersistableCustom;
 import org.apache.fineract.portfolio.savings.DepositAccountOnClosureType;
+import org.apache.fineract.portfolio.savings.SavingsApiConstants;
 import org.apache.fineract.portfolio.savings.SavingsPeriodFrequencyType;
 import org.apache.fineract.portfolio.savings.service.SavingsEnumerations;
 
@@ -87,6 +88,21 @@ public class DepositAccountTermAndPreClosure extends AbstractPersistableCustom {
     @Column(name = "transfer_to_savings_account_id")
     private Long transferToSavingsAccountId;
 
+    @Column(name = "interest_carried_forward_on_top_up", scale = 6, precision = 19)
+    private BigDecimal interestCarriedForwardOnTopUp;
+
+    @Column(name = "auto_rollover")
+    private boolean autoRollover;
+
+    @Column(name = "allow_partial_liquidation")
+    private Boolean allowPartialLiquidation;
+
+    @Column(name = "total_liquidation_allowed")
+    private Integer totalLiquidationAllowed;
+
+    @Column(name = "linked_origin_account_id")
+    private Long linkedOriginAccountId;
+
     protected DepositAccountTermAndPreClosure() {
 
     }
@@ -94,17 +110,30 @@ public class DepositAccountTermAndPreClosure extends AbstractPersistableCustom {
     public static DepositAccountTermAndPreClosure createNew(DepositPreClosureDetail preClosureDetail, DepositTermDetail depositTermDetail,
             SavingsAccount account, BigDecimal depositAmount, BigDecimal maturityAmount, final LocalDate maturityDate,
             Integer depositPeriod, final SavingsPeriodFrequencyType depositPeriodFrequency, final LocalDate expectedFirstDepositOnDate,
-            final DepositAccountOnClosureType accountOnClosureType, Boolean trasferInterest, Long transferToSavingsId) {
+            final DepositAccountOnClosureType accountOnClosureType, Boolean trasferInterest, Long transferToSavingsId,
+            BigDecimal interestCarriedForwardOnTopUp, boolean autoRollover) {
 
         return new DepositAccountTermAndPreClosure(preClosureDetail, depositTermDetail, account, depositAmount, maturityAmount,
                 maturityDate, depositPeriod, depositPeriodFrequency, expectedFirstDepositOnDate, accountOnClosureType, trasferInterest,
-                transferToSavingsId);
+                transferToSavingsId, interestCarriedForwardOnTopUp, autoRollover);
+    }
+
+    public static DepositAccountTermAndPreClosure createNew(DepositPreClosureDetail preClosureDetail, DepositTermDetail depositTermDetail,
+            SavingsAccount account, BigDecimal depositAmount, BigDecimal maturityAmount, final LocalDate maturityDate,
+            Integer depositPeriod, final SavingsPeriodFrequencyType depositPeriodFrequency, final LocalDate expectedFirstDepositOnDate,
+            final DepositAccountOnClosureType accountOnClosureType, Boolean trasferInterest, Long transferToSavingsId,
+            Boolean allowPartialLiquidation, Integer totalLiquidationAllowed) {
+
+        return new DepositAccountTermAndPreClosure(preClosureDetail, depositTermDetail, account, depositAmount, maturityAmount,
+                maturityDate, depositPeriod, depositPeriodFrequency, expectedFirstDepositOnDate, accountOnClosureType, trasferInterest,
+                transferToSavingsId, allowPartialLiquidation, totalLiquidationAllowed);
     }
 
     private DepositAccountTermAndPreClosure(DepositPreClosureDetail preClosureDetail, DepositTermDetail depositTermDetail,
             SavingsAccount account, BigDecimal depositAmount, BigDecimal maturityAmount, final LocalDate maturityDate,
             Integer depositPeriod, final SavingsPeriodFrequencyType depositPeriodFrequency, final LocalDate expectedFirstDepositOnDate,
-            final DepositAccountOnClosureType accountOnClosureType, Boolean transferInterest, Long transferToSavingsId) {
+            final DepositAccountOnClosureType accountOnClosureType, Boolean transferInterest, Long transferToSavingsId,
+            Boolean allowPartialLiquidation, Integer totalLiquidationsAllowed) {
         this.depositAmount = depositAmount;
         this.maturityAmount = maturityAmount;
         this.maturityDate = maturityDate;
@@ -117,6 +146,29 @@ public class DepositAccountTermAndPreClosure extends AbstractPersistableCustom {
         this.onAccountClosureType = (accountOnClosureType == null) ? null : accountOnClosureType.getValue();
         this.transferInterestToLinkedAccount = transferInterest;
         this.transferToSavingsAccountId = transferToSavingsId;
+        this.allowPartialLiquidation = allowPartialLiquidation;
+        this.totalLiquidationAllowed = totalLiquidationsAllowed;
+    }
+
+    private DepositAccountTermAndPreClosure(DepositPreClosureDetail preClosureDetail, DepositTermDetail depositTermDetail,
+            SavingsAccount account, BigDecimal depositAmount, BigDecimal maturityAmount, final LocalDate maturityDate,
+            Integer depositPeriod, final SavingsPeriodFrequencyType depositPeriodFrequency, final LocalDate expectedFirstDepositOnDate,
+            final DepositAccountOnClosureType accountOnClosureType, Boolean transferInterest, Long transferToSavingsId,
+            BigDecimal interestCarriedForwardOnTopUp, boolean autoRollover) {
+        this.depositAmount = depositAmount;
+        this.maturityAmount = maturityAmount;
+        this.maturityDate = maturityDate;
+        this.depositPeriod = depositPeriod;
+        this.depositPeriodFrequency = (depositPeriodFrequency == null) ? null : depositPeriodFrequency.getValue();
+        this.preClosureDetail = preClosureDetail;
+        this.depositTermDetail = depositTermDetail;
+        this.account = account;
+        this.expectedFirstDepositOnDate = expectedFirstDepositOnDate;
+        this.onAccountClosureType = (accountOnClosureType == null) ? null : accountOnClosureType.getValue();
+        this.transferInterestToLinkedAccount = transferInterest;
+        this.transferToSavingsAccountId = transferToSavingsId;
+        this.interestCarriedForwardOnTopUp = interestCarriedForwardOnTopUp;
+        this.autoRollover = autoRollover;
     }
 
     public Map<String, Object> update(final JsonCommand command, final DataValidatorBuilder baseDataValidator) {
@@ -176,6 +228,18 @@ public class DepositAccountTermAndPreClosure extends AbstractPersistableCustom {
 
         if (this.depositTermDetail != null) {
             actualChanges.putAll(this.depositTermDetail.update(command, baseDataValidator));
+        }
+
+        if (command.isChangeInBooleanParameterNamed(SavingsApiConstants.allowPartialLiquidation, this.allowPartialLiquidation)) {
+            final Boolean newValue = command.booleanObjectValueOfParameterNamed(SavingsApiConstants.allowPartialLiquidation);
+            actualChanges.put(SavingsApiConstants.allowPartialLiquidation, newValue);
+            this.allowPartialLiquidation = newValue;
+        }
+
+        if (command.isChangeInIntegerParameterNamed(SavingsApiConstants.totalLiquidationAllowed, this.totalLiquidationAllowed)) {
+            final Integer newValue = command.integerValueOfParameterNamed(SavingsApiConstants.totalLiquidationAllowed);
+            actualChanges.put(SavingsApiConstants.totalLiquidationAllowed, newValue);
+            this.totalLiquidationAllowed = newValue;
         }
         return actualChanges;
     }
@@ -303,7 +367,7 @@ public class DepositAccountTermAndPreClosure extends AbstractPersistableCustom {
         final Long transferToSavingsId = null;
         return DepositAccountTermAndPreClosure.createNew(preClosureDetail, depositTermDetail, account, actualDepositAmount, maturityAmount,
                 maturityDate, depositPeriod, depositPeriodFrequency, expectedFirstDepositOnDate, accountOnClosureType,
-                transferInterestToLinkedAccount, transferToSavingsId);
+                transferInterestToLinkedAccount, transferToSavingsId, allowPartialLiquidation, totalLiquidationAllowed);
     }
 
     public void updateExpectedFirstDepositDate(final LocalDate expectedFirstDepositOnDate) {
@@ -328,5 +392,41 @@ public class DepositAccountTermAndPreClosure extends AbstractPersistableCustom {
 
     public Long getTransferToSavingsAccountId() {
         return transferToSavingsAccountId;
+    }
+
+    public BigDecimal getInterestCarriedForwardOnTopUp() {
+        return interestCarriedForwardOnTopUp;
+    }
+
+    public void setInterestCarriedForwardOnTopUp(BigDecimal interestCarriedForwardOnTopUp) {
+        this.interestCarriedForwardOnTopUp = interestCarriedForwardOnTopUp;
+    }
+
+    public DepositPreClosureDetail getPreClosureDetail() {
+        return preClosureDetail;
+    }
+
+    public void setLinkedOriginAccountId(Long id) {
+        this.linkedOriginAccountId = id;
+    }
+
+    public Boolean getAllowPartialLiquidation() {
+        return allowPartialLiquidation;
+    }
+
+    public Integer getTotalLiquidationAllowed() {
+        return totalLiquidationAllowed;
+    }
+
+    public Long getLinkedOriginAccountId() {
+        return this.linkedOriginAccountId;
+    }
+
+    public void setAllowPartialLiquidation(Boolean allowPartialLiquidation) {
+        this.allowPartialLiquidation = allowPartialLiquidation;
+    }
+
+    public void setTotalLiquidationAllowed(Integer totalLiquidationAllowed) {
+        this.totalLiquidationAllowed = totalLiquidationAllowed;
     }
 }

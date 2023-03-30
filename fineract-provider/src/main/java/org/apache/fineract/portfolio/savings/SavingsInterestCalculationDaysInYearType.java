@@ -32,7 +32,7 @@ import java.util.List;
 public enum SavingsInterestCalculationDaysInYearType {
 
     INVALID(0, "savingsInterestCalculationDaysInYearType.invalid"), //
-    DAYS_360(360, "savingsInterestCalculationDaysInYearType.days360"), //
+    ACTUAL(1, "savingsInterestCalculationDaysInYearType.actual"), DAYS_360(360, "savingsInterestCalculationDaysInYearType.days360"), //
     DAYS_365(365, "savingsInterestCalculationDaysInYearType.days365");
 
     private final Integer value;
@@ -66,6 +66,9 @@ public enum SavingsInterestCalculationDaysInYearType {
         SavingsInterestCalculationDaysInYearType repaymentFrequencyType = SavingsInterestCalculationDaysInYearType.INVALID;
         if (type != null) {
             switch (type) {
+                case 1:
+                    repaymentFrequencyType = SavingsInterestCalculationDaysInYearType.ACTUAL;
+                break;
                 case 360:
                     repaymentFrequencyType = SavingsInterestCalculationDaysInYearType.DAYS_360;
                 break;
@@ -75,5 +78,9 @@ public enum SavingsInterestCalculationDaysInYearType {
             }
         }
         return repaymentFrequencyType;
+    }
+
+    public boolean isActual() {
+        return SavingsInterestCalculationDaysInYearType.ACTUAL.getValue().equals(this.value);
     }
 }

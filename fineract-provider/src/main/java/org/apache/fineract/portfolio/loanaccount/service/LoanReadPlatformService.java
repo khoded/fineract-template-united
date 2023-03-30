@@ -25,6 +25,7 @@ import java.util.List;
 import org.apache.fineract.infrastructure.core.service.Page;
 import org.apache.fineract.infrastructure.core.service.SearchParameters;
 import org.apache.fineract.organisation.staff.data.StaffData;
+import org.apache.fineract.portfolio.account.data.PortfolioAccountData;
 import org.apache.fineract.portfolio.calendar.data.CalendarData;
 import org.apache.fineract.portfolio.floatingrates.data.InterestRatePeriodData;
 import org.apache.fineract.portfolio.loanaccount.data.CollectionData;
@@ -38,6 +39,10 @@ import org.apache.fineract.portfolio.loanaccount.data.LoanTransactionData;
 import org.apache.fineract.portfolio.loanaccount.data.PaidInAdvanceData;
 import org.apache.fineract.portfolio.loanaccount.data.RepaymentScheduleRelatedLoanData;
 import org.apache.fineract.portfolio.loanaccount.domain.LoanTransactionType;
+import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanOverdueReminderData;
+import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanRepaymentConfirmationData;
+import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanRepaymentReminderData;
+import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanRepaymentScheduleData;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanScheduleData;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.LoanSchedulePeriodData;
 import org.apache.fineract.portfolio.loanaccount.loanschedule.data.OverdueLoanScheduleData;
@@ -150,5 +155,19 @@ public interface LoanReadPlatformService {
 
     List<LoanRepaymentScheduleInstallmentData> getRepaymentDataResponse(Long loanId);
 
+    Integer retrieveNumberOfActiveLoansByClientId(Long clientId);
+
     CollectionData retrieveLoanCollectionData(Long loanId);
+
+    List<LoanAccountData> retrieveOverDueLoansForClient(Long client);
+
+    List<LoanRepaymentReminderData> findLoanRepaymentReminderData(Integer numberOfDaysToDueDate);
+
+    LoanRepaymentConfirmationData generateLoanPaymentReceipt(Long transactionId);
+
+    List<LoanRepaymentScheduleData> getLoanRepaymentScheduleData(Long loanId);
+
+    List<LoanOverdueReminderData> findLoanOverdueReminderData(Integer numberOfDaysToDueDate);
+
+    Collection<PortfolioAccountData> retrieveVendorSavingAccountsForBnplLoans(Long vendorClientId);
 }

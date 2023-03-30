@@ -18,9 +18,12 @@
  */
 package org.apache.fineract.portfolio.paymentdetail.service;
 
+import java.time.LocalDate;
 import java.util.Map;
+import java.util.Optional;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.portfolio.paymentdetail.domain.PaymentDetail;
+import org.apache.fineract.portfolio.savings.SavingsAccountTransactionType;
 
 public interface PaymentDetailWritePlatformService {
 
@@ -29,4 +32,10 @@ public interface PaymentDetailWritePlatformService {
     PaymentDetail createPaymentDetail(JsonCommand command, Map<String, Object> changes);
 
     PaymentDetail persistPaymentDetail(PaymentDetail paymentDetail);
+
+    PaymentDetail createAndPersistPaymentDetailForVaultTribe(JsonCommand command, Map<String, Object> changes,
+            SavingsAccountTransactionType savingsAccountTransactionType, Integer parentSavingsAccountTransactionId,
+            LocalDate transactionDate, Integer parentTransactionPaymentDetailsId);
+
+    Optional<PaymentDetail> getPaymentDetail(Long id);
 }

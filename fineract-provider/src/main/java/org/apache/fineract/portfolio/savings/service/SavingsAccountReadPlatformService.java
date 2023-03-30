@@ -24,6 +24,8 @@ import java.util.List;
 import org.apache.fineract.infrastructure.core.service.Page;
 import org.apache.fineract.infrastructure.core.service.SearchParameters;
 import org.apache.fineract.portfolio.savings.DepositAccountType;
+import org.apache.fineract.portfolio.savings.data.RecurringMissedTargetData;
+import org.apache.fineract.portfolio.savings.data.SavingsAccountBlockNarrationHistoryData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountTransactionData;
 
@@ -43,10 +45,11 @@ public interface SavingsAccountReadPlatformService {
 
     SavingsAccountTransactionData retrieveDepositTransactionTemplate(Long savingsId, DepositAccountType depositAccountType);
 
-    Collection<SavingsAccountTransactionData> retrieveAllTransactions(Long savingsId, DepositAccountType depositAccountType);
+    Collection<SavingsAccountTransactionData> retrieveAllTransactions(Long savingsId, DepositAccountType depositAccountType, Integer offset,
+            Integer limit);
 
-    // Collection<SavingsAccountAnnualFeeData>
-    // retrieveAccountsWithAnnualFeeDue();
+    Collection<SavingsAccountTransactionData> retrieveAccrualTransactions(Long savingsId, DepositAccountType depositAccountType,
+            Integer offset, Integer limit);
 
     SavingsAccountTransactionData retrieveSavingsTransaction(Long savingsId, Long transactionId, DepositAccountType depositAccountType);
 
@@ -62,10 +65,21 @@ public interface SavingsAccountReadPlatformService {
 
     String retrieveAccountNumberByAccountId(Long accountId);
 
-    List<Long> getAccountsIdsByStatusPaged(Integer status, int pageSize, Long maxSavingsIdInList);
+    Long getSavingsAccountTransactionTotalFiltered(Long savingsId, DepositAccountType depositAccountType, Boolean hideAccrualTransactions);
 
     List<SavingsAccountData> retrieveAllSavingsDataForInterestPosting(boolean backdatedTxnsAllowedTill, int pageSize, Integer status,
             Long maxSavingsId);
 
     List<SavingsAccountTransactionData> retrieveAllTransactionData(List<String> refNo);
+
+    Collection<SavingsAccountBlockNarrationHistoryData> retrieveSavingsAccountBlockNarrationHistory(Long savingsId);
+
+    List<Long> retrieveActiveSavingsAccrualAccounts(Long accountType);
+
+    List<Long> retrieveActiveSavingAccountsWithZeroInterest();
+
+    List<Long> retrieveActiveOverdraftSavingAccounts();
+
+    RecurringMissedTargetData findRecurringDepositAccountWithMissedTarget(Long savingsAccountId);
+
 }

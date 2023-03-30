@@ -18,6 +18,8 @@
  */
 package org.apache.fineract.portfolio.savings.data;
 
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.VAULT_TARGET_AMOUNT;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.VAULT_TARGET_DATE;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.accountNoParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.allowOverdraftParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.amountParamName;
@@ -221,6 +223,27 @@ public class SavingsAccountDataValidator {
             baseDataValidator.reset().parameter(SavingsApiConstants.datatables).value(datatables).notNull().jsonArrayNotEmpty();
         }
 
+        if (this.fromApiJsonHelper.parameterExists(VAULT_TARGET_AMOUNT, element)
+                || this.fromApiJsonHelper.parameterExists(VAULT_TARGET_DATE, element)) {
+
+            final BigDecimal vaultTargetAmount = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(VAULT_TARGET_AMOUNT, element);
+            baseDataValidator.reset().parameter(VAULT_TARGET_AMOUNT).value(vaultTargetAmount).notNull().zeroOrPositiveAmount();
+
+            final LocalDate vaultTargetDate = this.fromApiJsonHelper.extractLocalDateNamed(VAULT_TARGET_DATE, element);
+            baseDataValidator.reset().parameter(VAULT_TARGET_DATE).value(vaultTargetDate).notNull();
+        }
+        if (this.fromApiJsonHelper.parameterExists(SavingsApiConstants.WITHDRAWAL_FREQUENCY, element)) {
+            final Integer withdrawalFrequency = this.fromApiJsonHelper
+                    .extractIntegerSansLocaleNamed(SavingsApiConstants.WITHDRAWAL_FREQUENCY, element);
+            baseDataValidator.reset().parameter(SavingsApiConstants.WITHDRAWAL_FREQUENCY).value(withdrawalFrequency).notNull();
+        }
+        if (this.fromApiJsonHelper.parameterExists(SavingsApiConstants.WITHDRAWAL_FREQUENCY_ENUM, element)) {
+            final Integer withdrawalFrequencyEnum = this.fromApiJsonHelper
+                    .extractIntegerSansLocaleNamed(SavingsApiConstants.WITHDRAWAL_FREQUENCY_ENUM, element);
+            baseDataValidator.reset().parameter(SavingsApiConstants.WITHDRAWAL_FREQUENCY_ENUM).value(withdrawalFrequencyEnum)
+                    .inMinMaxRange(0, 3);
+        }
+
         validateSavingsCharges(element, baseDataValidator);
 
         validateOverdraftParams(baseDataValidator, element);
@@ -408,6 +431,16 @@ public class SavingsAccountDataValidator {
             baseDataValidator.reset().parameter(withHoldTaxParamName).value(withHoldTax).ignoreIfNull().validateForBooleanValue();
         }
 
+        if (this.fromApiJsonHelper.parameterExists(VAULT_TARGET_AMOUNT, element)
+                || this.fromApiJsonHelper.parameterExists(VAULT_TARGET_DATE, element)) {
+
+            final BigDecimal vaultTargetAmount = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(VAULT_TARGET_AMOUNT, element);
+            baseDataValidator.reset().parameter(VAULT_TARGET_AMOUNT).value(vaultTargetAmount).notNull().zeroOrPositiveAmount();
+
+            final LocalDate vaultTargetDate = this.fromApiJsonHelper.extractLocalDateNamed(VAULT_TARGET_DATE, element);
+            baseDataValidator.reset().parameter(VAULT_TARGET_DATE).value(vaultTargetDate).notNull();
+        }
+
         validateOverdraftParams(baseDataValidator, element);
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }
@@ -530,5 +563,68 @@ public class SavingsAccountDataValidator {
             throw new PlatformApiDataValidationException("validation.msg.validation.errors.exist", "Validation errors exist.",
                     dataValidationErrors);
         }
+    }
+
+    public void validateNewMembersOnVaultTribe(final String json) {
+
+        if (StringUtils.isBlank(json)) {
+            throw new InvalidJsonException();
+        }
+
+        final Type typeOfMap = new TypeToken<Map<String, Object>>() {}.getType();
+        this.fromApiJsonHelper.checkForUnsupportedParameters(typeOfMap, json,
+                SavingsAccountConstant.ADD_MORE_MEMBERS_TO_VAULT_TRIBE_REQUEST_DATA_PARAMETERS);
+
+        final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+        final DataValidatorBuilder baseDataValidator = new DataValidatorBuilder(dataValidationErrors)
+                .resource(SavingsApiConstants.SAVINGS_ACCOUNT_RESOURCE_NAME);
+
+        final JsonElement element = this.fromApiJsonHelper.parse(json);
+        final Long clientId = this.fromApiJsonHelper.extractLongNamed(clientIdParamName, element);
+        if (clientId != null) {
+            baseDataValidator.reset().parameter(clientIdParamName).value(clientId).longGreaterThanZero();
+        } else {
+            baseDataValidator.reset().parameter(clientIdParamName).value(clientId).notNull().integerGreaterThanZero();
+        }
+
+        final Long groupId = this.fromApiJsonHelper.extractLongNamed(groupIdParamName, element);
+        if (groupId != null) {
+            baseDataValidator.reset().parameter(groupIdParamName).value(groupId).longGreaterThanZero();
+        } else {
+            baseDataValidator.reset().parameter(groupIdParamName).value(groupId).notNull().integerGreaterThanZero();
+        }
+
+        final Long productId = this.fromApiJsonHelper.extractLongNamed(productIdParamName, element);
+        baseDataValidator.reset().parameter(productIdParamName).value(productId).notNull().integerGreaterThanZero();
+
+        final BigDecimal interestRate = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(nominalAnnualInterestRateParamName,
+                element);
+        baseDataValidator.reset().parameter(nominalAnnualInterestRateParamName).value(interestRate).notNull().zeroOrPositiveAmount();
+
+        if (this.fromApiJsonHelper.parameterExists(minRequiredOpeningBalanceParamName, element)) {
+            final BigDecimal minOpeningBalance = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(minRequiredOpeningBalanceParamName,
+                    element);
+            baseDataValidator.reset().parameter(minRequiredOpeningBalanceParamName).value(minOpeningBalance).zeroOrPositiveAmount();
+        }
+
+        final Integer lockinPeriodFrequency = this.fromApiJsonHelper.extractIntegerWithLocaleNamed(lockinPeriodFrequencyParamName, element);
+        baseDataValidator.reset().parameter(lockinPeriodFrequencyParamName).value(lockinPeriodFrequency).notNull().integerZeroOrGreater();
+
+        if (lockinPeriodFrequency != null) {
+            final Integer lockinPeriodFrequencyType = this.fromApiJsonHelper
+                    .extractIntegerSansLocaleNamed(lockinPeriodFrequencyTypeParamName, element);
+            baseDataValidator.reset().parameter(lockinPeriodFrequencyTypeParamName).value(lockinPeriodFrequencyType).notNull()
+                    .inMinMaxRange(0, 3);
+        }
+
+        final Integer lockinPeriodFrequencyType = this.fromApiJsonHelper.extractIntegerSansLocaleNamed(lockinPeriodFrequencyTypeParamName,
+                element);
+        baseDataValidator.reset().parameter(lockinPeriodFrequencyTypeParamName).value(lockinPeriodFrequencyType).notNull().inMinMaxRange(0,
+                3);
+
+        final BigDecimal vaultTargetAmount = this.fromApiJsonHelper.extractBigDecimalWithLocaleNamed(VAULT_TARGET_AMOUNT, element);
+        baseDataValidator.reset().parameter(VAULT_TARGET_AMOUNT).value(vaultTargetAmount).notNull().zeroOrPositiveAmount();
+
+        throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }
 }

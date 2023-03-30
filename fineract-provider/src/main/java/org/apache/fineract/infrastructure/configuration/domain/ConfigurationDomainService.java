@@ -118,4 +118,14 @@ public interface ConfigurationDomainService {
     boolean isCOBDateAdjustmentEnabled();
 
     boolean isReversalTransactionAllowed();
+
+    boolean isClientLevelValidationEnabled();
+
+    boolean enforceOverdueLoansForMinBalance();
+
+    boolean isPostOverdraftInterestOnDepositEnabled();
+
+    boolean isMaxActiveLoansEnabled();
+
+    Long getMaxActiveLoans();
 }

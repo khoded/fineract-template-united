@@ -30,7 +30,10 @@ import org.apache.fineract.infrastructure.documentmanagement.domain.StorageType;
 import org.apache.fineract.organisation.staff.domain.Staff;
 import org.apache.fineract.organisation.staff.domain.StaffRepositoryWrapper;
 import org.apache.fineract.portfolio.client.domain.Client;
+import org.apache.fineract.portfolio.client.domain.ClientBusinessOwnerRepository;
+import org.apache.fineract.portfolio.client.domain.ClientBusinessOwners;
 import org.apache.fineract.portfolio.client.domain.ClientRepositoryWrapper;
+import org.apache.fineract.portfolio.client.exception.ClientBusinessOwnerNotFoundException;
 import org.apache.fineract.portfolio.client.exception.ImageNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.EmptyResultDataAccessException;
@@ -45,14 +48,17 @@ public class ImageReadPlatformServiceImpl implements ImageReadPlatformService {
     private final ContentRepositoryFactory contentRepositoryFactory;
     private final ClientRepositoryWrapper clientRepositoryWrapper;
     private final StaffRepositoryWrapper staffRepositoryWrapper;
+    private final ClientBusinessOwnerRepository clientBusinessOwnerRepository;
 
     @Autowired
     public ImageReadPlatformServiceImpl(final JdbcTemplate jdbcTemplate, final ContentRepositoryFactory documentStoreFactory,
-            final ClientRepositoryWrapper clientRepositoryWrapper, StaffRepositoryWrapper staffRepositoryWrapper) {
+            final ClientRepositoryWrapper clientRepositoryWrapper, StaffRepositoryWrapper staffRepositoryWrapper,
+            final ClientBusinessOwnerRepository clientBusinessOwnerRepository) {
         this.staffRepositoryWrapper = staffRepositoryWrapper;
         this.jdbcTemplate = jdbcTemplate;
         this.contentRepositoryFactory = documentStoreFactory;
         this.clientRepositoryWrapper = clientRepositoryWrapper;
+        this.clientBusinessOwnerRepository = clientBusinessOwnerRepository;
     }
 
     private static final class ImageMapper implements RowMapper<ImageData> {
@@ -70,6 +76,12 @@ public class ImageReadPlatformServiceImpl implements ImageReadPlatformService {
                 builder.append(" from m_image image , m_client client " + " where client.image_id = image.id and client.id=?");
             } else if (EntityTypeForImages.STAFF.toString().equalsIgnoreCase(entityType)) {
                 builder.append("from m_image image , m_staff staff " + " where staff.image_id = image.id and staff.id=?");
+            } else if (EntityTypeForImages.BUSINESSOWNER.toString().equalsIgnoreCase(entityType)) {
+                builder.append("from m_image image , m_business_owners businessOwner "
+                        + " where businessOwner.image_id = image.id and businessOwner.id=?");
+            } else if (EntityTypeForImages.BUSINESSOWNER.toString().equalsIgnoreCase(entityType)) {
+                builder.append("from m_image image , m_business_owners businessOwner "
+                        + " where businessOwner.image_id = image.id and businessOwner.id=?");
             }
             return builder.toString();
         }
@@ -93,6 +105,10 @@ public class ImageReadPlatformServiceImpl implements ImageReadPlatformService {
             } else if (EntityTypeForImages.STAFF.toString().equalsIgnoreCase(entityType)) {
                 Staff owner = this.staffRepositoryWrapper.findOneWithNotFoundDetection(entityId);
                 displayName = owner.displayName();
+            } else if (EntityTypeForImages.BUSINESSOWNER.toString().equalsIgnoreCase(entityType)) {
+                ClientBusinessOwners businessOwner = this.clientBusinessOwnerRepository.findById(entityId)
+                        .orElseThrow(() -> new ClientBusinessOwnerNotFoundException(entityId));
+                displayName = businessOwner.getFirstName();
             } else {
                 displayName = "UnknownEntityType:" + entityType;
             }

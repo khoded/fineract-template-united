@@ -18,6 +18,7 @@
  */
 package org.apache.fineract.portfolio.paymentdetail.domain;
 
+import java.time.LocalDate;
 import java.util.Map;
 import javax.persistence.Column;
 import javax.persistence.Entity;
@@ -55,6 +56,18 @@ public final class PaymentDetail extends AbstractPersistableCustom {
     @Column(name = "bank_number", length = 50)
     private String bankNumber;
 
+    @Column(name = "actual_transaction_type", length = 50)
+    private String actualTransactionType;
+
+    @Column(name = "parent_savings_account_transaction_id")
+    private Integer parentSavingsAccountTransactionId;
+
+    @Column(name = "parent_transaction_payment_details_id")
+    private Integer parentTransactionPaymentDetailsId;
+
+    @Column(name = "transaction_date")
+    private LocalDate transactionDate;
+
     PaymentDetail() {
 
     }
@@ -82,6 +95,7 @@ public final class PaymentDetail extends AbstractPersistableCustom {
         if (StringUtils.isNotBlank(bankNumber)) {
             changes.put(PaymentDetailConstants.bankNumberParamName, bankNumber);
         }
+
         final PaymentDetail paymentDetail = new PaymentDetail(paymentType, accountNumber, checkNumber, routingCode, receiptNumber,
                 bankNumber);
         return paymentDetail;
@@ -119,5 +133,44 @@ public final class PaymentDetail extends AbstractPersistableCustom {
 
     public String getRoutingCode() {
         return routingCode;
+    }
+
+    public void setActualTransactionType(String actualTransactionType) {
+        this.actualTransactionType = actualTransactionType;
+    }
+
+    public void setParentSavingsAccountTransactionId(Integer parentSavingsAccountTransactionId) {
+        this.parentSavingsAccountTransactionId = parentSavingsAccountTransactionId;
+    }
+
+    public void setParentTransactionPaymentDetailsId(Integer parentTransactionPaymentDetailsId) {
+        this.parentTransactionPaymentDetailsId = parentTransactionPaymentDetailsId;
+    }
+
+    public void setTransactionDate(LocalDate transactionDate) {
+        this.transactionDate = transactionDate;
+    }
+
+    public String getActualTransactionType() {
+        return actualTransactionType;
+    }
+
+    public Integer getParentSavingsAccountTransactionId() {
+        return parentSavingsAccountTransactionId;
+    }
+
+    public void setPaymentType(PaymentType paymentType) {
+        this.paymentType = paymentType;
+    }
+
+    public void setAccountNumber(String accountNumber) {
+        this.accountNumber = accountNumber;
+    }
+
+    public static PaymentDetail paymentDetails(PaymentType paymentType, String accountNumber) {
+        PaymentDetail pay = new PaymentDetail();
+        pay.setPaymentType(paymentType);
+        pay.setAccountNumber(accountNumber);
+        return pay;
     }
 }

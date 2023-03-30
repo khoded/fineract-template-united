@@ -20,11 +20,13 @@ package org.apache.fineract.portfolio.savings.domain;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.List;
 import javax.persistence.Column;
 import javax.persistence.Embeddable;
 import javax.persistence.Transient;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.fineract.infrastructure.core.service.DateUtils;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.Money;
@@ -83,6 +85,9 @@ public final class SavingsAccountSummary {
     // Currently this represents the last interest posting date
     @Column(name = "interest_posted_till_date")
     private LocalDate interestPostedTillDate;
+
+    @Column(name = "total_overdraft_interest_earned_derived", scale = 6, precision = 19)
+    private BigDecimal totalOverdraftInterestEarned;
 
     @Transient
     private BigDecimal runningBalanceOnInterestPostingTillDate = BigDecimal.ZERO;
@@ -255,13 +260,23 @@ public final class SavingsAccountSummary {
 
     public void updateFromInterestPeriodSummaries(final MonetaryCurrency currency, final List<PostingPeriod> allPostingPeriods) {
         Money totalEarned = Money.zero(currency);
+        Money overdraftEarned = Money.zero(currency);
+        LocalDate interestCalculationDate = DateUtils.getLocalDateOfTenant();
         for (final PostingPeriod period : allPostingPeriods) {
-            Money interestEarned = period.interest();
-            interestEarned = interestEarned == null ? Money.zero(currency) : interestEarned;
-            totalEarned = totalEarned.plus(interestEarned);
+            if (CollectionUtils.isNotEmpty(period.interests())) {
+                for (Money interestEarned : period.interests()) {
+                    interestEarned = interestEarned == null ? Money.zero(currency) : interestEarned;
+                    if (interestEarned.isGreaterThanZero()) {
+                        totalEarned = totalEarned.plus(interestEarned);
+                    } else {
+                        overdraftEarned = overdraftEarned.plus(interestEarned);
+                    }
+                }
+            }
         }
-        this.lastInterestCalculationDate = DateUtils.getBusinessLocalDate();
+        this.lastInterestCalculationDate = interestCalculationDate.atStartOfDay(ZoneId.systemDefault()).toLocalDate();
         this.totalInterestEarned = totalEarned.getAmount();
+        this.totalOverdraftInterestEarned = overdraftEarned.getAmount().abs();
     }
 
     public boolean isLessThanOrEqualToAccountBalance(final Money amount) {
@@ -333,11 +348,23 @@ public final class SavingsAccountSummary {
         return this.totalInterestEarned;
     }
 
+    public void setTotalInterestEarned(BigDecimal totalInterestEarned) {
+        this.totalInterestEarned = totalInterestEarned;
+    }
+
     public BigDecimal getTotalOverdraftInterestDerived() {
         return this.totalOverdraftInterestDerived;
     }
 
     public BigDecimal getTotalWithholdTax() {
         return this.totalWithholdTax;
+    }
+
+    public BigDecimal getTotalOverdraftInterestEarned() {
+        return totalOverdraftInterestEarned;
+    }
+
+    public void setTotalOverdraftInterestEarned(BigDecimal totalOverdraftInterestEarned) {
+        this.totalOverdraftInterestEarned = totalOverdraftInterestEarned;
     }
 }

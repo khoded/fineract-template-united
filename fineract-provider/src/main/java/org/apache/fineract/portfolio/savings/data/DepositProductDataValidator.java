@@ -24,6 +24,7 @@ import static org.apache.fineract.portfolio.savings.DepositsApiConstants.FIXED_D
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.RECURRING_DEPOSIT_PRODUCT_REQUEST_DATA_PARAMETERS;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.RECURRING_DEPOSIT_PRODUCT_RESOURCE_NAME;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.adjustAdvanceTowardsFuturePaymentsParamName;
+import static org.apache.fineract.portfolio.savings.DepositsApiConstants.allowFreeWithdrawalParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.allowWithdrawalParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.chartsParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.depositAmountParamName;
@@ -39,6 +40,8 @@ import static org.apache.fineract.portfolio.savings.DepositsApiConstants.minDepo
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.preClosurePenalApplicableParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.preClosurePenalInterestOnTypeIdParamName;
 import static org.apache.fineract.portfolio.savings.DepositsApiConstants.preClosurePenalInterestParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.allowManuallyEnterInterestRateParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.allowPartialLiquidation;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.currencyCodeParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.descriptionParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.digitsAfterDecimalParamName;
@@ -49,6 +52,7 @@ import static org.apache.fineract.portfolio.savings.SavingsApiConstants.interest
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.interestCalculationTypeParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.interestCompoundingPeriodTypeParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.interestPostingPeriodTypeParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.isUSDProductParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.lockinPeriodFrequencyParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.lockinPeriodFrequencyTypeParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.minBalanceForInterestCalculationParamName;
@@ -57,6 +61,7 @@ import static org.apache.fineract.portfolio.savings.SavingsApiConstants.namePara
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.nominalAnnualInterestRateParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.shortNameParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.taxGroupIdParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.totalLiquidationAllowed;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.withHoldTaxParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.withdrawalFeeForTransfersParamName;
 
@@ -125,6 +130,8 @@ public class DepositProductDataValidator {
 
         validateDepositAmountForCreate(element, baseDataValidator);
 
+        validatePartialLiquidationSetting(element, baseDataValidator);
+
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
     }
 
@@ -151,7 +158,23 @@ public class DepositProductDataValidator {
 
         validateDepositAmountForUpdate(element, baseDataValidator);
 
+        validatePartialLiquidationSetting(element, baseDataValidator);
+
         throwExceptionIfValidationWarningsExist(dataValidationErrors);
+    }
+
+    private void validatePartialLiquidationSetting(JsonElement element, DataValidatorBuilder baseDataValidator) {
+
+        boolean allowLiquidation = false;
+        if (this.fromApiJsonHelper.parameterExists(allowPartialLiquidation, element)) {
+            allowLiquidation = this.fromApiJsonHelper.extractBooleanNamed(depositAmountParamName, element);
+        }
+
+        if (allowLiquidation && this.fromApiJsonHelper.parameterExists(totalLiquidationAllowed, element)) {
+            Integer maxLiquidationTimes = this.fromApiJsonHelper.extractIntegerWithLocaleNamed(totalLiquidationAllowed, element);
+            baseDataValidator.reset().parameter(totalLiquidationAllowed).value(maxLiquidationTimes).notNull().positiveAmount();
+        }
+
     }
 
     public void validateForRecurringDepositCreate(final String json) {
@@ -298,6 +321,19 @@ public class DepositProductDataValidator {
                     .ignoreIfNull().zeroOrPositiveAmount();
         }
 
+        // If currency is usd for product
+        if (this.fromApiJsonHelper.parameterExists(isUSDProductParamName, element)) {
+            final String isUSDProduct = this.fromApiJsonHelper.extractStringNamed(isUSDProductParamName, element);
+            baseDataValidator.reset().parameter(isUSDProductParamName).value(isUSDProduct).ignoreIfNull().validateForBooleanValue();
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(allowManuallyEnterInterestRateParamName, element)) {
+            final String allowManuallyEnterInterestRate = this.fromApiJsonHelper.extractStringNamed(allowManuallyEnterInterestRateParamName,
+                    element);
+            baseDataValidator.reset().parameter(allowManuallyEnterInterestRate).value(allowManuallyEnterInterestRate).ignoreIfNull()
+                    .validateForBooleanValue();
+        }
+
         // accounting related data validation
         final Integer accountingRuleType = fromApiJsonHelper.extractIntegerNamed("accountingRule", element, Locale.getDefault());
         baseDataValidator.reset().parameter("accountingRule").value(accountingRuleType).notNull().inMinMaxRange(1, 3);
@@ -393,7 +429,7 @@ public class DepositProductDataValidator {
         }
     }
 
-    private void validateChartsData(JsonElement element, DataValidatorBuilder baseDataValidator) {
+    public void validateChartsData(JsonElement element, DataValidatorBuilder baseDataValidator) {
         if (element.isJsonObject()) {
 
             final JsonArray array = this.fromApiJsonHelper.extractJsonArrayNamed(chartsParamName, element);
@@ -511,6 +547,11 @@ public class DepositProductDataValidator {
                     .extractBigDecimalWithLocaleNamed(minBalanceForInterestCalculationParamName, element);
             baseDataValidator.reset().parameter(minBalanceForInterestCalculationParamName).value(minBalanceForInterestCalculation)
                     .ignoreIfNull().zeroOrPositiveAmount();
+        }
+        // If currency is usd for product
+        if (this.fromApiJsonHelper.parameterExists(isUSDProductParamName, element)) {
+            final String isUSDProduct = this.fromApiJsonHelper.extractStringNamed(isUSDProductParamName, element);
+            baseDataValidator.reset().parameter(isUSDProductParamName).value(isUSDProduct).ignoreIfNull().validateForBooleanValue();
         }
 
         final Long savingsControlAccountId = fromApiJsonHelper.extractLongNamed(SavingProductAccountingParams.SAVINGS_CONTROL.getValue(),
@@ -687,6 +728,13 @@ public class DepositProductDataValidator {
         baseDataValidator.reset().parameter(isMandatoryDepositParamName).value(isMandatoryDeposit).ignoreIfNull().validateForBooleanValue();
         final Boolean allowWithdrawal = this.fromApiJsonHelper.extractBooleanNamed(allowWithdrawalParamName, element);
         baseDataValidator.reset().parameter(allowWithdrawalParamName).value(allowWithdrawal).ignoreIfNull().validateForBooleanValue();
+
+        if (fromApiJsonHelper.parameterExists(allowFreeWithdrawalParamName, element)) {
+            final Boolean allowFreeWithdrawal = this.fromApiJsonHelper.extractBooleanNamed(allowFreeWithdrawalParamName, element);
+            baseDataValidator.reset().parameter(allowFreeWithdrawalParamName).value(allowFreeWithdrawal).ignoreIfNull()
+                    .validateForBooleanValue();
+        }
+
         final Boolean adjustAdvanceTowardsFuturePayments = this.fromApiJsonHelper
                 .extractBooleanNamed(adjustAdvanceTowardsFuturePaymentsParamName, element);
         baseDataValidator.reset().parameter(adjustAdvanceTowardsFuturePaymentsParamName).value(adjustAdvanceTowardsFuturePayments)
@@ -704,6 +752,12 @@ public class DepositProductDataValidator {
         if (this.fromApiJsonHelper.parameterExists(allowWithdrawalParamName, element)) {
             final Boolean allowWithdrawal = this.fromApiJsonHelper.extractBooleanNamed(allowWithdrawalParamName, element);
             baseDataValidator.reset().parameter(allowWithdrawalParamName).value(allowWithdrawal).ignoreIfNull().validateForBooleanValue();
+        }
+
+        if (this.fromApiJsonHelper.parameterExists(allowFreeWithdrawalParamName, element)) {
+            final Boolean allowFreeWithdrawal = this.fromApiJsonHelper.extractBooleanNamed(allowFreeWithdrawalParamName, element);
+            baseDataValidator.reset().parameter(allowFreeWithdrawalParamName).value(allowFreeWithdrawal).ignoreIfNull()
+                    .validateForBooleanValue();
         }
 
         if (this.fromApiJsonHelper.parameterExists(adjustAdvanceTowardsFuturePaymentsParamName, element)) {

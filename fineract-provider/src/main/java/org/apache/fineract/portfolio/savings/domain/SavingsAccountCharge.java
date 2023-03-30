@@ -49,6 +49,7 @@ import org.apache.fineract.portfolio.charge.domain.Charge;
 import org.apache.fineract.portfolio.charge.domain.ChargeCalculationType;
 import org.apache.fineract.portfolio.charge.domain.ChargeTimeType;
 import org.apache.fineract.portfolio.charge.exception.SavingsAccountChargeWithoutMandatoryFieldException;
+import org.apache.fineract.portfolio.savings.request.SavingsAccountChargeReq;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -104,6 +105,12 @@ public class SavingsAccountCharge extends AbstractPersistableCustom {
     @Column(name = "amount", scale = 6, precision = 19, nullable = false)
     private BigDecimal amount;
 
+    @Column(name = "min_amount", scale = 6, precision = 19)
+    private BigDecimal minAmount;
+
+    @Column(name = "max_amount", scale = 6, precision = 19)
+    private BigDecimal maxAmount;
+
     @Column(name = "amount_paid_derived", scale = 6, precision = 19, nullable = true)
     private BigDecimal amountPaid;
 
@@ -130,6 +137,27 @@ public class SavingsAccountCharge extends AbstractPersistableCustom {
 
     @Column(name = "inactivated_on_date")
     private LocalDate inactivationDate;
+
+    public static SavingsAccountCharge createNew(SavingsAccount savingsAccount, Charge chargeDefinition,
+            SavingsAccountChargeReq savingsAccountChargeReq) {
+
+        BigDecimal amount = savingsAccountChargeReq.getAmount();
+        final LocalDate dueDate = savingsAccountChargeReq.getDueDate();
+        MonthDay feeOnMonthDay = savingsAccountChargeReq.getFeeOnMonthDay();
+        Integer feeInterval = savingsAccountChargeReq.getFeeInterval();
+        final ChargeTimeType chargeTime = null;
+        final ChargeCalculationType chargeCalculation = null;
+        final boolean status = true;
+
+        // If these values is not sent as parameter, then derive from Charge
+        // definition
+        amount = (amount == null) ? chargeDefinition.getAmount() : amount;
+        feeOnMonthDay = (feeOnMonthDay == null) ? chargeDefinition.getFeeOnMonthDay() : feeOnMonthDay;
+        feeInterval = (feeInterval == null) ? chargeDefinition.getFeeInterval() : feeInterval;
+
+        return new SavingsAccountCharge(savingsAccount, chargeDefinition, amount, chargeTime, chargeCalculation, dueDate, status,
+                feeOnMonthDay, feeInterval);
+    }
 
     public static SavingsAccountCharge createNewFromJson(final SavingsAccount savingsAccount, final Charge chargeDefinition,
             final JsonCommand command) {
@@ -234,6 +262,8 @@ public class SavingsAccountCharge extends AbstractPersistableCustom {
 
         this.paid = determineIfFullyPaid();
         this.status = status;
+        this.minAmount = chargeDefinition.getMinAmount();
+        this.maxAmount = chargeDefinition.getMaxAmount();
     }
 
     public void resetPropertiesForRecurringFees() {
@@ -551,7 +581,7 @@ public class SavingsAccountCharge extends AbstractPersistableCustom {
         return this.amount.subtract(totalAccountedFor);
     }
 
-    private BigDecimal percentageOf(final BigDecimal value, final BigDecimal percentage) {
+    public BigDecimal percentageOf(final BigDecimal value, final BigDecimal percentage) {
 
         BigDecimal percentageOf = BigDecimal.ZERO;
 
@@ -596,6 +626,10 @@ public class SavingsAccountCharge extends AbstractPersistableCustom {
 
         final Money amountWaivedOrWrittenOff = getAmountWaived(currency).plus(getAmountWrittenOff(currency));
         return Money.of(currency, this.amountPaid).plus(amountWaivedOrWrittenOff).isGreaterThanZero();
+    }
+
+    public BigDecimal getAmount() {
+        return this.amount;
     }
 
     public Money getAmount(final MonetaryCurrency currency) {
@@ -754,7 +788,7 @@ public class SavingsAccountCharge extends AbstractPersistableCustom {
         SavingsAccountCharge that = (SavingsAccountCharge) o;
         return (penaltyCharge == that.penaltyCharge) && (paid == that.paid) && (waived == that.waived) && (status == that.status)
                 && Objects.equals(savingsAccount, that.savingsAccount) && Objects.equals(charge, that.charge)
-                && Objects.equals(chargeTime, that.chargeTime) && dueDate.compareTo(that.dueDate) == 0
+                && Objects.equals(chargeTime, that.chargeTime) && (dueDate != null && dueDate.compareTo(that.dueDate) == 0)
                         ? Boolean.TRUE
                         : Boolean.FALSE && Objects.equals(feeOnMonth, that.feeOnMonth) && Objects.equals(feeOnDay, that.feeOnDay)
                                 && Objects.equals(feeInterval, that.feeInterval)
@@ -763,15 +797,17 @@ public class SavingsAccountCharge extends AbstractPersistableCustom {
                                 && Objects.equals(amount, that.amount) && Objects.equals(amountPaid, that.amountPaid)
                                 && Objects.equals(amountWaived, that.amountWaived)
                                 && Objects.equals(amountWrittenOff, that.amountWrittenOff)
-                                && Objects.equals(amountOutstanding, that.amountOutstanding)
-                                && inactivationDate.compareTo(that.inactivationDate) == 0 ? Boolean.TRUE : Boolean.FALSE;
+                                && Objects.equals(amountOutstanding, that.amountOutstanding) && Objects.equals(minAmount, that.minAmount)
+                                && Objects.equals(maxAmount, that.maxAmount) && inactivationDate.compareTo(that.inactivationDate) == 0
+                                        ? Boolean.TRUE
+                                        : Boolean.FALSE;
     }
 
     @Override
     public int hashCode() {
         return Objects.hash(savingsAccount, charge, chargeTime, dueDate, feeOnMonth, feeOnDay, feeInterval, chargeCalculation, percentage,
                 amountPercentageAppliedTo, amount, amountPaid, amountWaived, amountWrittenOff, amountOutstanding, penaltyCharge, paid,
-                waived, status, inactivationDate);
+                waived, status, inactivationDate, minAmount, maxAmount);
     }
 
     public BigDecimal calculateWithdralFeeAmount(@NotNull BigDecimal transactionAmount) {
@@ -779,7 +815,18 @@ public class SavingsAccountCharge extends AbstractPersistableCustom {
         if (ChargeCalculationType.fromInt(this.chargeCalculation).isFlat()) {
             amountPaybale = this.amount;
         } else if (ChargeCalculationType.fromInt(this.chargeCalculation).isPercentageOfAmount()) {
+
             amountPaybale = transactionAmount.multiply(this.percentage).divide(BigDecimal.valueOf(100L), MoneyHelper.getRoundingMode());
+            /*
+             * Apply Computation min and max amount configuration
+             *
+             */
+
+            if (this.maxAmount != null && amountPaybale.compareTo(this.maxAmount) > 0) {
+                amountPaybale = this.maxAmount;
+            } else if (this.minAmount != null && amountPaybale.compareTo(this.minAmount) != 0) {
+                amountPaybale = this.minAmount;
+            }
         }
         return amountPaybale;
     }
@@ -919,4 +966,54 @@ public class SavingsAccountCharge extends AbstractPersistableCustom {
     public boolean canOverriteSavingAccountRules() {
         return (!this.isSavingsActivation() && !this.isWithdrawalFee());
     }
+
+    public void setPercentage(BigDecimal percentage) {
+        this.percentage = percentage;
+    }
+
+    public void setAmountPercentageAppliedTo(BigDecimal amountPercentageAppliedTo) {
+        this.amountPercentageAppliedTo = amountPercentageAppliedTo;
+    }
+
+    public void setAmount(BigDecimal amount) {
+        this.amount = amount;
+    }
+
+    public BigDecimal getPercentage() {
+        return percentage;
+    }
+
+    public void setAmountOutstanding(BigDecimal amountOutstanding) {
+        this.amountOutstanding = amountOutstanding;
+    }
+
+    public void setChargePaid() {
+        this.paid = determineIfFullyPaid();
+    }
+
+    public SavingsAccountCharge copy() {
+        SavingsAccountCharge dup = new SavingsAccountCharge();
+        dup.charge = this.charge;
+        dup.chargeTime = this.chargeTime;
+        dup.penaltyCharge = this.penaltyCharge;
+        dup.chargeCalculation = this.chargeCalculation;
+        dup.amount = this.amount;
+        dup.amountPaid = BigDecimal.ZERO;
+        dup.amountWaived = BigDecimal.ZERO;
+        dup.amountWrittenOff = BigDecimal.ZERO;
+        dup.amountOutstanding = dup.calculateAmountOutstanding(this.savingsAccount.currency);
+        dup.paid = false;
+        dup.waived = false;
+        dup.savingsAccount = null;
+        return dup;
+    }
+
+    public boolean isFdaPartialLiquidationFee() {
+        return ChargeTimeType.fromInt(this.chargeTime).isFdaPartialLiquidationFee();
+    }
+
+    public boolean isFdaPreclosureFee() {
+        return ChargeTimeType.fromInt(this.chargeTime).isFdaPreclosureFee();
+    }
+
 }

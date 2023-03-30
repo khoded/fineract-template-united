@@ -37,4 +37,8 @@ public interface ScheduledJobRunnerService {
     void updateTrialBalanceDetails() throws JobExecutionException;
 
     void executeMissMatchedJobs() throws JobExecutionException;
+
+    void postAccrualInterestForSavings() throws JobExecutionException;
+
+    void updateNextWithdrawalDateOnSavingsAccount() throws JobExecutionException;
 }

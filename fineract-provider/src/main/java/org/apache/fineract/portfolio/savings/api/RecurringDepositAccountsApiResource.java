@@ -66,6 +66,8 @@ import org.apache.fineract.infrastructure.core.serialization.DefaultToApiJsonSer
 import org.apache.fineract.infrastructure.core.serialization.FromJsonHelper;
 import org.apache.fineract.infrastructure.core.service.Page;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
+import org.apache.fineract.portfolio.account.data.PortfolioAccountData;
+import org.apache.fineract.portfolio.account.service.AccountAssociationsReadPlatformService;
 import org.apache.fineract.portfolio.savings.DepositAccountType;
 import org.apache.fineract.portfolio.savings.DepositsApiConstants;
 import org.apache.fineract.portfolio.savings.SavingsApiConstants;
@@ -100,6 +102,8 @@ public class RecurringDepositAccountsApiResource {
     private final BulkImportWorkbookService bulkImportWorkbookService;
     private final BulkImportWorkbookPopulatorService bulkImportWorkbookPopulatorService;
 
+    private final AccountAssociationsReadPlatformService accountAssociationsReadPlatformService;
+
     @Autowired
     public RecurringDepositAccountsApiResource(final DepositAccountReadPlatformService depositAccountReadPlatformService,
             final PlatformSecurityContext context, final DefaultToApiJsonSerializer<DepositAccountData> toApiJsonSerializer,
@@ -108,7 +112,8 @@ public class RecurringDepositAccountsApiResource {
             final SavingsAccountChargeReadPlatformService savingsAccountChargeReadPlatformService, final FromJsonHelper fromJsonHelper,
             final DepositAccountPreMatureCalculationPlatformService accountPreMatureCalculationPlatformService,
             final BulkImportWorkbookService bulkImportWorkbookService,
-            final BulkImportWorkbookPopulatorService bulkImportWorkbookPopulatorService) {
+            final BulkImportWorkbookPopulatorService bulkImportWorkbookPopulatorService,
+            AccountAssociationsReadPlatformService accountAssociationsReadPlatformService) {
         this.depositAccountReadPlatformService = depositAccountReadPlatformService;
         this.context = context;
         this.toApiJsonSerializer = toApiJsonSerializer;
@@ -119,6 +124,7 @@ public class RecurringDepositAccountsApiResource {
         this.accountPreMatureCalculationPlatformService = accountPreMatureCalculationPlatformService;
         this.bulkImportWorkbookService = bulkImportWorkbookService;
         this.bulkImportWorkbookPopulatorService = bulkImportWorkbookPopulatorService;
+        this.accountAssociationsReadPlatformService = accountAssociationsReadPlatformService;
     }
 
     @GET
@@ -208,7 +214,8 @@ public class RecurringDepositAccountsApiResource {
     public String retrieveOne(@PathParam("accountId") @Parameter(description = "accountId") final Long accountId,
             @DefaultValue("false") @QueryParam("staffInSelectedOfficeOnly") @Parameter(description = "staffInSelectedOfficeOnly") final boolean staffInSelectedOfficeOnly,
             @DefaultValue("all") @QueryParam("chargeStatus") @Parameter(description = "chargeStatus") final String chargeStatus,
-            @Context final UriInfo uriInfo) {
+            @Context final UriInfo uriInfo, @QueryParam("offset") @Parameter(description = "offset") final Integer offset,
+            @QueryParam("limit") @Parameter(description = "limit") final Integer limit) {
 
         this.context.authenticatedUser().validateHasReadPermission(DepositsApiConstants.RECURRING_DEPOSIT_ACCOUNT_RESOURCE_NAME);
 
@@ -221,7 +228,7 @@ public class RecurringDepositAccountsApiResource {
 
         final Set<String> mandatoryResponseParameters = new HashSet<>();
         final RecurringDepositAccountData accountTemplate = populateTemplateAndAssociations(accountId, account, staffInSelectedOfficeOnly,
-                chargeStatus, uriInfo, mandatoryResponseParameters);
+                chargeStatus, uriInfo, mandatoryResponseParameters, offset, limit);
 
         final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters(),
                 mandatoryResponseParameters);
@@ -231,10 +238,12 @@ public class RecurringDepositAccountsApiResource {
 
     private RecurringDepositAccountData populateTemplateAndAssociations(final Long accountId,
             final RecurringDepositAccountData savingsAccount, final boolean staffInSelectedOfficeOnly, final String chargeStatus,
-            final UriInfo uriInfo, final Set<String> mandatoryResponseParameters) {
+            final UriInfo uriInfo, final Set<String> mandatoryResponseParameters, final Integer offset, final Integer limit) {
 
         Collection<SavingsAccountTransactionData> transactions = null;
         Collection<SavingsAccountChargeData> charges = null;
+        Long transactionSize = null;
+        PortfolioAccountData linkedAccount = null;
 
         final Set<String> associationParameters = ApiParameterHelper.extractAssociationsForResponseIfProvided(uriInfo.getQueryParameters());
         if (!associationParameters.isEmpty()) {
@@ -246,7 +255,19 @@ public class RecurringDepositAccountsApiResource {
             if (associationParameters.contains(SavingsApiConstants.transactions)) {
                 mandatoryResponseParameters.add(SavingsApiConstants.transactions);
                 final Collection<SavingsAccountTransactionData> currentTransactions = this.depositAccountReadPlatformService
-                        .retrieveAllTransactions(DepositAccountType.RECURRING_DEPOSIT, accountId);
+                        .retrieveAllTransactions(DepositAccountType.RECURRING_DEPOSIT, accountId, offset, limit);
+                transactionSize = this.depositAccountReadPlatformService.getSavingsAccountTransactionTotalFiltered(accountId,
+                        DepositAccountType.RECURRING_DEPOSIT, true);
+                if (!CollectionUtils.isEmpty(currentTransactions)) {
+                    transactions = currentTransactions;
+                }
+            }
+            if (associationParameters.contains(SavingsApiConstants.accrualTransactions)) {
+                mandatoryResponseParameters.add(SavingsApiConstants.accrualTransactions);
+                final Collection<SavingsAccountTransactionData> currentTransactions = this.depositAccountReadPlatformService
+                        .retrieveAccrualTransactions(accountId, DepositAccountType.RECURRING_DEPOSIT, offset, limit);
+                transactionSize = this.depositAccountReadPlatformService.getSavingsAccountTransactionTotalFiltered(accountId,
+                        DepositAccountType.RECURRING_DEPOSIT, false);
                 if (!CollectionUtils.isEmpty(currentTransactions)) {
                     transactions = currentTransactions;
                 }
@@ -260,6 +281,11 @@ public class RecurringDepositAccountsApiResource {
                     charges = currentCharges;
                 }
             }
+
+            if (associationParameters.contains(SavingsApiConstants.linkedAccount)) {
+                mandatoryResponseParameters.add(SavingsApiConstants.linkedAccount);
+                linkedAccount = this.accountAssociationsReadPlatformService.retriveSavingsLinkedAssociation(accountId);
+            }
         }
 
         RecurringDepositAccountData templateData = null;
@@ -271,7 +297,10 @@ public class RecurringDepositAccountsApiResource {
                     staffInSelectedOfficeOnly);
         }
 
-        return RecurringDepositAccountData.withTemplateOptions(savingsAccount, templateData, transactions, charges);
+        RecurringDepositAccountData result = RecurringDepositAccountData.withTemplateOptions(savingsAccount, templateData, transactions,
+                charges, linkedAccount);
+        result.setTransactionSize(transactionSize);
+        return result;
     }
 
     @PUT
@@ -375,12 +404,15 @@ public class RecurringDepositAccountsApiResource {
             final ApiRequestJsonSerializationSettings settings = this.apiRequestParameterHelper.process(uriInfo.getQueryParameters());
             return this.toApiJsonSerializer.serialize(settings, account,
                     DepositsApiConstants.RECURRING_DEPOSIT_ACCOUNT_RESPONSE_DATA_PARAMETERS);
+        } else if (is(commandParam, DepositsApiConstants.COMMAND_POST_ACCRUAL_INTEREST_AS_ON)) {
+            final CommandWrapper commandRequest = builder.recurringDepositAccountAccrualInterestPosting(accountId).build();
+            result = this.commandsSourceWritePlatformService.logCommandSource(commandRequest);
         }
 
         if (result == null) {
             throw new UnrecognizedQueryParamException("command", commandParam,
                     new Object[] { "reject", "withdrawnByApplicant", "approve", "undoapproval", "activate", "calculateInterest",
-                            "postInterest", "close", "prematureClose", "calculatePrematureAmount" });
+                            "postInterest", "close", "prematureClose", "calculatePrematureAmount", "postAccrualInterestAsOn" });
         }
 
         return this.toApiJsonSerializer.serialize(result);

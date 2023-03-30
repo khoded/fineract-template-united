@@ -27,6 +27,8 @@ import org.apache.fineract.portfolio.client.data.ClientData;
 public class ClientApiConstants {
 
     public static final String CLIENT_RESOURCE_NAME = "client";
+
+    public static final String CLIENT_LEVELS = "clientLevels";
     public static final String CLIENT_CHARGES_RESOURCE_NAME = "CLIENTCHARGE";
 
     // Client Charge Action Names
@@ -65,15 +67,20 @@ public class ClientApiConstants {
     public static final String CLIENT_NON_PERSON_CONSTITUTION = "Constitution";
     public static final String CLIENT_NON_PERSON_MAIN_BUSINESS_LINE = "Main Business Line";
 
+    public static final String TITLE = "TITLE";
+
+    public static final String PRODUCT_CATEGORY = "ProductCategory";
+
+    public static final String PRODUCT_TYPE = "ProductType";
+
     // general
     public static final String localeParamName = "locale";
     public static final String dateFormatParamName = "dateFormat";
     public static final String address = "address";
     public static final String familyMembers = "familyMembers";
-    public static final String MARITALSTATUS = "MARITALSTATUS";
+    public static final String businessOwners = "businessOwners";
+    public static final String MARITALSTATUS = "MARITAL STATUS";
     public static final String maritalStatusIdParamName = "maritalStatusId";
-
-    public static final String CLIENT_TYPE_INDIVIDUAL = "Individual";
 
     // request parameters
     public static final String idParamName = "id";
@@ -184,18 +191,35 @@ public class ClientApiConstants {
     public static final String obligeeData = "ObligeeDetails";
 
     public static final String clientEntityName = "clients";
+    public static final String clientLevelIdParamName = "clientLevelId";
+
+    public static final String singleWithdrawLimit = "singleWithdrawLimit";
+    public static final String dailyWithdrawLimit = "dailyWithdrawLimit";
+
+    public static final String initialsParam = "initials";
+    public static final String mnemonicsParamNameParam = "mnemonics";
+    public static final String altMobileNoParam = "altMobileNo";
+    public static final String titleParam = "titleId";
+
+    public static final String inBusinessSinceParamName = "inBusinessSince";
+
+    public static final String isRegisteredParam = "isRegistered";
+
+    public static final String atAddressSinceParamName = "atAddressSince";
 
     /**
      * These parameters will match the class level parameters of {@link ClientData}. Where possible, we try to get
      * response parameters to match those of request parameters.
      */
-    protected static final Set<String> CLIENT_RESPONSE_DATA_PARAMETERS = new HashSet<>(Arrays.asList(idParamName, accountNoParamName,
-            externalIdParamName, statusParamName, activeParamName, activationDateParamName, firstnameParamName, middlenameParamName,
-            lastnameParamName, fullnameParamName, displayNameParamName, mobileNoParamName, emailAddressParamName, officeIdParamName,
-            officeNameParamName, transferToOfficeIdParamName, transferToOfficeNameParamName, hierarchyParamName, imageIdParamName,
-            imagePresentParamName, staffIdParamName, staffNameParamName, timelineParamName, groupsParamName, officeOptionsParamName,
-            staffOptionsParamName, dateOfBirthParamName, genderParamName, clientTypeParamName, clientClassificationParamName,
-            legalFormParamName, clientNonPersonDetailsParamName, isStaffParamName));
+    protected static final Set<String> CLIENT_RESPONSE_DATA_PARAMETERS = new HashSet<>(
+            Arrays.asList(idParamName, accountNoParamName, externalIdParamName, statusParamName, activeParamName, activationDateParamName,
+                    firstnameParamName, middlenameParamName, lastnameParamName, fullnameParamName, displayNameParamName, mobileNoParamName,
+                    emailAddressParamName, officeIdParamName, officeNameParamName, transferToOfficeIdParamName,
+                    transferToOfficeNameParamName, hierarchyParamName, imageIdParamName, imagePresentParamName, staffIdParamName,
+                    staffNameParamName, timelineParamName, groupsParamName, officeOptionsParamName, staffOptionsParamName,
+                    dateOfBirthParamName, genderParamName, clientTypeParamName, clientClassificationParamName, legalFormParamName,
+                    clientNonPersonDetailsParamName, isStaffParamName, clientLevelIdParamName, dailyWithdrawLimit, singleWithdrawLimit,
+                    initialsParam, maritalStatusIdParamName, mnemonicsParamNameParam, altMobileNoParam, "clientAdditionalInfoData"));
 
     protected static final Set<String> CLIENT_CHARGES_RESPONSE_DATA_PARAMETERS = new HashSet<>(Arrays.asList(chargeIdParamName,
             clientIdParamName, chargeNameParamName, penaltyParamName, chargeTimeTypeParamName, dueAsOfDateParamName,
