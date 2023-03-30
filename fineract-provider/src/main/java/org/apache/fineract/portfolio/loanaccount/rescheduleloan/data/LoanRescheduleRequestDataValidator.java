@@ -185,7 +185,7 @@ public class LoanRescheduleRequestDataValidator {
         }
         LoanRepaymentScheduleInstallment installment = null;
         if (rescheduleFromDate != null) {
-            System.out.println("rescheduleFromDate: "+rescheduleFromDate);
+
             installment = loan.getRepaymentScheduleInstallment(rescheduleFromDate);
 
             if (installment == null) {

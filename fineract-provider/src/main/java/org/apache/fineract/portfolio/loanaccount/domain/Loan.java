@@ -5866,7 +5866,7 @@ public class Loan extends AbstractAuditableWithUTCDateTimeCustom {
      **/
     public LoanRepaymentScheduleInstallment getRepaymentScheduleInstallment(LocalDate dueDate) {
         LoanRepaymentScheduleInstallment installment = null;
-System.out.println(" EndDate:"+dueDate);
+
         if (dueDate != null) {
             List<LoanRepaymentScheduleInstallment> installments = getRepaymentScheduleInstallments();
             for (LoanRepaymentScheduleInstallment repaymentScheduleInstallment : installments) {
