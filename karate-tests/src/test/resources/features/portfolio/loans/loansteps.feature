@@ -92,3 +92,19 @@ Feature: Create loan stapes
     When method GET
     Then status 200
     * def loanAccount = response
+
+  @ignore
+  @createLoanWithSavingsAccountStep
+  Scenario: Create loan accounts With Savings Account Step
+    Given configure ssl = true
+    * def loansData = read('classpath:templates/loans.json')
+    Given path 'loans'
+    And header Accept = 'application/json'
+    And header Content-Type = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request loansData.loanWithSavingsAccount
+    When method POST
+    Then status 200
+    Then match $ contains { resourceId: '#notnull' }
+    Then def loanId = response.resourceId
