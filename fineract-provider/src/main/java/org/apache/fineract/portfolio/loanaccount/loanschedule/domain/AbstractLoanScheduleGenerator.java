@@ -1120,6 +1120,12 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                     }
                     loanTermVariationsData.setProcessed(true);
                 break;
+
+                case PRINCIPAL_DUE_FIXED_AMOUNT:
+                    loanApplicationTerms.setPrincipalDueFixedAmount(loanTermVariationsData.getDecimalValue());
+                    recalculateAmounts = true;
+                    break;
+
                 case EXTEND_REPAYMENT_PERIOD:
                     Integer rescheduleNumberOfRepayments = loanApplicationTerms.getNumberOfRepayments();
                     rescheduleNumberOfRepayments += loanTermVariationsData.getDecimalValue().intValue();

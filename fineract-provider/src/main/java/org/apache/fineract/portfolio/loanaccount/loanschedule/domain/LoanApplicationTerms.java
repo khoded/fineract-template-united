@@ -207,6 +207,9 @@ public final class LoanApplicationTerms {
     private Money interestTobeApproppriated;
     private final BigDecimal fixedPrincipalPercentagePerInstallment;
 
+
+    private BigDecimal principalDueFixedAmount;
+
     private LocalDate newScheduledDueDateStart;
 
     private boolean advancePaymentInterestForExactDaysInPeriod;
@@ -1839,5 +1842,13 @@ public final class LoanApplicationTerms {
 
     public boolean isAdvancePaymentInterestForExactDaysInPeriodEnabled() {
         return this.advancePaymentInterestForExactDaysInPeriod;
+    }
+
+    public BigDecimal getPrincipalDueFixedAmount() {
+        return principalDueFixedAmount;
+    }
+
+    public void setPrincipalDueFixedAmount(BigDecimal principalDueFixedAmount) {
+        this.principalDueFixedAmount = principalDueFixedAmount;
     }
 }

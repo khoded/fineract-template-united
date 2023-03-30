@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.TreeMap;
 import org.apache.fineract.organisation.monetary.domain.Money;
 import org.apache.fineract.portfolio.loanaccount.data.LoanTermVariationsData;
+import org.apache.fineract.portfolio.loanaccount.domain.LoanTermVariationType;
 import org.apache.fineract.portfolio.loanproduct.domain.AmortizationMethod;
 
 /**
@@ -162,9 +163,15 @@ public class DecliningBalanceInterestLoanScheduleGenerator extends AbstractLoanS
         final Money interestBroughtFowardDueToGrace = cumulatingInterestDueToGrace;
         final Money totalCumulativePrincipalToDate = totalCumulativePrincipal.plus(principalForThisInstallment);
 
-        // adjust if needed
-        principalForThisInstallment = loanApplicationTerms.adjustPrincipalIfLastRepaymentPeriod(principalForThisInstallment,
-                totalCumulativePrincipalToDate, periodNumber);
+        // adjust principal for this installment if needed
+        if(loanApplicationTerms.getPrincipalDueFixedAmount()!=null){
+            principalForThisInstallment = loanApplicationTerms.adjustPrincipalIfLastRepaymentPeriod(Money.of(interestForThisInstallment.getCurrency(),loanApplicationTerms.getPrincipalDueFixedAmount()),
+                    totalCumulativePrincipalToDate, periodNumber);
+        }
+        else{
+            principalForThisInstallment = loanApplicationTerms.adjustPrincipalIfLastRepaymentPeriod(principalForThisInstallment,
+                    totalCumulativePrincipalToDate, periodNumber);
+        }
 
         PrincipalInterest principalInterest = new PrincipalInterest(principalForThisInstallment, interestForThisInstallment,
                 interestBroughtFowardDueToGrace);

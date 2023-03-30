@@ -301,7 +301,7 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
             final LoanRescheduleRequest loanRescheduleRequest,
             List<LoanRescheduleRequestToTermVariationMapping> loanRescheduleRequestToTermVariationMappings, final Boolean isActive,
             final boolean isSpecificToInstallment, BigDecimal decimalValue, LocalDate dueDate, LocalDate endDate, final BigDecimal emi,
-            final BigDecimal principalAmount) {
+            final BigDecimal newPrincipalDueFixedAmount) {
 
         if (rescheduleFromDate != null && endDate != null && emi != null) {
             createEMIVariation(loan, rescheduleFromDate, loanRescheduleRequest, loanRescheduleRequestToTermVariationMappings,
@@ -309,9 +309,9 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
                     endDate, emi);
         }
 
-        if (rescheduleFromDate != null  && principalAmount != null) {
+        if (rescheduleFromDate != null  && newPrincipalDueFixedAmount != null) {
             createFixedPrincipalVariation(loan, rescheduleFromDate, loanRescheduleRequest, loanRescheduleRequestToTermVariationMappings,
-                    isActive, principalAmount);
+                    isActive, newPrincipalDueFixedAmount);
         }
 
         if (rescheduleFromDate != null && adjustedDueDate != null) {
@@ -382,7 +382,7 @@ public class LoanRescheduleRequestWritePlatformServiceImpl implements LoanResche
     private void createFixedPrincipalVariation(Loan loan, LocalDate rescheduleFromDate, LoanRescheduleRequest loanRescheduleRequest, List<LoanRescheduleRequestToTermVariationMapping> loanRescheduleRequestToTermVariationMappings, Boolean isActive, BigDecimal principalAmount) {
         LoanTermVariations parent = null;
         LocalDate rescheduleFromLocDate = rescheduleFromDate;
-        final Integer termType = LoanTermVariationType.PRINCIPAL_AMOUNT.getValue();
+        final Integer termType = LoanTermVariationType.PRINCIPAL_DUE_FIXED_AMOUNT.getValue();
         List<LoanRepaymentScheduleInstallment> installments = loan.getRepaymentScheduleInstallments();
         for (LoanRepaymentScheduleInstallment installment : installments) {
             if (installment.getDueDate().isEqual(rescheduleFromLocDate)
