@@ -16,16 +16,42 @@
  * specific language governing permissions and limitations
  * under the License.
  */
-rootProject.name='fineract'
-include ':module:dummy:core'
-include ':module:dummy:service'
-include ':module:dummy:starter'
-include ':custom:foo:service'
-include ':fineract-provider'
-include ':fineract-war'
-include ':integration-tests'
-include ':twofactor-tests'
-include ':oauth2-tests'
-include ':fineract-client'
-include ':fineract-doc'
-include 'karate-tests'
+
+plugins {
+    id 'java'
+    id "com.github.prspal.karate-runner" version "0.0.3"
+}
+
+group 'org.apache.fineract'
+
+apply from: 'dependencies.gradle'
+
+repositories {
+    mavenCentral()
+}
+
+
+sourceSets {
+    test {
+        resources {
+            srcDir file('src/test/java')
+            exclude '**/*.java'
+        }
+    }
+}
+
+task karateExecute(type: JavaExec) {
+    classpath = sourceSets.test.runtimeClasspath
+    main = System.properties.getProperty('mainClass')
+}
+
+
+test {
+    useJUnitPlatform()
+
+    systemProperty "karate.options", System.properties.getProperty("karate.options")
+    systemProperty "karate.env", System.properties.getProperty("karate.env")
+
+    outputs.upToDateWhen { false }
+    testLogging.showStandardStreams = true
+}
