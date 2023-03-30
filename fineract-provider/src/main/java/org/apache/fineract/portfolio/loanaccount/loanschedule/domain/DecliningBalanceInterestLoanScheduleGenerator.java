@@ -163,11 +163,11 @@ public class DecliningBalanceInterestLoanScheduleGenerator extends AbstractLoanS
         final Money totalCumulativePrincipalToDate = totalCumulativePrincipal.plus(principalForThisInstallment);
 
         // adjust principal for this installment if needed
-        if(loanApplicationTerms.isFixedDueAmountChange()){
-            principalForThisInstallment = loanApplicationTerms.adjustPrincipalIfLastRepaymentPeriod(Money.of(interestForThisInstallment.getCurrency(),loanApplicationTerms.getFixedPrincipalAmount()),
+        if (loanApplicationTerms.isFixedDueAmountChange()) {
+            principalForThisInstallment = loanApplicationTerms.adjustPrincipalIfLastRepaymentPeriod(
+                    Money.of(interestForThisInstallment.getCurrency(), loanApplicationTerms.getFixedPrincipalAmount()),
                     totalCumulativePrincipalToDate, periodNumber);
-        }
-        else{
+        } else {
             principalForThisInstallment = loanApplicationTerms.adjustPrincipalIfLastRepaymentPeriod(principalForThisInstallment,
                     totalCumulativePrincipalToDate, periodNumber);
         }

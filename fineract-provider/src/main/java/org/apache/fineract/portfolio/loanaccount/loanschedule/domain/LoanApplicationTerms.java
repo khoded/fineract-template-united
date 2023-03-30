@@ -207,7 +207,6 @@ public final class LoanApplicationTerms {
     private Money interestTobeApproppriated;
     private final BigDecimal fixedPrincipalPercentagePerInstallment;
 
-
     private boolean fixedDueAmountChange;
 
     private LocalDate newScheduledDueDateStart;

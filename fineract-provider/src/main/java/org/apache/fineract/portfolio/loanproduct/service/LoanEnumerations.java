@@ -589,7 +589,7 @@ public final class LoanEnumerations {
             case PRINCIPAL_DUE_FIXED_AMOUNT:
                 optionData = new EnumOptionData(LoanTermVariationType.PRINCIPAL_DUE_FIXED_AMOUNT.getValue().longValue(),
                         LoanTermVariationType.PRINCIPAL_DUE_FIXED_AMOUNT.getCode(), "fixedPrincipalPerInstallmentAmount");
-                break;
+            break;
 
             case GRACE_ON_INTEREST:
                 optionData = new EnumOptionData(LoanTermVariationType.GRACE_ON_INTEREST.getValue().longValue(),
