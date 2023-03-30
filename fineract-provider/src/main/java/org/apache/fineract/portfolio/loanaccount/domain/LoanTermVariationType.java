@@ -80,7 +80,7 @@ public enum LoanTermVariationType {
             break;
             case 10:
                 enumeration = LoanTermVariationType.INTEREST_RATE_FROM_INSTALLMENT;
-
+                break;
             case 11:
                 enumeration = LoanTermVariationType.PRINCIPAL_DUE_FIXED_AMOUNT;
             break;

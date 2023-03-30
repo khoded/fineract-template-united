@@ -1122,7 +1122,8 @@ public abstract class AbstractLoanScheduleGenerator implements LoanScheduleGener
                 break;
 
                 case PRINCIPAL_DUE_FIXED_AMOUNT:
-                    loanApplicationTerms.setPrincipalDueFixedAmount(loanTermVariationsData.getDecimalValue());
+                    loanApplicationTerms.setFixedDueAmountChange(true);
+                    loanApplicationTerms.setFixedPrincipalAmount(loanTermVariationsData.getDecimalValue());
                     recalculateAmounts = true;
                     break;
 
