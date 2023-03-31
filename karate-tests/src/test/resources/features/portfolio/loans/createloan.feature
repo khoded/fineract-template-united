@@ -38,9 +38,9 @@ Feature: Test loan account apis
 
 
 
-  @createanddisburseloanToSavingsAccount
-  Scenario: Create approve and disburse loan to a savings account
-    Then print 'JB Disburse to Savings'
+  @testThatICanCreateAndDisburseLoanToSavingsAccount
+  Scenario: Test That I Can Create And Disburse Loan To savings account
+
     * def loanProduct = call read('classpath:features/portfolio/products/loanproduct.feature@fetchdefaultproduct')
     * def loanProductId = loanProduct.loanProductId
     #create savings account with clientCreationDate
@@ -49,9 +49,6 @@ Feature: Test loan account apis
     * def result = call read('classpath:features/portfolio/clients/clientsteps.feature@create') { clientCreationDate : '#(submittedOnDate)' }
     * def clientId = result.response.resourceId
     #Create Savings Account Product and Savings Account
-    Then print 'Client With Savings Account is ID =  : ', clientId
-        #create savings account step
-
     * def savingsAccount = call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@createSavingsAccountStep') { submittedOnDate : '#(submittedOnDate)', clientId : '#(clientId)'}
     * def savingsId = savingsAccount.savingsId
     #approve savings account step setup approval Date
@@ -61,7 +58,6 @@ Feature: Test loan account apis
     * def activateSavings = call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@activate') { savingsId : '#(savingsId)', activationDate : '#(submittedOnDate)' }
     Then def activeSavingsId = activateSavings.activeSavingsId
 
-      #loan creation made 30 days back
     * def loanAmount = 1000
     * def loan = call read('classpath:features/portfolio/loans/loansteps.feature@createLoanWithSavingsAccountStep') { submittedOnDate : '#(submittedOnDate)', loanAmount : '#(loanAmount)', clientCreationDate : '#(submittedOnDate)', loanProductId : '#(loanProductId)', clientId : '#(clientId)', savingsAccountId : '#(savingsId)' }
     * def loanId = loan.loanId
@@ -74,7 +70,16 @@ Feature: Test loan account apis
     * def disbursementDate = submittedOnDate
     * def disburseloan = call read('classpath:features/portfolio/loans/loansteps.feature@disburse') { loanAmount : '#(loanAmount)', disbursementDate : '#(disbursementDate)', loanId : '#(loanId)' }
      #fetch loan details here
-    * def loanResponse = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyid') { loanId : '#(loanId)' }
+    * def loanResponse = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
+    # Assert Loan Account Status is Active and check the Disbursed principle is Expected
+
+    * assert savingsId == loanResponse.loanAccount.linkedAccount.id
+    * assert loanAmount == loanResponse.loanAccount.principal
+    * assert loanResponse.loanAccount.status.value == 'Active'
+    * assert karate.sizeOf(loanResponse.loanAccount.transactions) > 0
+    # Undo Disbursal of this Loan Account
+#    * def undisbursedLoanAccountReponse = call read('classpath:features/portfolio/loans/loansteps.feature@unDisburseLoanAccounttStep') { loanId : '#(loanId)' }
+
 
 
 

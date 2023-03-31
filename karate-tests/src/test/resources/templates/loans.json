@@ -70,5 +70,8 @@
     "loanType": "individual",
     "expectedDisbursementDate": "#(submittedOnDate)",
     "submittedOnDate": "#(submittedOnDate)"
+  },
+  "unDisburseLoanAccountPayload": {
+    "note": "Don't Really"
   }
 }
