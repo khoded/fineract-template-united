@@ -71,9 +71,14 @@ Feature: Test loan account apis
     * def disburseloan = call read('classpath:features/portfolio/loans/loansteps.feature@disburseToSavingsAccountStep') { loanAmount : '#(loanAmount)', disbursementDate : '#(disbursementDate)', loanId : '#(loanId)',  loanAmount : '#(loanAmount)'  }
      #fetch loan details here
     * def loanResponse = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
-    # Assert Loan Account Status is Active and check the Disbursed principle is Expected
+    #Get Savings Account details and check if money hads been deposited
+    * def savingsResponse = call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@findsavingsbyid') { savingsId : '#(savingsId)' }
+    * assert loanAmount == savingsResponse.savingsAccount.summary.availableBalance
+    * assert clientId == savingsResponse.savingsAccount.clientId
 
+    # Assert Loan Account Status is Active and check the Disbursed principle is Expected
     * assert savingsId == loanResponse.loanAccount.linkedAccount.id
+    * assert clientId == loanResponse.loanAccount.clientId
     * assert loanAmount == loanResponse.loanAccount.principal
     * assert loanResponse.loanAccount.status.value == 'Active'
     * assert karate.sizeOf(loanResponse.loanAccount.transactions) > 0
