@@ -58,7 +58,7 @@ Feature: Test loan account apis
     * def activateSavings = call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@activate') { savingsId : '#(savingsId)', activationDate : '#(submittedOnDate)' }
     Then def activeSavingsId = activateSavings.activeSavingsId
 
-    * def loanAmount = 1000
+    * def loanAmount = 8500
     * def loan = call read('classpath:features/portfolio/loans/loansteps.feature@createLoanWithSavingsAccountStep') { submittedOnDate : '#(submittedOnDate)', loanAmount : '#(loanAmount)', clientCreationDate : '#(submittedOnDate)', loanProductId : '#(loanProductId)', clientId : '#(clientId)', savingsAccountId : '#(savingsId)' }
     * def loanId = loan.loanId
 
@@ -68,7 +68,7 @@ Feature: Test loan account apis
 
       #disbursal
     * def disbursementDate = submittedOnDate
-    * def disburseloan = call read('classpath:features/portfolio/loans/loansteps.feature@disburse') { loanAmount : '#(loanAmount)', disbursementDate : '#(disbursementDate)', loanId : '#(loanId)' }
+    * def disburseloan = call read('classpath:features/portfolio/loans/loansteps.feature@disburseToSavingsAccountStep') { loanAmount : '#(loanAmount)', disbursementDate : '#(disbursementDate)', loanId : '#(loanId)',  loanAmount : '#(loanAmount)'  }
      #fetch loan details here
     * def loanResponse = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
     # Assert Loan Account Status is Active and check the Disbursed principle is Expected

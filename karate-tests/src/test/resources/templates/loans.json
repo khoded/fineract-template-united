@@ -39,6 +39,13 @@
     "locale": "en",
     "dateFormat": "#(format)"
   },
+  "disburseToSavingsAccount": {
+    "transactionAmount": "#(loanAmount)",
+    "actualDisbursementDate": "#(disbursementDate)",
+    "locale": "en",
+    "dateFormat": "#(format)",
+    "note": "#(faker.name().firstName)"
+  },
   "transaction": {
     "transactionDate": "#(repaymentDate)",
     "paymentTypeId": 1,
