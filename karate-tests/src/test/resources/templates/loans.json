@@ -79,6 +79,15 @@
     "submittedOnDate": "#(submittedOnDate)"
   },
   "unDisburseLoanAccountPayload": {
-    "note": "Don't Really"
+    "note": "Un-disburse this Loan Account"
+  },
+  "unApproveLoanAccountPayload": {
+    "note": "Un-Approve this Loan Account"
+  },
+  "rejectLoanApplicationPayLoad": {
+    "rejectedOnDate": "#(submittedOnDate)",
+    "note": "Reject this Loan Account",
+    "locale": "en",
+    "dateFormat": "#(format)"
   }
 }

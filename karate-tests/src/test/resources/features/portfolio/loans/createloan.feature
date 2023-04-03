@@ -83,8 +83,17 @@ Feature: Test loan account apis
     * assert loanResponse.loanAccount.status.value == 'Active'
     * assert karate.sizeOf(loanResponse.loanAccount.transactions) > 0
     # Undo Disbursal of this Loan Account
-#    * def undisbursedLoanAccountReponse = call read('classpath:features/portfolio/loans/loansteps.feature@unDisburseLoanAccounttStep') { loanId : '#(loanId)' }
-
+    * def undisbursedLoanAccountReponse = call read('classpath:features/portfolio/loans/loansteps.feature@unDisburseLoanAccounttStep') { loanId : '#(loanId)' }
+    * def loanAccountNotActiveReponse = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
+    * assert loanAccountNotActiveReponse.loanAccount.status.value == 'Approved'
+    #  Un-Approve Loan Account
+    * def undApproveLoanAccountReponse = call read('classpath:features/portfolio/loans/loansteps.feature@unApproveLoanAccounttStep') { loanId : '#(loanId)' }
+    * def loanAccountNotApprovedReponse = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
+    * assert loanAccountNotApprovedReponse.loanAccount.status.value == 'Submitted and pending approval'
+     #  Reject Loan Account
+    * def rejectedLoanAccountReponse = call read('classpath:features/portfolio/loans/loansteps.feature@rejectedLoanAccounttStep') { loanId : '#(loanId)', rejectedOnDate : '#(submittedOnDate)' }
+    * def loanAccounteRectedReponse = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)'}
+    * assert loanAccounteRectedReponse.loanAccount.status.value == 'Rejected'
 
 
 
