@@ -2071,7 +2071,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
 
         // for BNPL loan - transfer to vendor savings account as per bnpl configuration if there are any
-        if (loan.getBnplLoan()) {
+        if (loan.getBnplLoan() != null && loan.getBnplLoan()) {
             // get the vendor savings account
             final PortfolioAccountData vendorPortfolioAccountData = this.accountAssociationsReadPlatformService
                     .retriveLoanLinkedVendorAssociation(loan.getId());

@@ -92,3 +92,67 @@ Feature: Create loan stapes
     When method GET
     Then status 200
     * def loanAccount = response
+
+  @ignore
+  @findloanbyidWithAllAssociationStep
+  Scenario: Get loan account by id
+    Given configure ssl = true
+    Given path 'loans',loanId
+    And params {associations:'all'}
+    And params {exclude:'guarantors,futureSchedule'}
+    And header Accept = 'application/json'
+    And header Content-Type = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    When method GET
+    Then status 200
+    * def loanAccount = response
+
+  @ignore
+  @createLoanWithSavingsAccountStep
+  Scenario: Create loan accounts With Savings Account Step
+    Given configure ssl = true
+    * def loansData = read('classpath:templates/loans.json')
+    Given path 'loans'
+    And header Accept = 'application/json'
+    And header Content-Type = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request loansData.loanWithSavingsAccount
+    When method POST
+    Then status 200
+    Then match $ contains { resourceId: '#notnull' }
+    Then def loanId = response.resourceId
+
+  @ignore
+  @unDisburseLoanAccounttStep
+  Scenario: Un Disburse Loan Account Step
+    Given configure ssl = true
+    * def loansData = read('classpath:templates/loans.json')
+    Given path 'loans',loanId
+    And params {command:'undodisbursal'}
+    And header Accept = 'application/json'
+    And header Content-Type = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request loansData.unDisburseLoanAccountPayload
+    When method POST
+    Then status 200
+    Then match $ contains { resourceId: '#notnull' }
+    Then def loanId = response.resourceId
+
+  @ignore
+  @disburseToSavingsAccountStep
+  Scenario: Disburse loan to Savings Account
+    Given configure ssl = true
+    * def loansData = read('classpath:templates/loans.json')
+    Given path 'loans',loanId
+    And params {command:'disbursetosavings'}
+    And header Accept = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request loansData.disburseToSavingsAccount
+    When method POST
+    Then status 200
+    Then match $ contains { resourceId: '#notnull' }
+    Then def loanId = response.resourceId
