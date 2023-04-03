@@ -125,7 +125,7 @@ Feature: Create loan stapes
     Then def loanId = response.resourceId
 
   @ignore
-  @unDisburseLoanAccounttStep
+  @unDisburseLoanAccountStep
   Scenario: Un Disburse Loan Account Step
     Given configure ssl = true
     * def loansData = read('classpath:templates/loans.json')
@@ -158,7 +158,7 @@ Feature: Create loan stapes
     Then def loanId = response.resourceId
 
   @ignore
-  @unApproveLoanAccounttStep
+  @unApproveLoanAccountStep
   Scenario: Un Approve Loan Account Step
     Given configure ssl = true
     * def loansData = read('classpath:templates/loans.json')
@@ -175,7 +175,7 @@ Feature: Create loan stapes
     Then def loanId = response.resourceId
 
   @ignore
-  @rejectedLoanAccounttStep
+  @rejectedLoanAccountStep
   Scenario: Un Approve Loan Account Step
     Given configure ssl = true
     * def loansData = read('classpath:templates/loans.json')
