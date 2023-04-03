@@ -11,7 +11,7 @@ Feature: Test client apis
 
     #activateclient
     * def activatedClient = call read('classpath:features/portfolio/clients/clientsteps.feature@activateClientStep') { clientId : '#(createdClientId)'}
-    * assert createdClientId = activatedClient.res.clientId
+    * assert createdClientId == activatedClient.res.clientId
 
     #fetch created client
     * def legalFormId = 2
@@ -32,10 +32,6 @@ Feature: Test client apis
     * def result = call read('classpath:features/portfolio/clients/clientsteps.feature@create') { clientCreationDate : '#(submittedOnDate)'}
     * def createdClientId = result.clientId
 
-    #activateclient
-    * def activatedClient = call read('classpath:features/portfolio/clients/clientsteps.feature@activateClientStep') { clientId : '#(createdClientId)'}
-    * assert createdClientId = activatedClient.res.clientId
-
     #fetch created client
     * def legalFormId = 1
     * def result = call read('classpath:features/portfolio/clients/clientsteps.feature@findbyclientid') { clientId : '#(createdClientId)'}
@@ -45,5 +41,5 @@ Feature: Test client apis
 
     #update fetched client
     * def updatedClient = call read('classpath:features/portfolio/clients/clientsteps.feature@update') { clientId : '#(createdClientId)'}
-    * assert clientId == updatedClient.res.resourceId
+    * assert createdClientId == updatedClient.res.resourceId
 

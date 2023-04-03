@@ -67,7 +67,7 @@ Feature: Client creations steps
   Scenario: Activate client test
     Given configure ssl = true
     Given path 'clients' ,clientId
-     And params {command:'activate'}
+    And params {command:'activate'}
     And header Accept = 'application/json'
     And header Authorization = authToken
     And header fineract-platform-tenantid = tenantId
