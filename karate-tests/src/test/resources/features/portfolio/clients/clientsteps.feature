@@ -119,3 +119,18 @@ Feature: Client creations steps
     Then status 200
     Then def res = response
 
+  #set parameter savingsProductId
+  @ignore
+  @createClientWithSavingsStep
+  Scenario: Create client with saving account test
+    Given configure ssl = true
+    Given path 'clients'
+    And header Accept = 'application/json'
+    And header Authorization = authToken
+    And header fineract-platform-tenantid = tenantId
+    And request clientdata.createClientWithSavingsPayload
+    When method POST
+    Then status 200
+    Then match $ contains { resourceId: '#notnull', savingsId : '#notnull' }
+    Then def client = response
+

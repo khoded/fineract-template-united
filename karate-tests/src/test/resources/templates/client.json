@@ -45,7 +45,6 @@
       "dateFormat": "dd MMMM yyyy",
       "incorpValidityTillDate": "#(df.format(calendar.getTime()))"
     },
-    "altMobileNo": "#(faker.phoneNumber().cellPhone())",
     "active": false,
     "locale": "en",
     "dateFormat": "#(format)",
@@ -53,7 +52,6 @@
     "submittedOnDate": "#(clientCreationDate)",
     "dateOfBirth": "#(df.format(faker.date().birthday()))",
     "savingsProductId": null,
-    "externalId": "#(faker.number().randomNumber())",
     "mnemonics": "anything",
     "initials": "1"
   },
@@ -62,22 +60,44 @@
     "accountNo": "#(accountNo)",
     "isStaff": false,
     "mobileNo": "#(faker.phoneNumber().cellPhone())",
-    "fullname": "Business",
+    "fullname": "Business update",
     "clientNonPersonDetails": {
        "incorpNumber": "#(faker.number().randomNumber())",
        "locale": "en",
-       "dateFormat": "dd MMMM yyyy",
+       "dateFormat": "#(format)",
        "incorpValidityTillDate": "#(df.format(calendar.getTime()))"
      },
     "legalFormId": 2,
     "altMobileNo": "#(faker.phoneNumber().cellPhone())",
     "locale": "en",
-    "dateFormat": "dd MMMM yyyy",
+    "dateFormat": "#(format)",
     "activationDate": "#(df.format(calendar.getTime()))",
     "dateOfBirth": "#(df.format(faker.date().birthday()))",
     "submittedOnDate": "#(df.format(calendar.getTime()))",
     "externalId": "#(faker.number().randomNumber())",
     "mnemonics": "anything",
     "initials": "1"
+  },
+  "createClientWithSavingsPayload" : {
+    "address": [],
+    "familyMembers": [],
+    "businessOwners": [],
+    "officeId": 1,
+    "legalFormId": 1,
+    "firstname": "#(faker.name().firstName())",
+    "lastname": "#(faker.name().lastName())",
+    "mobileNo": "#(faker.phoneNumber().cellPhone())",
+    "altMobileNo": "#(faker.phoneNumber().cellPhone())",
+    "active": true,
+    "dailyWithdrawLimit": "100000",
+    "singleWithdrawLimit": "500000",
+    "mnemonics": "anything",
+    "initials": "1",
+    "savingsProductId": "#(savingsProductId)",
+    "locale": "en",
+    "dateFormat": "#(format)",
+    "activationDate": "#(df.format(calendar.getTime()))",
+    "submittedOnDate": "#(df.format(calendar.getTime()))",
+    "dateOfBirth": "#(df.format(faker.date().birthday()))"
   }
 }
