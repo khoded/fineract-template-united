@@ -74,6 +74,8 @@ Feature: Test loan account apis
     #Get Savings Account details and check if money hads been deposited
     * def savingsResponse = call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@findsavingsbyid') { savingsId : '#(savingsId)' }
     * assert loanAmount == savingsResponse.savingsAccount.summary.availableBalance
+    * assert loanAmount == savingsResponse.savingsAccount.summary.accountBalance
+    * assert loanAmount == savingsResponse.savingsAccount.summary.totalDeposits
     * assert clientId == savingsResponse.savingsAccount.clientId
 
     # Assert Loan Account Status is Active and check the Disbursed principle is Expected
@@ -81,7 +83,13 @@ Feature: Test loan account apis
     * assert clientId == loanResponse.loanAccount.clientId
     * assert loanAmount == loanResponse.loanAccount.principal
     * assert loanResponse.loanAccount.status.value == 'Active'
-    * assert karate.sizeOf(loanResponse.loanAccount.transactions) > 0
+    * assert karate.sizeOf(loanResponse.loanAccount.transactions) == 1
+    * assert loanResponse.loanAccount.transactions[0].type.value == 'Disbursement'
+    * assert loanResponse.loanAccount.transactions[0].amount == loanAmount
+    * def loanTerm = loanResponse.loanAccount.termFrequency
+    Then print 'Loan Term',loanTerm
+    # plus one is the disbursement transaction returned in the schedule
+    * assert karate.sizeOf(loanResponse.loanAccount.repaymentSchedule.periods) == loanTerm + 1
     # Undo Disbursal of this Loan Account
     * def undisbursedLoanAccountReponse = call read('classpath:features/portfolio/loans/loansteps.feature@unDisburseLoanAccountStep') { loanId : '#(loanId)' }
     * def loanAccountNotActiveReponse = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
