@@ -74,6 +74,8 @@ Feature: Test loan account apis
     #Get Savings Account details and check if money hads been deposited
     * def savingsResponse = call read('classpath:features/portfolio/savingsaccount/savingssteps.feature@findsavingsbyid') { savingsId : '#(savingsId)' }
     * assert loanAmount == savingsResponse.savingsAccount.summary.availableBalance
+    * assert loanAmount == savingsResponse.savingsAccount.summary.accountBalance
+    * assert loanAmount == savingsResponse.savingsAccount.summary.totalDeposits
     * assert clientId == savingsResponse.savingsAccount.clientId
 
     # Assert Loan Account Status is Active and check the Disbursed principle is Expected
@@ -81,10 +83,43 @@ Feature: Test loan account apis
     * assert clientId == loanResponse.loanAccount.clientId
     * assert loanAmount == loanResponse.loanAccount.principal
     * assert loanResponse.loanAccount.status.value == 'Active'
-    * assert karate.sizeOf(loanResponse.loanAccount.transactions) > 0
+    * assert karate.sizeOf(loanResponse.loanAccount.transactions) == 1
+    * assert loanResponse.loanAccount.transactions[0].type.value == 'Disbursement'
+    * assert loanResponse.loanAccount.transactions[0].amount == loanAmount
+    * def loanTerm = loanResponse.loanAccount.termFrequency
+    Then print 'Loan Term',loanTerm
+    # plus one is the disbursement transaction returned in the schedule
+    * assert karate.sizeOf(loanResponse.loanAccount.repaymentSchedule.periods) == loanTerm + 1
     # Undo Disbursal of this Loan Account
-#    * def undisbursedLoanAccountReponse = call read('classpath:features/portfolio/loans/loansteps.feature@unDisburseLoanAccounttStep') { loanId : '#(loanId)' }
+    * def undisbursedLoanAccountReponse = call read('classpath:features/portfolio/loans/loansteps.feature@unDisburseLoanAccountStep') { loanId : '#(loanId)' }
+    * def loanAccountNotActiveReponse = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
+    * assert loanAccountNotActiveReponse.loanAccount.status.value == 'Approved'
+    #  Un-Approve Loan Account
+    * def undApproveLoanAccountReponse = call read('classpath:features/portfolio/loans/loansteps.feature@unApproveLoanAccountStep') { loanId : '#(loanId)' }
+    * def loanAccountNotApprovedReponse = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)' }
+    * assert loanAccountNotApprovedReponse.loanAccount.status.value == 'Submitted and pending approval'
+     #  Reject Loan Account
+    * def rejectedLoanAccountReponse = call read('classpath:features/portfolio/loans/loansteps.feature@rejectedLoanAccountStep') { loanId : '#(loanId)', rejectedOnDate : '#(submittedOnDate)' }
+    * def loanAccounteRectedReponse = call read('classpath:features/portfolio/loans/loansteps.feature@findloanbyidWithAllAssociationStep') { loanId : '#(loanId)'}
+    * assert loanAccounteRectedReponse.loanAccount.status.value == 'Rejected'
 
 
+  @testThatLoanAccountCreationCannotViolateProductSettingsConfiguration
+  Scenario: Test That Loan Account Creation Can not Violate Product Settings Configuration
 
+    * def loanProduct = call read('classpath:features/portfolio/products/loanproduct.feature@fetchdefaultproduct')
+    * def loanProductId = loanProduct.loanProductId
+    #create savings account with clientCreationDate
+    * def submittedOnDate = df.format(faker.date().past(30, 29, TimeUnit.DAYS))
+
+    * def result = call read('classpath:features/portfolio/clients/clientsteps.feature@create') { clientCreationDate : '#(submittedOnDate)' }
+    * def clientId = result.response.resourceId
+    # Principal Amount should not be greater than the maximum principal set on the product
+    * def loanAmount = 8500000
+    * def loan = call read('classpath:features/portfolio/loans/loansteps.feature@createloanTemplate400Step') { submittedOnDate : '#(submittedOnDate)', loanAmount : '#(loanAmount)', loanProductId : '#(loanProductId)', clientId : '#(clientId)'}
+
+    # Loan Account can not be created with Date before the client creation
+    * def LoanCreationDate = df.format(faker.date().past(50, 29, TimeUnit.DAYS))
+    * def loanAmount = 8500
+    * def loan = call read('classpath:features/portfolio/loans/loansteps.feature@createloanTemplate403Step') { submittedOnDate : '#(LoanCreationDate)', loanAmount : '#(loanAmount)', loanProductId : '#(loanProductId)', clientId : '#(clientId)'}
 
