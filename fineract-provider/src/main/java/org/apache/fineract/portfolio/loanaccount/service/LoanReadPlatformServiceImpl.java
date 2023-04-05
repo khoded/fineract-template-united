@@ -1322,14 +1322,11 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
 
         public String loanPaymentsSchema() {
 
-            return " tr.id as id, " +
-                    " CASE "
-                    + "     WHEN mlt.id IS not null and tr.transaction_type_enum = 1 and mlt.topup_amount <> tr.amount "
-                    + "       then 25 "
-                    + "    ELSE tr.transaction_type_enum "
-                    + " END as transactionType,"
-                    + " tr.transaction_date as " + sqlGenerator.escape("date")
-                    + ", tr.amount as total, " + " tr.principal_portion_derived as principal, tr.interest_portion_derived as interest, "
+            return " tr.id as id, " + " CASE "
+                    + "     WHEN mlt.id IS not null and tr.transaction_type_enum = 1 and mlt.topup_amount <> tr.amount " + "       then 25 "
+                    + "    ELSE tr.transaction_type_enum " + " END as transactionType," + " tr.transaction_date as "
+                    + sqlGenerator.escape("date") + ", tr.amount as total, "
+                    + " tr.principal_portion_derived as principal, tr.interest_portion_derived as interest, "
                     + " tr.fee_charges_portion_derived as fees, tr.penalty_charges_portion_derived as penalties, "
                     + " tr.overpayment_portion_derived as overpayment, tr.outstanding_loan_balance_derived as outstandingLoanBalance, "
                     + " tr.unrecognized_income_portion as unrecognizedIncome," + " tr.submitted_on_date as submittedOnDate, "
@@ -2376,6 +2373,12 @@ public class LoanReadPlatformServiceImpl implements LoanReadPlatformService {
     public Integer retrieveNumberOfActiveLoans() {
         final String sql = "select count(*) from m_loan";
         return this.jdbcTemplate.queryForObject(sql, Integer.class);
+    }
+
+    @Override
+    public Integer retrieveNumberOfActiveLoansByClientId(Long clientId) {
+        final String sql = "select count(*) from m_loan where client_id = ? and (loan_status_id = 300 or loan_status_id = 301)";
+        return this.jdbcTemplate.queryForObject(sql, Integer.class, clientId);
     }
 
     @Override

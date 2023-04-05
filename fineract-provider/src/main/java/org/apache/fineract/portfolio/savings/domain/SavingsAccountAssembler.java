@@ -23,6 +23,8 @@ import static org.apache.fineract.portfolio.interestratechart.InterestRateChartA
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.SAVINGS_ACCOUNT_RESOURCE_NAME;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.VAULT_TARGET_AMOUNT;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.VAULT_TARGET_DATE;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.WITHDRAWAL_FREQUENCY;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.WITHDRAWAL_FREQUENCY_ENUM;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.accountNoParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.allowOverdraftParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.clientIdParamName;
@@ -46,6 +48,7 @@ import static org.apache.fineract.portfolio.savings.SavingsApiConstants.minRequi
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.nominalAnnualInterestRateOverdraftParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.nominalAnnualInterestRateParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.overdraftLimitParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.postOverdraftInterestOnDepositParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.productIdParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.submittedOnDateParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.useFloatingInterestRateParamName;
@@ -62,6 +65,7 @@ import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
 import org.apache.fineract.infrastructure.core.api.JsonCommand;
 import org.apache.fineract.infrastructure.core.exception.UnsupportedParameterException;
@@ -301,6 +305,13 @@ public class SavingsAccountAssembler {
             minOverdraftForInterestCalculation = product.minOverdraftForInterestCalculation();
         }
 
+        boolean postOverdraftInterestOnDeposit = false;
+        if (command.parameterExists(postOverdraftInterestOnDepositParamName)) {
+            postOverdraftInterestOnDeposit = command.booleanPrimitiveValueOfParameterNamed(postOverdraftInterestOnDepositParamName);
+        } else {
+            postOverdraftInterestOnDeposit = ObjectUtils.defaultIfNull(product.getPostOverdraftInterestOnDeposit(), Boolean.FALSE);
+        }
+
         boolean enforceMinRequiredBalance = false;
         if (command.parameterExists(enforceMinRequiredBalanceParamName)) {
             enforceMinRequiredBalance = command.booleanPrimitiveValueOfParameterNamed(enforceMinRequiredBalanceParamName);
@@ -344,6 +355,8 @@ public class SavingsAccountAssembler {
         if (command.parameterExists(VAULT_TARGET_DATE)) {
             vaultTargetDate = this.fromApiJsonHelper.extractLocalDateNamed(VAULT_TARGET_DATE, element);
         }
+        final Integer withdrawalFrequency = command.integerValueOfParameterNamed(WITHDRAWAL_FREQUENCY);
+        final Integer withdrawalFrequencyEnum = command.integerValueOfParameterNamed(WITHDRAWAL_FREQUENCY_ENUM);
 
         final SavingsAccount account = SavingsAccount.createNewApplicationForSubmittal(client, group, product, fieldOfficer, accountNo,
                 externalId, accountType, submittedOnDate, submittedBy, interestRate, interestCompoundingPeriodType,
@@ -355,7 +368,9 @@ public class SavingsAccountAssembler {
         account.setVaultTribeDetails(vaultTargetAmount, vaultTargetDate);
         account.setUseFloatingInterestRate(useFloatingInterestRate);
         account.validateNewApplicationState(DateUtils.getBusinessLocalDate(), SAVINGS_ACCOUNT_RESOURCE_NAME);
-
+        account.setWithdrawalFrequency(withdrawalFrequency);
+        account.setWithdrawalFrequencyEnum(withdrawalFrequencyEnum);
+        account.setPostOverdraftInterestOnDeposit(postOverdraftInterestOnDeposit);
         account.validateAccountValuesWithProduct();
 
         return account;

@@ -132,6 +132,7 @@ public class SavingsApiConstants {
     public static final String bankNumberParamName = "bankNumber";
     public static final String allowOverdraftParamName = "allowOverdraft";
     public static final String overdraftLimitParamName = "overdraftLimit";
+    public static final String postOverdraftInterestOnDepositParamName = "postOverdraftInterestOnDeposit";
     public static final String nominalAnnualInterestRateOverdraftParamName = "nominalAnnualInterestRateOverdraft";
     public static final String minOverdraftForInterestCalculationParamName = "minOverdraftForInterestCalculation";
     public static final String minRequiredBalanceParamName = "minRequiredBalance";
@@ -226,4 +227,15 @@ public class SavingsApiConstants {
     public static final String floatingInterestRatesParamName = "floatingInterestRates";
     public static final String floatingInterestRateValueParamName = "floatingInterestRateValue";
     public static final String ADD_PENALTY_ON_MISSED_TARGET_SAVINGS = "addPenaltyOnMissedTargetSavings";
+    public static final String WITHDRAWAL_FREQUENCY = "withdrawalFrequency";
+    public static final String WITHDRAWAL_FREQUENCY_ENUM = "withdrawalFrequencyEnum";
+    public static final String WITHDRAWAL_FREQUENCY_OPTIONS = "withdrawalFrequencyOptions";
+
+    public static String savingsProductCategoryIdParamName = "productCategoryId";
+
+    public static String savingsProductTypeIdParamName = "productTypeId";
+
+    public static String SAVINGS_PRODUCT_CATEGORY = "SavingsProductCategory";
+
+    public static String SAVINGS_PRODUCT_TYPE = "SavingsProductType";
 }

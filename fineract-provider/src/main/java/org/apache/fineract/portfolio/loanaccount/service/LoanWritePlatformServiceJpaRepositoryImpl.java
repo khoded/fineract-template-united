@@ -862,7 +862,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 loan.adjustNetDisbursalAmount(netDisbursalAmount);
             }
             saveAndFlushLoanWithDataIntegrityViolationChecks(loan);
-            this.accountTransfersWritePlatformService.reverseAllTransactions(loanId, PortfolioAccountType.LOAN);
+            this.accountTransfersWritePlatformService.reverseAllTransactions(loanId, PortfolioAccountType.LOAN, loan);
             String noteText = null;
             if (command.hasParameter("note")) {
                 noteText = command.stringValueOfParameterNamed("note");
@@ -2071,7 +2071,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         this.accountTransfersWritePlatformService.transferFunds(accountTransferDTO);
 
         // for BNPL loan - transfer to vendor savings account as per bnpl configuration if there are any
-        if (loan.getBnplLoan()) {
+        if (loan.getBnplLoan() != null && loan.getBnplLoan()) {
             // get the vendor savings account
             final PortfolioAccountData vendorPortfolioAccountData = this.accountAssociationsReadPlatformService
                     .retriveLoanLinkedVendorAssociation(loan.getId());
@@ -2083,13 +2083,15 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
 
             // get amount to transfer as per bnpl config
             Money bnplVendorAmount = Money.zero(amount.getCurrency());
-
+            final RoundingMode roundingMode = MoneyHelper.getRoundingMode();
+            final MathContext mc = new MathContext(8, roundingMode);
             if (Boolean.TRUE.equals(loan.getRequiresEquityContribution())) {
                 BigDecimal equityContributionLoanPercentage = loan.getEquityContributionLoanPercentage();
                 if (equityContributionLoanPercentage.compareTo(BigDecimal.ZERO) > 0) {
-                    final RoundingMode roundingMode = MoneyHelper.getRoundingMode();
-                    final MathContext mc = new MathContext(8, roundingMode);
-                    bnplVendorAmount = amount.percentageOf(equityContributionLoanPercentage, mc.getRoundingMode());
+                    BigDecimal hundredPercentage = new BigDecimal(100);
+                    BigDecimal disbursedPercentage = hundredPercentage.subtract(equityContributionLoanPercentage);
+                    BigDecimal originalDisbursedAmount = amount.getAmount().multiply(hundredPercentage, mc).divide(disbursedPercentage, mc);
+                    bnplVendorAmount = Money.of(loan.getCurrency(), originalDisbursedAmount);
                 } else {
                     final String errorMessage = "Disburse BNPL Loan with id:" + loan.getId()
                             + " requires percentage of loan which needs to be transfer to vendor if the loan RequiresEquityContribution has true";
@@ -2099,6 +2101,17 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
                 // if equity contribution is false, it means full disbursal amount transfer to vendor
                 bnplVendorAmount = amount;
             }
+
+            // deduct charge from vendor amount
+            BigDecimal pendingDisbursalCharges = BigDecimal.ZERO;
+            final Set<LoanCharge> loanCharges = loan.charges();
+            for (final LoanCharge loanCharge : loanCharges) {
+                if ((loanCharge.isDueAtDisbursement() || loanCharge.isDisburseToSavings()) && loanCharge.isChargePending()) {
+                    pendingDisbursalCharges = pendingDisbursalCharges.add(loanCharge.amountOutstanding(), mc);
+                }
+            }
+            Money pendingDisbursalChargeMoney = Money.of(loan.getCurrency(), pendingDisbursalCharges);
+            bnplVendorAmount = bnplVendorAmount.minus(pendingDisbursalChargeMoney);
 
             final AccountTransferDTO vendorAccountTransferDTO = new AccountTransferDTO(transactionDate, bnplVendorAmount.getAmount(),
                     PortfolioAccountType.SAVINGS, PortfolioAccountType.SAVINGS, portfolioAccountData.accountId(),
@@ -2800,7 +2813,7 @@ public class LoanWritePlatformServiceJpaRepositoryImpl implements LoanWritePlatf
         LocalDate startDate = dueDate.plusDays(penaltyWaitPeriodValue.intValue() + 1);
         Loan loanData = this.loanAssembler.assembleFrom(loanId);
         LocalDate endDate = DateUtils.getBusinessLocalDate();
-        if (dueDate.isBefore(loanData.getMaturityDate())) {
+        if (dueDate.isBefore(loanData.getExpectedMaturityDate())) {
             if (chargeDefinition.feeInterval() != null) {
                 endDate = scheduledDateGenerator.getRepaymentPeriodDate(PeriodFrequencyType.fromInt(feeFrequency),
                         chargeDefinition.feeInterval(), startDate);

@@ -434,7 +434,7 @@ public final class LoanEnumerations {
             case TOP_UP:
                 optionData = new LoanTransactionEnumData(LoanTransactionType.TOP_UP.getValue().longValue(),
                         LoanTransactionType.TOP_UP.getCode(), "Top Up");
-                break;
+            break;
         }
         return optionData;
     }
@@ -585,6 +585,12 @@ public final class LoanEnumerations {
                 optionData = new EnumOptionData(LoanTermVariationType.PRINCIPAL_AMOUNT.getValue().longValue(),
                         LoanTermVariationType.PRINCIPAL_AMOUNT.getCode(), "principalAmount");
             break;
+
+            case PRINCIPAL_DUE_FIXED_AMOUNT:
+                optionData = new EnumOptionData(LoanTermVariationType.PRINCIPAL_DUE_FIXED_AMOUNT.getValue().longValue(),
+                        LoanTermVariationType.PRINCIPAL_DUE_FIXED_AMOUNT.getCode(), "fixedPrincipalPerInstallmentAmount");
+            break;
+
             case GRACE_ON_INTEREST:
                 optionData = new EnumOptionData(LoanTermVariationType.GRACE_ON_INTEREST.getValue().longValue(),
                         LoanTermVariationType.GRACE_ON_INTEREST.getCode(), "graceOnInterest");

@@ -32,6 +32,7 @@ import static org.apache.fineract.portfolio.savings.SavingsApiConstants.minOverd
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.minRequiredBalanceParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.nominalAnnualInterestRateOverdraftParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.overdraftLimitParamName;
+import static org.apache.fineract.portfolio.savings.SavingsApiConstants.postOverdraftInterestOnDepositParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.withHoldTaxParamName;
 import static org.apache.fineract.portfolio.savings.SavingsApiConstants.withdrawalFeeForTransfersParamName;
 
@@ -73,6 +74,7 @@ import javax.persistence.Table;
 import javax.persistence.Transient;
 import javax.persistence.UniqueConstraint;
 import javax.persistence.Version;
+import org.apache.commons.lang3.ObjectUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.fineract.infrastructure.codes.domain.CodeValue;
 import org.apache.fineract.infrastructure.configuration.domain.ConfigurationDomainService;
@@ -288,6 +290,9 @@ public class SavingsAccount extends AbstractPersistableCustom {
     @Column(name = "min_overdraft_for_interest_calculation", scale = 6, precision = 19, nullable = true)
     private BigDecimal minOverdraftForInterestCalculation;
 
+    @Column(name = "post_overdraft_interest_on_deposit")
+    private Boolean postOverdraftInterestOnDeposit;
+
     @Column(name = "enforce_min_required_balance")
     private boolean enforceMinRequiredBalance;
 
@@ -392,11 +397,20 @@ public class SavingsAccount extends AbstractPersistableCustom {
     @Column(name = "is_unlocked")
     private boolean unlocked;
 
-    @Column(name = "use_floating_interest_rate",nullable = true)
+    @Column(name = "use_floating_interest_rate", nullable = true)
     private Boolean useFloatingInterestRate;
 
     @OneToMany(cascade = CascadeType.ALL, mappedBy = "savingsAccount", orphanRemoval = true, fetch = FetchType.LAZY)
     private Set<SavingsAccountFloatingInterestRate> savingsAccountFloatingInterestRates = new HashSet<>();
+
+    @Column(name = "withdrawal_frequency")
+    private Integer withdrawalFrequency;
+    @Column(name = "withdrawal_frequency_enum")
+    private Integer withdrawalFrequencyEnum;
+    @Column(name = "previous_flex_withdrawal_date")
+    private LocalDate previousFlexWithdrawalDate;
+    @Column(name = "next_flex_withdrawal_date")
+    private LocalDate nextFlexWithdrawalDate;
 
     protected SavingsAccount() {
         //
@@ -702,7 +716,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
         this.recalculateRunningBalances();
 
         final List<PostingPeriod> postingPeriods = calculateInterestUsing(mc, interestPostingUpToDate, isInterestTransfer,
-                isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth, postInterestOnDate, true);
+                isSavingsInterestPostingAtCurrentPeriodEnd, financialYearBeginningMonth, postInterestOnDate, true, false, false);
         Money interestPostedToDate = Money.zero(this.currency);
 
         boolean applyWithHoldTax = isWithHoldTax();
@@ -1173,11 +1187,23 @@ public class SavingsAccount extends AbstractPersistableCustom {
 
     public List<PostingPeriod> calculateInterestUsing(final MathContext mc, final LocalDate upToInterestCalculationDate,
             boolean isInterestTransfer, final boolean isSavingsInterestPostingAtCurrentPeriodEnd, final Integer financialYearBeginningMonth,
-            final LocalDate postInterestOnDate, final Boolean includePostingAndWithHoldTax) {
+            final LocalDate postInterestOnDate, final Boolean includePostingAndWithHoldTax, final boolean backdatedTxnsAllowedTill,
+            final boolean postReversals) {
+
+        // no openingBalance concept supported yet but probably will to allow
+        // for migrations.
+        Money openingAccountBalance = null;
+
+        // Check global configurations and 'pivot' date is null
+        if (backdatedTxnsAllowedTill) {
+            openingAccountBalance = Money.of(this.currency, this.summary.getRunningBalanceOnPivotDate());
+        } else {
+            openingAccountBalance = Money.zero(this.currency);
+        }
 
         // update existing transactions so derived balance fields are
         // correct.
-        resetAccountTransactionsEndOfDayBalances(getTransactions(), upToInterestCalculationDate);
+        recalculateDailyBalances(openingAccountBalance, upToInterestCalculationDate, backdatedTxnsAllowedTill, postReversals);
 
         // 1. default to calculate interest based on entire history OR
         // 2. determine latest 'posting period' and find interest credited to
@@ -1648,8 +1674,12 @@ public class SavingsAccount extends AbstractPersistableCustom {
                 "savingsaccount");
         validateActivityNotBeforeClientOrGroupTransferDate(SavingsEvent.SAVINGS_WITHDRAWAL, transactionDTO.getTransactionDate());
 
-        if (applyWithdrawFee) {
+        if (applyWithdrawFee && this.withdrawalFrequency == null && this.withdrawalFrequencyEnum == null) {
             // auto pay withdrawal fee
+            payWithdrawalFee(transactionDTO.getTransactionAmount(), transactionDTO.getTransactionDate(), transactionDTO.getAppUser(),
+                    transactionDTO.getPaymentDetail(), backdatedTxnsAllowedTill, refNo);
+        } else if (applyWithdrawFee && this.withdrawalFrequency != null && this.withdrawalFrequencyEnum != null
+                && !this.nextFlexWithdrawalDate.isEqual(transactionDTO.getTransactionDate())) {
             payWithdrawalFee(transactionDTO.getTransactionAmount(), transactionDTO.getTransactionDate(), transactionDTO.getAppUser(),
                     transactionDTO.getPaymentDetail(), backdatedTxnsAllowedTill, refNo);
         }
@@ -2189,10 +2219,17 @@ public class SavingsAccount extends AbstractPersistableCustom {
             this.minOverdraftForInterestCalculation = newValue;
         }
 
+        if (command.isChangeInBooleanParameterNamed(postOverdraftInterestOnDepositParamName, this.postOverdraftInterestOnDeposit)) {
+            final boolean newValue = command.booleanPrimitiveValueOfParameterNamed(postOverdraftInterestOnDepositParamName);
+            actualChanges.put(postOverdraftInterestOnDepositParamName, newValue);
+            this.postOverdraftInterestOnDeposit = newValue;
+        }
+
         if (!this.allowOverdraft) {
             this.overdraftLimit = null;
             this.nominalAnnualInterestRateOverdraft = null;
             this.minOverdraftForInterestCalculation = null;
+            this.postOverdraftInterestOnDeposit = null;
         }
 
         if (command.isChangeInBooleanParameterNamed(enforceMinRequiredBalanceParamName, this.enforceMinRequiredBalance)) {
@@ -2960,6 +2997,26 @@ public class SavingsAccount extends AbstractPersistableCustom {
         }
 
         return nextDueDate;
+    }
+
+    public void validateAccountBalanceForBnplLoanWithEquityContribution(final BigDecimal bnplEquityAmount, final boolean isException) {
+        Money runningBalance = this.summary.getAccountBalance(getCurrency());
+        Money minRequiredBalance = minRequiredBalanceDerived(getCurrency()).add(bnplEquityAmount);
+        final BigDecimal withdrawalFee = null;
+
+        // In overdraft cases, minRequiredBalance can be in violation after interest posting
+        // and should be checked after processing all transactions
+        if (!isOverdraft()) {
+            if (runningBalance.minus(minRequiredBalance).isLessThanZero()) {
+                throw new InsufficientAccountBalanceException("bnplEquityAmount", getAccountBalance(), withdrawalFee, bnplEquityAmount);
+            }
+        }
+
+        if (this.getSavingsHoldAmount().compareTo(BigDecimal.ZERO) > 0) {
+            if (runningBalance.minus(this.getSavingsHoldAmount()).minus(minRequiredBalance).isLessThanZero()) {
+                throw new InsufficientAccountBalanceException("bnplEquityAmount", getAccountBalance(), withdrawalFee, bnplEquityAmount);
+            }
+        }
     }
 
     public void validateAccountBalanceDoesNotBecomeNegativeMinimal(final BigDecimal transactionAmount, final boolean isException) {
@@ -4443,7 +4500,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
         this.accountType = accountType;
     }
 
-    private boolean isOverdraft() {
+    public boolean isOverdraft() {
         return allowOverdraft;
     }
 
@@ -4949,10 +5006,6 @@ public class SavingsAccount extends AbstractPersistableCustom {
 
     private boolean interestAlreadyPosted(SavingsAccountTransaction lastTransaction, SavingsAccountTransaction lastInterestPosting,
             LocalDateInterval periodInterval) {
-        if (lastTransaction != null && periodInterval.endDate().plusDays(1).isBefore(lastTransaction.getTransactionLocalDate())) {
-            return true;
-        }
-
         if (lastInterestPosting != null && periodInterval.endDate().plusDays(1).isEqual(lastInterestPosting.getTransactionLocalDate())) {
             return true;
         }
@@ -5140,5 +5193,53 @@ public class SavingsAccount extends AbstractPersistableCustom {
 
     public Set<SavingsAccountFloatingInterestRate> getSavingsAccountFloatingInterestRates() {
         return savingsAccountFloatingInterestRates;
+    }
+
+    public void setVersion(int version) {
+        this.version = version;
+    }
+
+    public void setWithdrawalFrequency(Integer withdrawalFrequency) {
+        this.withdrawalFrequency = withdrawalFrequency;
+    }
+
+    public void setWithdrawalFrequencyEnum(Integer withdrawalFrequencyEnum) {
+        this.withdrawalFrequencyEnum = withdrawalFrequencyEnum;
+    }
+
+    public void setPreviousFlexWithdrawalDate(LocalDate previousFlexWithdrawalDate) {
+        this.previousFlexWithdrawalDate = previousFlexWithdrawalDate;
+    }
+
+    public void setNextFlexWithdrawalDate(LocalDate nextFlexWithdrawalDate) {
+        this.nextFlexWithdrawalDate = nextFlexWithdrawalDate;
+    }
+
+    public Integer getWithdrawalFrequency() {
+        return withdrawalFrequency;
+    }
+
+    public Integer getWithdrawalFrequencyEnum() {
+        return withdrawalFrequencyEnum;
+    }
+
+    public Group getGroup() {
+        return group;
+    }
+
+    public LocalDate getPreviousFlexWithdrawalDate() {
+        return previousFlexWithdrawalDate;
+    }
+
+    public LocalDate getNextFlexWithdrawalDate() {
+        return nextFlexWithdrawalDate;
+    }
+
+    public void setPostOverdraftInterestOnDeposit(Boolean postOverdraftInterestOnDeposit) {
+        this.postOverdraftInterestOnDeposit = postOverdraftInterestOnDeposit;
+    }
+
+    public boolean isPostOverdraftInterestOnDeposit() {
+        return ObjectUtils.defaultIfNull(this.postOverdraftInterestOnDeposit, Boolean.FALSE);
     }
 }
