@@ -31,7 +31,6 @@ import org.apache.fineract.portfolio.client.api.ClientApiConstants;
 import org.apache.fineract.portfolio.validationlimit.data.ValidationLimitData;
 import org.apache.fineract.portfolio.validationlimit.exception.ValidationLimitNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.Cacheable;
 import org.springframework.dao.EmptyResultDataAccessException;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
@@ -55,7 +54,6 @@ public class ValidationLimitReadPlatformServiceImpl implements ValidationLimitRe
     }
 
     @Override
-    @Cacheable(value = "ValidationLimit", key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('ch')")
     public Collection<ValidationLimitData> retrieveAllValidationLimits() {
         final ValidationLimitMapper rm = new ValidationLimitMapper();
         String sql = "select " + rm.validationLimitSchema() + " order by cvclientlevel.order_position";
