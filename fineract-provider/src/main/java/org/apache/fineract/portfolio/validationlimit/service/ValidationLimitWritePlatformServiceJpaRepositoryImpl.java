@@ -38,7 +38,6 @@ import org.apache.fineract.portfolio.validationlimit.serialization.ValidationLim
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -67,7 +66,6 @@ public class ValidationLimitWritePlatformServiceJpaRepositoryImpl implements Val
 
     @Transactional
     @Override
-    @CacheEvict(value = "validationLimit", key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('ch')")
     public CommandProcessingResult createValidationLimit(final JsonCommand command) {
         try {
             this.context.authenticatedUser();
@@ -104,7 +102,6 @@ public class ValidationLimitWritePlatformServiceJpaRepositoryImpl implements Val
 
     @Transactional
     @Override
-    @CacheEvict(value = "validationlimit", key = "T(org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil).getTenant().getTenantIdentifier().concat('ch')")
     public CommandProcessingResult updateValidationLimit(final Long validationLimitId, final JsonCommand command) {
 
         try {
