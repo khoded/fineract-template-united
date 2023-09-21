@@ -205,9 +205,7 @@ public class ReadReportingServiceImpl implements ReadReportingService {
     }
 
     private String getSql(final String name, final String type) {
-        //final String encodedName = sqlInjectionPreventerService.encodeSql(name);
-        //Commenting above encoding because it replaces "-"" with -/ in report name
-
+        final String encodedName = sqlInjectionPreventerService.encodeSql(name);
         final String encodedType = sqlInjectionPreventerService.encodeSql(type);
 
         final String inputSql = "select " + encodedType + "_sql as the_sql from stretchy_" + encodedType + " where " + encodedType
@@ -216,12 +214,12 @@ public class ReadReportingServiceImpl implements ReadReportingService {
         final String inputSqlWrapped = this.genericDataService.wrapSQL(inputSql);
 
         // the return statement contains the exact sql required
-        final SqlRowSet rs = this.jdbcTemplate.queryForRowSet(inputSqlWrapped, name);
+        final SqlRowSet rs = this.jdbcTemplate.queryForRowSet(inputSqlWrapped, encodedName);
 
         if (rs.next() && rs.getString("the_sql") != null) {
             return rs.getString("the_sql");
         }
-        throw new ReportNotFoundException(name);
+        throw new ReportNotFoundException(encodedName);
     }
 
     @Override
