@@ -19,11 +19,15 @@
 package org.apache.fineract.portfolio.tax.service;
 
 import java.math.BigDecimal;
+import java.sql.Connection;
+import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
+
 import org.apache.fineract.accounting.common.AccountingDropdownReadPlatformService;
 import org.apache.fineract.accounting.common.AccountingEnumerations;
 import org.apache.fineract.accounting.glaccount.data.GLAccountData;
@@ -35,6 +39,7 @@ import org.apache.fineract.portfolio.tax.data.TaxGroupData;
 import org.apache.fineract.portfolio.tax.data.TaxGroupMappingsData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.PreparedStatementCreator;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Service;
 
@@ -59,13 +64,18 @@ public class TaxReadPlatformServiceImpl implements TaxReadPlatformService {
     @Override
     public Collection<TaxComponentData> retrieveAllTaxComponents() {
         String sql = "select " + this.taxComponentMapper.getSchema();
-        return this.jdbcTemplate.query(sql, this.taxComponentMapper); // NOSONAR
+        return this.jdbcTemplate.query(getScrollSensitiveQuery(sql, null), this.taxComponentMapper); // NOSONAR
     }
 
     @Override
     public TaxComponentData retrieveTaxComponentData(final Long id) {
         String sql = "select " + this.taxComponentMapper.getSchema() + " where tc.id=?";
-        return this.jdbcTemplate.queryForObject(sql, this.taxComponentMapper, new Object[] { id }); // NOSONAR
+        //return this.jdbcTemplate.queryForObject(sql, this.taxComponentMapper, new Object[] { id }); // NOSONAR
+        List<TaxComponentData> taxComponentDataList = this.jdbcTemplate.query(getScrollSensitiveQuery(sql, id), this.taxComponentMapper);
+        if (!taxComponentDataList.isEmpty()) {
+            return taxComponentDataList.get(0);
+        }
+        return null;
     }
 
     @Override
@@ -77,13 +87,18 @@ public class TaxReadPlatformServiceImpl implements TaxReadPlatformService {
     @Override
     public Collection<TaxGroupData> retrieveAllTaxGroups() {
         String sql = "select " + this.taxGroupMapper.getSchema();
-        return this.jdbcTemplate.query(sql, this.taxGroupMapper); // NOSONAR
+        return this.jdbcTemplate.query(getScrollSensitiveQuery(sql, null), this.taxGroupMapper); // NOSONAR
     }
 
     @Override
     public TaxGroupData retrieveTaxGroupData(final Long id) {
         String sql = "select " + this.taxGroupMapper.getSchema() + " where tg.id=?";
-        return this.jdbcTemplate.queryForObject(sql, this.taxGroupMapper, new Object[] { id }); // NOSONAR
+        //return this.jdbcTemplate.queryForObject(sql, this.taxGroupMapper, new Object[] { id }); // NOSONAR
+        List<TaxGroupData> taxGroupDataList = this.jdbcTemplate.query(getScrollSensitiveQuery(sql, id), this.taxGroupMapper);
+        if (!taxGroupDataList.isEmpty()) {
+            return taxGroupDataList.get(0);
+        }
+        return null;
     }
 
     @Override
@@ -298,6 +313,20 @@ public class TaxReadPlatformServiceImpl implements TaxReadPlatformService {
             return TaxGroupData.lookup(id, name);
         }
 
+    }
+
+    private PreparedStatementCreator getScrollSensitiveQuery(final String query, Long id) {
+        return new PreparedStatementCreator() {
+
+            @Override
+            public PreparedStatement createPreparedStatement(Connection connection) throws SQLException {
+                PreparedStatement ps = connection.prepareStatement(query, ResultSet.TYPE_SCROLL_SENSITIVE, ResultSet.CONCUR_READ_ONLY);
+                if (id != null) {
+                    ps.setLong(1, id);
+                }
+                return ps;
+            }
+        };
     }
 
 }
