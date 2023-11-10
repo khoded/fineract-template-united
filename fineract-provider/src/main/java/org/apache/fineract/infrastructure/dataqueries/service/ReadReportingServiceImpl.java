@@ -205,8 +205,8 @@ public class ReadReportingServiceImpl implements ReadReportingService {
     }
 
     private String getSql(final String name, final String type) {
-        final String encodedName = sqlInjectionPreventerService.encodeSql(name);
-        final String encodedType = sqlInjectionPreventerService.encodeSql(type);
+        final String encodedName = name;
+        final String encodedType = type;
 
         final String inputSql = "select " + encodedType + "_sql as the_sql from stretchy_" + encodedType + " where " + encodedType
                 + "_name = ?";
