@@ -248,11 +248,6 @@ public class ClientPersonWorkbookPopulator extends AbstractWorkbookPopulator {
         DataValidationConstraint officeNameConstraint = validationHelper.createFormulaListConstraint("Office");
         DataValidationConstraint staffNameConstraint = validationHelper
                 .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$D1))");
-        DataValidationConstraint submittedOnDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.LESS_OR_EQUAL, "=$I1", null, dateformat);
-        DataValidationConstraint activationDateConstraint = validationHelper.createDateConstraint(
-                DataValidationConstraint.OperatorType.BETWEEN, "=VLOOKUP($D1,$AJ$2:$AK" + (offices.size() + 1) + ",2,FALSE)", "=TODAY()",
-                dateformat);
         DataValidationConstraint dobDateConstraint = validationHelper
                 .createDateConstraint(DataValidationConstraint.OperatorType.LESS_OR_EQUAL, "=TODAY()", null, dateformat);
         DataValidationConstraint activeConstraint = validationHelper.createExplicitListConstraint(new String[] { "True", "False" });
@@ -268,8 +263,8 @@ public class ClientPersonWorkbookPopulator extends AbstractWorkbookPopulator {
 
         DataValidation officeValidation = validationHelper.createValidation(officeNameConstraint, officeNameRange);
         DataValidation staffValidation = validationHelper.createValidation(staffNameConstraint, staffNameRange);
-        DataValidation submittedOnDateValidation = validationHelper.createValidation(submittedOnDateConstraint, submittedOnDateRange);
-        DataValidation activationDateValidation = validationHelper.createValidation(activationDateConstraint, activationDateRange);
+        //DataValidation submittedOnDateValidation = validationHelper.createValidation(submittedOnDateConstraint, submittedOnDateRange);
+        //DataValidation activationDateValidation = validationHelper.createValidation(activationDateConstraint, activationDateRange);
         DataValidation dobDateValidation = validationHelper.createValidation(dobDateConstraint, dobRange);
         DataValidation activeValidation = validationHelper.createValidation(activeConstraint, activeRange);
         DataValidation clientTypeValidation = validationHelper.createValidation(clientTypesConstraint, clientTypeRange);
@@ -286,8 +281,8 @@ public class ClientPersonWorkbookPopulator extends AbstractWorkbookPopulator {
         worksheet.addValidationData(activeValidation);
         worksheet.addValidationData(officeValidation);
         worksheet.addValidationData(staffValidation);
-        worksheet.addValidationData(activationDateValidation);
-        worksheet.addValidationData(submittedOnDateValidation);
+        //worksheet.addValidationData(activationDateValidation);
+      //  worksheet.addValidationData(submittedOnDateValidation);
         worksheet.addValidationData(dobDateValidation);
         worksheet.addValidationData(clientTypeValidation);
         worksheet.addValidationData(isStaffValidation);
