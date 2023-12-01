@@ -816,7 +816,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
             builder.append("c.id as id, c.display_name as displayName, ");
             builder.append("c.office_id as officeId, o.name as officeName ");
             builder.append("from m_client c ");
-            builder.append("join m_office o on o.id = c.office_id ");
+            builder.append("left join m_office o on o.id = c.office_id ");
 
             this.schema = builder.toString();
         }
