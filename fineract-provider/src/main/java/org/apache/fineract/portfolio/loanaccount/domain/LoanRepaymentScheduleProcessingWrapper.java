@@ -21,6 +21,7 @@ package org.apache.fineract.portfolio.loanaccount.domain;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 import org.apache.fineract.organisation.monetary.domain.MonetaryCurrency;
 import org.apache.fineract.organisation.monetary.domain.Money;
@@ -200,7 +201,9 @@ public class LoanRepaymentScheduleProcessingWrapper {
                         && (loanCharge.isDueForCollectionFromAndUpToAndIncluding(periodStart, periodEnd)
                                 || loanCharge.isDueForCollectionForDisburseToSavingsAndIncluding(periodStart))
                         && loanCharge.getChargeCalculation().isPercentageBased()) {
-                    cumulative = cumulative.plus(loanCharge.chargeAmount());
+                    if (Objects.equals(loanCharge.getOverdueInstallmentCharge().getInstallment().getInstallmentNumber(), period.getInstallmentNumber())) {
+                        cumulative = cumulative.plus(loanCharge.chargeAmount());
+                    }
                 } else if ((loanCharge.isDueForCollectionFromAndUpToAndIncluding(periodStart, periodEnd)
                         || loanCharge.isDueForCollectionForDisburseToSavingsAndIncluding(periodStart))
                         && loanCharge.getChargeCalculation().isPercentageBased()) {
