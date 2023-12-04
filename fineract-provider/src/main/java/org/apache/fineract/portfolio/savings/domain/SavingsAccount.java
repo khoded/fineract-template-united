@@ -1620,19 +1620,15 @@ public class SavingsAccount extends AbstractPersistableCustom {
 
     private void validatePaymentTypeWhenPaymentTypeEnabled() {
         for (SavingsAccountCharge charge : this.charges()) {
-            if (charge.isWithdrawalFee() && charge.isActive()) {
-                if (charge.isEnablePaymentType()) {
-                    if (charge.getCharge().getPaymentType() == null) {
-                        final String defaultUserMessage = "Payment Type cannot be blank for Charge (" + charge.getCharge().getName() + ")";
-                        final ApiParameterError error = ApiParameterError.parameterError("error.msg.savingsaccount.withdrawl.charge.payment.type.cannot.be.blank",
-                                defaultUserMessage, "charge", charge.getCharge().getName());
+            if (charge.isWithdrawalFee() && charge.isActive() && charge.isEnablePaymentType() && charge.getCharge().getPaymentType() == null) {
+                final String defaultUserMessage = "Payment Type cannot be blank for Charge (" + charge.getCharge().getName() + ")";
+                final ApiParameterError error = ApiParameterError.parameterError("error.msg.savingsaccount.withdrawl.charge.payment.type.cannot.be.blank",
+                        defaultUserMessage, "charge", charge.getCharge().getName());
 
-                        final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
-                        dataValidationErrors.add(error);
+                final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+                dataValidationErrors.add(error);
 
-                        throw new PlatformApiDataValidationException(dataValidationErrors);
-                    }
-                }
+                throw new PlatformApiDataValidationException(dataValidationErrors);
             }
         }
     }
