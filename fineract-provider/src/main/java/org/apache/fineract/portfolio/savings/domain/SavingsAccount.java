@@ -1618,6 +1618,21 @@ public class SavingsAccount extends AbstractPersistableCustom {
         this.startInterestCalculationDate = startInterestCalculationDate;
     }
 
+    private void validatePaymentTypeWhenPaymentTypeEnabled() {
+        for (SavingsAccountCharge charge : this.charges()) {
+            if (charge.isWithdrawalFee() && charge.isActive() && charge.isEnablePaymentType() && charge.getCharge().getPaymentType() == null) {
+                final String defaultUserMessage = "Payment Type cannot be blank for Charge (" + charge.getCharge().getName() + ")";
+                final ApiParameterError error = ApiParameterError.parameterError("error.msg.savingsaccount.withdrawl.charge.payment.type.cannot.be.blank",
+                        defaultUserMessage, "charge", charge.getCharge().getName());
+
+                final List<ApiParameterError> dataValidationErrors = new ArrayList<>();
+                dataValidationErrors.add(error);
+
+                throw new PlatformApiDataValidationException(dataValidationErrors);
+            }
+        }
+    }
+
     public SavingsAccountTransaction withdraw(final SavingsAccountTransactionDTO transactionDTO, final boolean applyWithdrawFee,
             final boolean backdatedTxnsAllowedTill, final Long relaxingDaysConfigForPivotDate, String refNo) {
 
@@ -1673,6 +1688,7 @@ public class SavingsAccount extends AbstractPersistableCustom {
         validatePivotDateTransaction(transactionDTO.getTransactionDate(), backdatedTxnsAllowedTill, relaxingDaysConfigForPivotDate,
                 "savingsaccount");
         validateActivityNotBeforeClientOrGroupTransferDate(SavingsEvent.SAVINGS_WITHDRAWAL, transactionDTO.getTransactionDate());
+        validatePaymentTypeWhenPaymentTypeEnabled();
 
         if (applyWithdrawFee && this.withdrawalFrequency == null && this.withdrawalFrequencyEnum == null) {
             // auto pay withdrawal fee
