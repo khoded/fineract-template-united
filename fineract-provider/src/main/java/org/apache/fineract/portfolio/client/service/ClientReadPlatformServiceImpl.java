@@ -105,6 +105,8 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
     private final ClientCollateralManagementRepositoryWrapper clientCollateralManagementRepositoryWrapper;
     private final ClientBusinessOwnerReadPlatformService clientBusinessOwnerReadPlatformService;
 
+    private final ClientSummaryMapper clientSummaryMapper = new ClientSummaryMapper();
+
     @Override
     public ClientData retrieveTemplate(final Long officeId, final boolean staffInSelectedOfficeOnly) {
         this.context.authenticatedUser();
@@ -925,5 +927,78 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
     public Collection<Long> retrieveUserClients(Long aUserID) {
         String sql = "SELECT  m.client_id FROM m_selfservice_user_client_mapping m INNER JOIN m_client c ON c.id = m.client_id WHERE m.appuser_id = ?";
         return jdbcTemplate.queryForList(sql, Long.class, aUserID);
+    }
+
+    @Override
+    public Page<ClientData> retrieveAllSummary(final SearchParameters searchParameters) {
+
+        final String userOfficeHierarchy = this.context.officeHierarchy();
+        final String underHierarchySearchString = userOfficeHierarchy + "%";
+
+        List<Object> paramList = new ArrayList<>(Arrays.asList(underHierarchySearchString, underHierarchySearchString));
+        final StringBuilder sqlBuilder = new StringBuilder(200);
+        sqlBuilder.append("select " + sqlGenerator.calcFoundRows() + " ");
+        sqlBuilder.append(this.clientSummaryMapper.schema());
+        sqlBuilder.append(" where (o.hierarchy like ? or transferToOffice.hierarchy like ?) ");
+
+        if (searchParameters != null) {
+
+            final String extraCriteria = buildSqlStringFromClientCriteria(this.clientSummaryMapper.schema(), searchParameters, paramList);
+
+            if (StringUtils.isNotBlank(extraCriteria)) {
+                sqlBuilder.append(" and (").append(extraCriteria).append(")");
+            }
+
+            if (searchParameters.isOrderByRequested()) {
+                sqlBuilder.append(" order by ").append(searchParameters.getOrderBy());
+                this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getOrderBy());
+                if (searchParameters.isSortOrderProvided()) {
+                    sqlBuilder.append(' ').append(searchParameters.getSortOrder());
+                    this.columnValidator.validateSqlInjection(sqlBuilder.toString(), searchParameters.getSortOrder());
+                }
+            }
+
+            if (searchParameters.isLimited()) {
+                sqlBuilder.append(" limit ").append(searchParameters.getLimit());
+                if (searchParameters.isOffset()) {
+                    sqlBuilder.append(" offset ").append(searchParameters.getOffset());
+                }
+            }
+        }
+        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlBuilder.toString(), paramList.toArray(),
+                this.clientSummaryMapper);
+    }
+
+    private static final class ClientSummaryMapper implements RowMapper<ClientData> {
+
+        private final String schema;
+
+        ClientSummaryMapper() {
+            final StringBuilder builder = new StringBuilder(400);
+
+            builder.append("c.id as id, c.display_name as displayName, ");
+            builder.append("c.office_id as officeId, o.name as officeName ");
+            builder.append("from m_client c ");
+            builder.append("join m_office o on o.id = c.office_id ");
+            builder.append("left join m_office transferToOffice on transferToOffice.id = c.transfer_to_office_id ");
+
+            this.schema = builder.toString();
+        }
+
+        public String schema() {
+            return this.schema;
+        }
+
+        @Override
+        public ClientData mapRow(final ResultSet rs, @SuppressWarnings("unused") final int rowNum) throws SQLException {
+
+            final Long id = JdbcSupport.getLong(rs, "id");
+            final String displayName = rs.getString("displayName");
+            final Long officeId = rs.getLong("officeId");
+            final String officeName = rs.getString("officeName");
+
+            return ClientData.lookup(id, displayName, officeId, officeName);
+
+        }
     }
 }
