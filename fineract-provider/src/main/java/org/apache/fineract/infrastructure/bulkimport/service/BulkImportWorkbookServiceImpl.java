@@ -47,7 +47,7 @@ import org.apache.fineract.infrastructure.documentmanagement.domain.DocumentRepo
 import org.apache.fineract.infrastructure.documentmanagement.service.DocumentWritePlatformService;
 import org.apache.fineract.infrastructure.documentmanagement.service.DocumentWritePlatformServiceJpaRepositoryImpl;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.tika.Tika;
 import org.apache.tika.io.TikaInputStream;
@@ -104,7 +104,7 @@ public class BulkImportWorkbookServiceImpl implements BulkImportWorkbookService 
                             "Uploaded file extension is not recognized.");
 
                 }
-                Workbook workbook = new HSSFWorkbook(clonedInputStream);
+                Workbook workbook = new XSSFWorkbook(clonedInputStream);
                 GlobalEntityType entityType = null;
                 int primaryColumn = 0;
                 if (entity.trim().equalsIgnoreCase(GlobalEntityType.CLIENTS_PERSON.toString())) {

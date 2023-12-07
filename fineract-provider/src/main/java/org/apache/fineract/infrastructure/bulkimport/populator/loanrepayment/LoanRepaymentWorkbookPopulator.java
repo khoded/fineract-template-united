@@ -34,8 +34,8 @@ import org.apache.fineract.infrastructure.bulkimport.populator.OfficeSheetPopula
 import org.apache.fineract.infrastructure.bulkimport.populator.comparator.LoanComparatorByStatusActive;
 import org.apache.fineract.portfolio.client.data.ClientData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanAccountData;
-import org.apache.poi.hssf.usermodel.HSSFDataValidationHelper;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataValidation;
@@ -131,7 +131,7 @@ public class LoanRepaymentWorkbookPopulator extends AbstractWorkbookPopulator {
         CellRangeAddressList repaymentDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
                 LoanRepaymentConstants.REPAID_ON_DATE_COL, LoanRepaymentConstants.REPAID_ON_DATE_COL);
 
-        DataValidationHelper validationHelper = new HSSFDataValidationHelper((HSSFSheet) worksheet);
+        DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) worksheet);
 
         setNames(worksheet);
 
@@ -208,7 +208,7 @@ public class LoanRepaymentWorkbookPopulator extends AbstractWorkbookPopulator {
         // Account Number Named after Clients
         for (int j = 0; j < clientsWithActiveLoans.size(); j++) {
             Name name = loanRepaymentWorkbook.createName();
-            setSanitized(name, "Account_" + clientsWithActiveLoans.get(j) + "_" + clientIdsWithActiveLoans.get(j) + "_");
+            setSanitized(name, "Account_" + clientsWithActiveLoans.get(j).trim().replaceAll("[\\[\\] )($%!@#^&*~,-?;'\"]", "_") + "_" + clientIdsWithActiveLoans.get(j) + "_");
             name.setRefersToFormula(TemplatePopulateImportConstants.LOAN_REPAYMENT_SHEET_NAME + "!$T$"
                     + clientNameToBeginEndIndexes.get(clientsWithActiveLoans.get(j))[0] + ":$T$"
                     + clientNameToBeginEndIndexes.get(clientsWithActiveLoans.get(j))[1]);

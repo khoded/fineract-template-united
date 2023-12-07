@@ -106,8 +106,7 @@ import org.apache.fineract.portfolio.savings.service.SavingsProductReadPlatformS
 import org.apache.fineract.portfolio.shareproducts.data.ShareProductData;
 import org.apache.fineract.useradministration.data.RoleData;
 import org.apache.fineract.useradministration.service.RoleReadPlatformService;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
-import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -176,7 +175,7 @@ public class BulkImportWorkbookPopulatorServiceImpl implements BulkImportWorkboo
     @Override
     public Response getTemplate(String entityType, Long officeId, Long staffId, final String dateFormat) {
         WorkbookPopulator populator = null;
-        final Workbook workbook = new HSSFWorkbook();
+        final XSSFWorkbook workbook = new XSSFWorkbook();
         if (entityType != null) {
             if (entityType.trim().equalsIgnoreCase(GlobalEntityType.CLIENTS_PERSON.toString())
                     || entityType.trim().equalsIgnoreCase(GlobalEntityType.CLIENTS_ENTITY.toString())) {
@@ -250,7 +249,7 @@ public class BulkImportWorkbookPopulatorServiceImpl implements BulkImportWorkboo
         return null;
     }
 
-    private Response buildResponse(final Workbook workbook, final String entity) {
+    private Response buildResponse(final XSSFWorkbook workbook, final String entity) {
         String filename = entity + DateUtils.getBusinessLocalDate().toString() + ".xls";
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
@@ -349,7 +348,9 @@ public class BulkImportWorkbookPopulatorServiceImpl implements BulkImportWorkboo
 
     private List<ClientData> fetchClients(Long officeId) {
         List<ClientData> clients = null;
+
         if (officeId == null) {
+            SearchParameters searchParameters = SearchParameters.from(null, officeId, null, null, null);
             Page<ClientData> clientDataPage = this.clientReadPlatformService.retrieveAll(null);
             if (clientDataPage != null) {
                 clients = new ArrayList<>();
@@ -444,10 +445,12 @@ public class BulkImportWorkbookPopulatorServiceImpl implements BulkImportWorkboo
 
     private List<LoanAccountData> fetchLoanAccounts(final Long officeId) {
         List<LoanAccountData> loanAccounts = null;
+        String sqlSearch = " l.loan_status_id = 300 ";
         if (officeId == null) {
-            loanAccounts = loanReadPlatformService.retrieveAll(null).getPageItems();
+            SearchParameters searchParameters = SearchParameters.from(sqlSearch, null, null, null, null);
+            loanAccounts = loanReadPlatformService.retrieveAll(searchParameters).getPageItems();
         } else {
-            SearchParameters searchParameters = SearchParameters.from(null, officeId, null, null, null);
+            SearchParameters searchParameters = SearchParameters.from(sqlSearch, officeId, null, null, null);
             loanAccounts = loanReadPlatformService.retrieveAll(searchParameters).getPageItems();
         }
         return loanAccounts;
