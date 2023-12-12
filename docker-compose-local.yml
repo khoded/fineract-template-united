@@ -56,6 +56,10 @@ services:
       - FINERACT_DEFAULT_TENANTDB_CONN_PARAMS=
       - FINERACT_TENANT_URL_PROTOCOL=jdbc
       - FINERACT_TENANT_URL_SUB_PROTOCOL=mariadb
+      # NOTE: env vars to select which authentication mode. It is exclusive option
+      - FINERACT_SECURITY_BASICAUTH_ENABLED=false
+      - FINERACT_SECURITY_OAUTH_ENABLED=true
+      - FINERACT_JWT_ISSUER_URL=http://10.2.3.21:8083/auth/realms/master
 
   # Frontend service
   community-app:
