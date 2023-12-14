@@ -97,7 +97,8 @@ public class UserDetailsApiResource {
         final Collection<String> permissions = new ArrayList<>();
         AuthenticatedOauthUserData authenticatedUserData = new AuthenticatedOauthUserData(principal.getUsername(), permissions);
 
-        final Collection<GrantedAuthority> authorities = new ArrayList<>(authentication.getAuthorities());
+        //Replaced new ArrayList<>(authentication.getAuthorities()) with pricipal.getAuthorities();
+        final Collection<GrantedAuthority> authorities = principal.getAuthorities(); 
         for (final GrantedAuthority grantedAuthority : authorities) {
             permissions.add(grantedAuthority.getAuthority());
         }
