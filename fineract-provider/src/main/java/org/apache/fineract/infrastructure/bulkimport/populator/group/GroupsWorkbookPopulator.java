@@ -138,27 +138,27 @@ public class GroupsWorkbookPopulator extends AbstractWorkbookPopulator {
     }
 
     private void setRules(Sheet worksheet, String dateFormat) {
-        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GroupConstants.OFFICE_NAME_COL, GroupConstants.OFFICE_NAME_COL);
-        CellRangeAddressList staffNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList staffNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GroupConstants.STAFF_NAME_COL, GroupConstants.STAFF_NAME_COL);
-        CellRangeAddressList centerNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList centerNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GroupConstants.CENTER_NAME_COL, GroupConstants.CENTER_NAME_COL);
-        CellRangeAddressList activeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList activeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GroupConstants.ACTIVE_COL, GroupConstants.ACTIVE_COL);
-        CellRangeAddressList activationDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList activationDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GroupConstants.ACTIVATION_DATE_COL, GroupConstants.ACTIVATION_DATE_COL);
-        CellRangeAddressList submittedOnDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList submittedOnDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GroupConstants.SUBMITTED_ON_DATE_COL, GroupConstants.SUBMITTED_ON_DATE_COL);
-        CellRangeAddressList meetingStartDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList meetingStartDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GroupConstants.MEETING_START_DATE_COL, GroupConstants.MEETING_START_DATE_COL);
-        CellRangeAddressList isRepeatRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList isRepeatRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GroupConstants.IS_REPEATING_COL, GroupConstants.IS_REPEATING_COL);
-        CellRangeAddressList repeatsRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList repeatsRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GroupConstants.FREQUENCY_COL, GroupConstants.FREQUENCY_COL);
-        CellRangeAddressList repeatsEveryRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList repeatsEveryRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GroupConstants.INTERVAL_COL, GroupConstants.INTERVAL_COL);
-        CellRangeAddressList repeatsOnRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList repeatsOnRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GroupConstants.REPEATS_ON_DAY_COL, GroupConstants.REPEATS_ON_DAY_COL);
 
         DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) worksheet);
@@ -166,23 +166,23 @@ public class GroupsWorkbookPopulator extends AbstractWorkbookPopulator {
         setNames(worksheet, offices);
 
         DataValidationConstraint centerNameConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Center_\",$B1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Center_\",$B2))");
         DataValidationConstraint officeNameConstraint = validationHelper.createFormulaListConstraint("Office");
         DataValidationConstraint staffNameConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$B1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$B2))");
         DataValidationConstraint booleanConstraint = validationHelper.createExplicitListConstraint(new String[] { "True", "False" });
         DataValidationConstraint activationDateConstraint = validationHelper.createDateConstraint(
-                DataValidationConstraint.OperatorType.BETWEEN, "=VLOOKUP($B1,$IR$2:$IS" + (offices.size() + 1) + ",2,FALSE)", "=TODAY()",
+                DataValidationConstraint.OperatorType.BETWEEN, "=VLOOKUP($B2,$IR$2:$IS" + (offices.size() + 1) + ",2,FALSE)", "=TODAY()",
                 dateFormat);
         DataValidationConstraint submittedOnDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.LESS_OR_EQUAL, "=$G1", null, dateFormat);
+                .createDateConstraint(DataValidationConstraint.OperatorType.LESS_OR_EQUAL, "=$G2", null, dateFormat);
         DataValidationConstraint meetingStartDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$G1", "=TODAY()", dateFormat);
+                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$G2", "=TODAY()", dateFormat);
         DataValidationConstraint repeatsConstraint = validationHelper.createExplicitListConstraint(
                 new String[] { TemplatePopulateImportConstants.FREQUENCY_DAILY, TemplatePopulateImportConstants.FREQUENCY_WEEKLY,
                         TemplatePopulateImportConstants.FREQUENCY_MONTHLY, TemplatePopulateImportConstants.FREQUENCY_YEARLY });
-        DataValidationConstraint repeatsEveryConstraint = validationHelper.createFormulaListConstraint("INDIRECT($K1)");
-        DataValidationConstraint repeatsOnConstraint = validationHelper.createFormulaListConstraint("INDIRECT(CONCATENATE($K1,\"_DAYS\"))");
+        DataValidationConstraint repeatsEveryConstraint = validationHelper.createFormulaListConstraint("INDIRECT($K2)");
+        DataValidationConstraint repeatsOnConstraint = validationHelper.createFormulaListConstraint("INDIRECT(CONCATENATE($K2,\"_DAYS\"))");
 
         DataValidation centerValidation = validationHelper.createValidation(centerNameConstraint, centerNameRange);
         DataValidation officeValidation = validationHelper.createValidation(officeNameConstraint, officeNameRange);

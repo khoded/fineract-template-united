@@ -102,19 +102,19 @@ public class JournalEntriesWorkbookPopulator extends AbstractWorkbookPopulator {
 
     private void setRules(Sheet worksheet) {
 
-        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 JournalEntryConstants.OFFICE_NAME_COL, JournalEntryConstants.OFFICE_NAME_COL);
 
-        CellRangeAddressList currencyCodeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList currencyCodeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 JournalEntryConstants.CURRENCY_NAME_COL, JournalEntryConstants.CURRENCY_NAME_COL);
 
-        CellRangeAddressList paymenttypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList paymenttypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 JournalEntryConstants.PAYMENT_TYPE_ID_COL, JournalEntryConstants.PAYMENT_TYPE_ID_COL);
 
-        CellRangeAddressList glaccountCreditRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList glaccountCreditRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 JournalEntryConstants.GL_ACCOUNT_ID_CREDIT_COL, JournalEntryConstants.GL_ACCOUNT_ID_CREDIT_COL);
 
-        CellRangeAddressList glaccountDebitRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList glaccountDebitRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 JournalEntryConstants.GL_ACCOUNT_ID_DEBIT_COL, JournalEntryConstants.GL_ACCOUNT_ID_DEBIT_COL);
 
         DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) worksheet);

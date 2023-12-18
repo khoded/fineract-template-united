@@ -53,13 +53,13 @@ public class StaffWorkbookPopulator extends AbstractWorkbookPopulator {
     }
 
     private void setRules(Sheet staffSheet, String dateFormat) {
-        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 StaffConstants.OFFICE_NAME_COL, StaffConstants.OFFICE_NAME_COL);
-        CellRangeAddressList isLoanOfficerNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList isLoanOfficerNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 StaffConstants.IS_LOAN_OFFICER, StaffConstants.IS_LOAN_OFFICER);
-        CellRangeAddressList joinedOnNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList joinedOnNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 StaffConstants.JOINED_ON_COL, StaffConstants.JOINED_ON_COL);
-        CellRangeAddressList isActiveNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList isActiveNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 StaffConstants.IS_ACTIVE_COL, StaffConstants.IS_ACTIVE_COL);
 
         DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) staffSheet);

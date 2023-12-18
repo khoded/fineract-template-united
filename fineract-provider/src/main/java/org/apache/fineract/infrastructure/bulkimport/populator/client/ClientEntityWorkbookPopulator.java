@@ -225,37 +225,37 @@ public class ClientEntityWorkbookPopulator extends AbstractWorkbookPopulator {
     }
 
     private void setRules(Sheet worksheet, String dateFormat) {
-        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.OFFICE_NAME_COL, ClientEntityConstants.OFFICE_NAME_COL);
-        CellRangeAddressList staffNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList staffNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.STAFF_NAME_COL, ClientEntityConstants.STAFF_NAME_COL);
-        CellRangeAddressList submittedOnDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList submittedOnDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.SUBMITTED_ON_COL, ClientEntityConstants.SUBMITTED_ON_COL);
-        CellRangeAddressList dateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList dateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.ACTIVATION_DATE_COL, ClientEntityConstants.ACTIVATION_DATE_COL);
-        CellRangeAddressList activeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList activeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.ACTIVE_COL, ClientEntityConstants.ACTIVE_COL);
-        CellRangeAddressList clientTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList clientTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.CLIENT_TYPE_COL, ClientEntityConstants.CLIENT_TYPE_COL);
-        CellRangeAddressList constitutionRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList constitutionRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.CONSTITUTION_COL, ClientEntityConstants.CONSTITUTION_COL);
-        CellRangeAddressList mainBusinessLineRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList mainBusinessLineRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.MAIN_BUSINESS_LINE, ClientEntityConstants.MAIN_BUSINESS_LINE);
-        CellRangeAddressList clientClassificationRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList clientClassificationRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.CLIENT_CLASSIFICATION_COL, ClientEntityConstants.CLIENT_CLASSIFICATION_COL);
-        CellRangeAddressList enabledAddressRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList enabledAddressRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.ADDRESS_ENABLED, ClientEntityConstants.ADDRESS_ENABLED);
-        CellRangeAddressList addressTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList addressTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.ADDRESS_TYPE_COL, ClientEntityConstants.ADDRESS_TYPE_COL);
-        CellRangeAddressList stateProvinceRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList stateProvinceRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.STATE_PROVINCE_COL, ClientEntityConstants.STATE_PROVINCE_COL);
-        CellRangeAddressList countryRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList countryRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.COUNTRY_COL, ClientEntityConstants.COUNTRY_COL);
-        CellRangeAddressList activeAddressRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList activeAddressRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.IS_ACTIVE_ADDRESS_COL, ClientEntityConstants.IS_ACTIVE_ADDRESS_COL);
-        CellRangeAddressList incorporateDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList incorporateDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.INCOPORATION_DATE_COL, ClientEntityConstants.INCOPORATION_DATE_COL);
-        CellRangeAddressList incorporateDateTillRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList incorporateDateTillRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 ClientEntityConstants.INCOPORATION_VALID_TILL_COL, ClientEntityConstants.INCOPORATION_VALID_TILL_COL);
 
         DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) worksheet);
@@ -265,11 +265,11 @@ public class ClientEntityWorkbookPopulator extends AbstractWorkbookPopulator {
 
         DataValidationConstraint officeNameConstraint = validationHelper.createFormulaListConstraint("Office");
         DataValidationConstraint staffNameConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$B1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$B2))");
         DataValidationConstraint submittedOnDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.LESS_OR_EQUAL, "=$O1", null, dateFormat);
+                .createDateConstraint(DataValidationConstraint.OperatorType.LESS_OR_EQUAL, "=$O2", null, dateFormat);
         DataValidationConstraint activationDateConstraint = validationHelper.createDateConstraint(
-                DataValidationConstraint.OperatorType.BETWEEN, "=VLOOKUP($B1,$AJ$2:$AK" + (offices.size() + 1) + ",2,FALSE)", "=TODAY()",
+                DataValidationConstraint.OperatorType.BETWEEN, "=VLOOKUP($B2,$AJ$2:$AK" + (offices.size() + 1) + ",2,FALSE)", "=TODAY()",
                 dateFormat);
         DataValidationConstraint activeConstraint = validationHelper.createExplicitListConstraint(new String[] { "True", "False" });
         DataValidationConstraint clientTypesConstraint = validationHelper.createFormulaListConstraint("ClientTypes");

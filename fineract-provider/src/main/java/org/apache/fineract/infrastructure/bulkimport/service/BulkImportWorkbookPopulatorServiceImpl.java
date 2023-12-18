@@ -250,7 +250,7 @@ public class BulkImportWorkbookPopulatorServiceImpl implements BulkImportWorkboo
     }
 
     private Response buildResponse(final XSSFWorkbook workbook, final String entity) {
-        String filename = entity + DateUtils.getBusinessLocalDate().toString() + ".xls";
+        String filename = entity + DateUtils.getBusinessLocalDate().toString() + ".xlsx";
         final ByteArrayOutputStream baos = new ByteArrayOutputStream();
         try {
             workbook.write(baos);
@@ -260,7 +260,7 @@ public class BulkImportWorkbookPopulatorServiceImpl implements BulkImportWorkboo
 
         final ResponseBuilder response = Response.ok(baos.toByteArray());
         response.header("Content-Disposition", "attachment; filename=\"" + filename + "\"");
-        response.header("Content-Type", "application/vnd.ms-excel");
+        response.header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         return response.build();
     }
 

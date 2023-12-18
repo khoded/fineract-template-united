@@ -85,17 +85,17 @@ public class SharedAccountWorkBookPopulator extends AbstractWorkbookPopulator {
     }
 
     private void setRules(Sheet sharedAccountSheet, String dateFormat) {
-        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SharedAccountsConstants.CLIENT_NAME_COL, SharedAccountsConstants.CLIENT_NAME_COL);
-        CellRangeAddressList productRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList productRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SharedAccountsConstants.PRODUCT_COL, SharedAccountsConstants.PRODUCT_COL);
-        CellRangeAddressList submittedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList submittedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SharedAccountsConstants.SUBMITTED_ON_COL, SharedAccountsConstants.SUBMITTED_ON_COL);
-        CellRangeAddressList lockingFrequencyTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList lockingFrequencyTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SharedAccountsConstants.LOCK_IN_PERIOD_FREQUENCY_TYPE, SharedAccountsConstants.LOCK_IN_PERIOD_FREQUENCY_TYPE);
-        CellRangeAddressList applicationDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList applicationDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SharedAccountsConstants.APPLICATION_DATE_COL, SharedAccountsConstants.APPLICATION_DATE_COL);
-        CellRangeAddressList allowDividendCalcRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList allowDividendCalcRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SharedAccountsConstants.ALLOW_DIVIDEND_CALCULATION_FOR_INACTIVE_CLIENTS_COL,
                 SharedAccountsConstants.ALLOW_DIVIDEND_CALCULATION_FOR_INACTIVE_CLIENTS_COL);
 

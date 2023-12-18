@@ -576,4 +576,8 @@ public final class FixedDepositAccountData extends DepositAccountData {
     public void setTransactionSize(Long transactionSize) {
         this.transactionSize = transactionSize;
     }
+
+    public void setNominalAnnualInterestRate(BigDecimal annualInterestRate) {
+        this.nominalAnnualInterestRate = annualInterestRate;
+    }
 }

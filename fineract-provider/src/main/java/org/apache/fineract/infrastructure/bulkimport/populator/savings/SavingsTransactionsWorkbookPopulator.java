@@ -86,17 +86,17 @@ public class SavingsTransactionsWorkbookPopulator extends AbstractWorkbookPopula
     }
 
     private void setRules(Sheet worksheet, String dateFormat) {
-        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 TransactionConstants.OFFICE_NAME_COL, TransactionConstants.OFFICE_NAME_COL);
-        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 TransactionConstants.CLIENT_NAME_COL, TransactionConstants.CLIENT_NAME_COL);
-        CellRangeAddressList accountNumberRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList accountNumberRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 TransactionConstants.SAVINGS_ACCOUNT_NO_COL, TransactionConstants.SAVINGS_ACCOUNT_NO_COL);
-        CellRangeAddressList transactionTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList transactionTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 TransactionConstants.TRANSACTION_TYPE_COL, TransactionConstants.TRANSACTION_TYPE_COL);
-        CellRangeAddressList paymentTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList paymentTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 TransactionConstants.PAYMENT_TYPE_COL, TransactionConstants.PAYMENT_TYPE_COL);
-        CellRangeAddressList transactionDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList transactionDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 TransactionConstants.TRANSACTION_DATE_COL, TransactionConstants.TRANSACTION_DATE_COL);
 
         DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) worksheet);
@@ -105,14 +105,14 @@ public class SavingsTransactionsWorkbookPopulator extends AbstractWorkbookPopula
 
         DataValidationConstraint officeNameConstraint = validationHelper.createFormulaListConstraint("Office");
         DataValidationConstraint clientNameConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Client_\",$A1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Client_\",$A2))");
         DataValidationConstraint accountNumberConstraint = validationHelper.createFormulaListConstraint(
-                "INDIRECT(CONCATENATE(\"Account_\",SUBSTITUTE(SUBSTITUTE(SUBSTITUTE($B1,\" \",\"_\"),\"(\",\"_\"),\")\",\"_\")))");
+                "INDIRECT(CONCATENATE(\"Account_\",SUBSTITUTE(SUBSTITUTE(SUBSTITUTE($B2,\" \",\"_\"),\"(\",\"_\"),\")\",\"_\")))");
         DataValidationConstraint transactionTypeConstraint = validationHelper
                 .createExplicitListConstraint(new String[] { "Withdrawal", "Deposit" });
         DataValidationConstraint paymentTypeConstraint = validationHelper.createFormulaListConstraint("PaymentTypes");
         DataValidationConstraint transactionDateConstraint = validationHelper.createDateConstraint(
-                DataValidationConstraint.OperatorType.BETWEEN, "=VLOOKUP($C1,$Q$2:$T$" + (savingsAccounts.size() + 1) + ",4,FALSE)",
+                DataValidationConstraint.OperatorType.BETWEEN, "=VLOOKUP($C2,$Q$2:$T$" + (savingsAccounts.size() + 1) + ",4,FALSE)",
                 "=TODAY()", dateFormat);
 
         DataValidation officeValidation = validationHelper.createValidation(officeNameConstraint, officeNameRange);

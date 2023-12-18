@@ -620,4 +620,12 @@ public final class RecurringDepositAccountData extends DepositAccountData {
         return new HashCodeBuilder(17, 37).append(this.id).append(this.accountNo).toHashCode();
     }
 
+    public void setNominalAnnualInterestRate(BigDecimal nominalAnnualInterestRate) {
+        this.nominalAnnualInterestRate = nominalAnnualInterestRate;
+    }
+
+    public void setChart(DepositAccountInterestRateChartData charts) {
+        this.charts = charts;
+    }
+
 }

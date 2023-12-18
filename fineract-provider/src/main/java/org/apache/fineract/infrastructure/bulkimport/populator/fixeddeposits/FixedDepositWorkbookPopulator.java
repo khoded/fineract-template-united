@@ -74,33 +74,33 @@ public class FixedDepositWorkbookPopulator extends AbstractWorkbookPopulator {
     }
 
     private void setRules(Sheet worksheet, String dateFormat) {
-        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.OFFICE_NAME_COL, FixedDepositConstants.OFFICE_NAME_COL);
-        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.CLIENT_NAME_COL, FixedDepositConstants.CLIENT_NAME_COL);
-        CellRangeAddressList productNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList productNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.PRODUCT_COL, FixedDepositConstants.PRODUCT_COL);
-        CellRangeAddressList fieldOfficerRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList fieldOfficerRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.FIELD_OFFICER_NAME_COL, FixedDepositConstants.FIELD_OFFICER_NAME_COL);
-        CellRangeAddressList submittedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList submittedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.SUBMITTED_ON_DATE_COL, FixedDepositConstants.SUBMITTED_ON_DATE_COL);
-        CellRangeAddressList approvedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList approvedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.APPROVED_DATE_COL, FixedDepositConstants.APPROVED_DATE_COL);
-        CellRangeAddressList activationDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList activationDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.ACTIVATION_DATE_COL, FixedDepositConstants.ACTIVATION_DATE_COL);
-        CellRangeAddressList interestCompudingPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestCompudingPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.INTEREST_COMPOUNDING_PERIOD_COL, FixedDepositConstants.INTEREST_COMPOUNDING_PERIOD_COL);
-        CellRangeAddressList interestPostingPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestPostingPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.INTEREST_POSTING_PERIOD_COL, FixedDepositConstants.INTEREST_POSTING_PERIOD_COL);
-        CellRangeAddressList interestCalculationRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestCalculationRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.INTEREST_CALCULATION_COL, FixedDepositConstants.INTEREST_CALCULATION_COL);
-        CellRangeAddressList interestCalculationDaysInYearRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestCalculationDaysInYearRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL, FixedDepositConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL);
-        CellRangeAddressList lockinPeriodFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList lockinPeriodFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.LOCKIN_PERIOD_FREQUENCY_COL, FixedDepositConstants.LOCKIN_PERIOD_FREQUENCY_COL);
-        CellRangeAddressList depositAmountRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList depositAmountRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.DEPOSIT_AMOUNT_COL, FixedDepositConstants.DEPOSIT_AMOUNT_COL);
-        CellRangeAddressList depositPeriodTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList depositPeriodTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.DEPOSIT_PERIOD_FREQUENCY_COL, FixedDepositConstants.DEPOSIT_PERIOD_FREQUENCY_COL);
 
         DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) worksheet);
@@ -109,17 +109,17 @@ public class FixedDepositWorkbookPopulator extends AbstractWorkbookPopulator {
 
         DataValidationConstraint officeNameConstraint = validationHelper.createFormulaListConstraint("Office");
         DataValidationConstraint clientNameConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Client_\",$A1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Client_\",$A2))");
         DataValidationConstraint productNameConstraint = validationHelper.createFormulaListConstraint("Products");
         DataValidationConstraint fieldOfficerNameConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$A1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$A2))");
         DataValidationConstraint submittedDateConstraint = validationHelper.createDateConstraint(
                 DataValidationConstraint.OperatorType.BETWEEN,
-                "=VLOOKUP($B1,$AF$2:$AG$" + (clientSheetPopulator.getClientsSize() + 1) + ",2,FALSE)", "=TODAY()", dateFormat);
+                "=VLOOKUP($B2,$AF$2:$AG$" + (clientSheetPopulator.getClientsSize() + 1) + ",2,FALSE)", "=TODAY()", dateFormat);
         DataValidationConstraint approvalDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$E1", "=TODAY()", dateFormat);
+                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$E2", "=TODAY()", dateFormat);
         DataValidationConstraint activationDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$F1", "=TODAY()", dateFormat);
+                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$F2", "=TODAY()", dateFormat);
         DataValidationConstraint interestCompudingPeriodConstraint = validationHelper
                 .createExplicitListConstraint(new String[] { TemplatePopulateImportConstants.INTEREST_COMPOUNDING_PERIOD_DAILY,
                         TemplatePopulateImportConstants.INTEREST_COMPOUNDING_PERIOD_MONTHLY,
@@ -140,7 +140,7 @@ public class FixedDepositWorkbookPopulator extends AbstractWorkbookPopulator {
                 new String[] { TemplatePopulateImportConstants.FREQUENCY_DAYS, TemplatePopulateImportConstants.FREQUENCY_WEEKS,
                         TemplatePopulateImportConstants.FREQUENCY_MONTHS, TemplatePopulateImportConstants.FREQUENCY_YEARS });
         DataValidationConstraint depositConstraint = validationHelper.createDecimalConstraint(
-                DataValidationConstraint.OperatorType.GREATER_OR_EQUAL, "=INDIRECT(CONCATENATE(\"Min_Deposit_\",$C1))", null);
+                DataValidationConstraint.OperatorType.GREATER_OR_EQUAL, "=INDIRECT(CONCATENATE(\"Min_Deposit_\",$C2))", null);
 
         DataValidation officeValidation = validationHelper.createValidation(officeNameConstraint, officeNameRange);
         DataValidation clientValidation = validationHelper.createValidation(clientNameConstraint, clientNameRange);
@@ -317,6 +317,7 @@ public class FixedDepositWorkbookPopulator extends AbstractWorkbookPopulator {
         worksheet.setColumnWidth(FixedDepositConstants.DEPOSIT_PERIOD_COL, TemplatePopulateImportConstants.SMALL_COL_SIZE);
         worksheet.setColumnWidth(FixedDepositConstants.DEPOSIT_PERIOD_FREQUENCY_COL, TemplatePopulateImportConstants.SMALL_COL_SIZE);
         worksheet.setColumnWidth(FixedDepositConstants.EXTERNAL_ID_COL, TemplatePopulateImportConstants.SMALL_COL_SIZE);
+        worksheet.setColumnWidth(FixedDepositConstants.NOMINAL_INTEREST_RATE, TemplatePopulateImportConstants.SMALL_COL_SIZE);
 
         worksheet.setColumnWidth(FixedDepositConstants.CHARGE_ID_1, TemplatePopulateImportConstants.MEDIUM_COL_SIZE);
         worksheet.setColumnWidth(FixedDepositConstants.CHARGE_AMOUNT_1, TemplatePopulateImportConstants.MEDIUM_COL_SIZE);
@@ -343,6 +344,7 @@ public class FixedDepositWorkbookPopulator extends AbstractWorkbookPopulator {
         writeString(FixedDepositConstants.DEPOSIT_AMOUNT_COL, rowHeader, "Deposit Amount");
         writeString(FixedDepositConstants.DEPOSIT_PERIOD_COL, rowHeader, "Deposit Period");
         writeString(FixedDepositConstants.EXTERNAL_ID_COL, rowHeader, "External Id");
+        writeString(FixedDepositConstants.NOMINAL_INTEREST_RATE, rowHeader, "Nominal Interest Rate*");
 
         writeString(FixedDepositConstants.CHARGE_ID_1, rowHeader, "Charge Id");
         writeString(FixedDepositConstants.CHARGE_AMOUNT_1, rowHeader, "Charged Amount");

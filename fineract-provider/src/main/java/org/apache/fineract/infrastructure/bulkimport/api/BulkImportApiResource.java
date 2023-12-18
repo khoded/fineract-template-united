@@ -102,7 +102,7 @@ public class BulkImportApiResource {
 
     @GET
     @Path("downloadOutputTemplate")
-    @Produces("application/vnd.ms-excel")
+    @Produces("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
     public Response getOutputTemplate(@QueryParam("importDocumentId") final String importDocumentId) {
         return bulkImportWorkbookService.getOutputTemplate(importDocumentId);
     }

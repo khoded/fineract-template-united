@@ -96,7 +96,8 @@ public class BulkImportWorkbookServiceImpl implements BulkImportWorkbookService 
                 final Tika tika = new Tika();
                 final TikaInputStream tikaInputStream = TikaInputStream.get(bis);
                 final String fileType = tika.detect(tikaInputStream);
-                if (!fileType.contains("msoffice") && !fileType.contains("application/vnd.ms-excel")) {
+                if ((!fileType.contains("msoffice") && !fileType.contains("application/vnd.ms-excel")) &&
+                        !fileType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ) {
                     // We had a problem where we tried to upload the downloaded
                     // file from the import options, it was somehow changed the
                     // extension we use this fix.
@@ -265,7 +266,7 @@ public class BulkImportWorkbookServiceImpl implements BulkImportWorkbookService 
         File file = new File(fileLocation);
         final Response.ResponseBuilder response = Response.ok(file);
         response.header("Content-Disposition", "attachment; filename=\"" + fileName + "\"");
-        response.header("Content-Type", "application/vnd.ms-excel");
+        response.header("Content-Type", "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         return response.build();
     }
 
