@@ -26,8 +26,8 @@ import org.apache.fineract.infrastructure.bulkimport.populator.OfficeSheetPopula
 import org.apache.fineract.infrastructure.bulkimport.populator.PersonnelSheetPopulator;
 import org.apache.fineract.infrastructure.bulkimport.populator.RoleSheetPopulator;
 import org.apache.fineract.organisation.office.data.OfficeData;
-import org.apache.poi.hssf.usermodel.HSSFDataValidationHelper;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
@@ -62,22 +62,22 @@ public class UserWorkbookPopulator extends AbstractWorkbookPopulator {
     }
 
     private void setRules(Sheet usersheet) {
-        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 UserConstants.OFFICE_NAME_COL, UserConstants.OFFICE_NAME_COL);
-        CellRangeAddressList staffNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList staffNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 UserConstants.STAFF_NAME_COL, UserConstants.STAFF_NAME_COL);
-        CellRangeAddressList autoGenPwRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList autoGenPwRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 UserConstants.AUTO_GEN_PW_COL, UserConstants.AUTO_GEN_PW_COL);
-        CellRangeAddressList overridePwExpiryPolicyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList overridePwExpiryPolicyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 UserConstants.OVERRIDE_PW_EXPIRY_POLICY_COL, UserConstants.OVERRIDE_PW_EXPIRY_POLICY_COL);
 
-        DataValidationHelper validationHelper = new HSSFDataValidationHelper((HSSFSheet) usersheet);
+        DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) usersheet);
         List<OfficeData> offices = officeSheetPopulator.getOffices();
         setNames(usersheet, offices);
 
         DataValidationConstraint officeNameConstraint = validationHelper.createFormulaListConstraint("Office");
         DataValidationConstraint staffNameConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$A1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$A2))");
         DataValidationConstraint booleanConstraint = validationHelper.createExplicitListConstraint(new String[] { "True", "False" });
 
         DataValidation officeValidation = validationHelper.createValidation(officeNameConstraint, officeNameRange);

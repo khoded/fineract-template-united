@@ -201,10 +201,10 @@ dependencyManagement {
         dependency 'org.owasp.esapi:esapi:2.4.0.0'
         dependency 'org.awaitility:awaitility:4.2.0'
 
-        dependencySet(group: 'org.apache.poi', version: '4.1.2') {
+        dependencySet(group: 'org.apache.poi', version: '5.2.3') {
             entry 'poi'
             entry 'poi-ooxml'
-            entry 'poi-ooxml-schemas'
+            entry 'poi-ooxml-full'
         }
 
         dependencySet(group: 'io.rest-assured', version: '4.5.1') {

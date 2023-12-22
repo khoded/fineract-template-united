@@ -48,9 +48,10 @@ public final class RecurringDepositConstants {
     public static final int FREQ_SAME_AS_GROUP_CENTER_COL = 21;
     public static final int ADJUST_ADVANCE_PAYMENTS_COL = 22;
     public static final int EXTERNAL_ID_COL = 23;
-    public static final int STATUS_COL = 24;
-    public static final int SAVINGS_ID_COL = 25;
-    public static final int FAILURE_REPORT_COL = 26;
+    public static final int NOMINAL_ANNUAL_INTEREST_RATE = 24;
+    public static final int STATUS_COL = 25;
+    public static final int SAVINGS_ID_COL = 26;
+    public static final int FAILURE_REPORT_COL = 27;
     public static final int CHARGE_ID_1 = 28;
     public static final int CHARGE_AMOUNT_1 = 29;
     public static final int CHARGE_DUE_DATE_1 = 30;

@@ -19,8 +19,10 @@
 package org.apache.fineract.infrastructure.documentmanagement.contentrepository;
 
 import com.google.common.io.Files;
+
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
@@ -28,6 +30,7 @@ import java.util.Base64;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.fineract.infrastructure.core.config.FineractProperties;
 import org.apache.fineract.infrastructure.core.domain.Base64EncodedImage;
 import org.apache.fineract.infrastructure.core.service.ThreadLocalContextUtil;
@@ -36,7 +39,6 @@ import org.apache.fineract.infrastructure.documentmanagement.data.DocumentData;
 import org.apache.fineract.infrastructure.documentmanagement.data.FileData;
 import org.apache.fineract.infrastructure.documentmanagement.data.ImageData;
 import org.apache.fineract.infrastructure.documentmanagement.domain.StorageType;
-import org.apache.fineract.infrastructure.documentmanagement.exception.ContentManagementException;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Component;
 
@@ -151,14 +153,21 @@ public class FileSystemContentRepository implements ContentRepository {
     }
 
     private String writeFileToFileSystem(final String fileName, final InputStream uploadedInputStream, final String fileLocation) {
-        try (BufferedInputStream bis = new BufferedInputStream(uploadedInputStream)) {
-            String sanitizedPath = pathSanitizer.sanitize(fileLocation, bis);
+        String sanitizedPath = "";
+
+        try {
+            final ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            IOUtils.copy(uploadedInputStream, baos);
+            final byte[] bytes = baos.toByteArray();
+            InputStream clonedInputStream = new ByteArrayInputStream(bytes);
+            final BufferedInputStream bis = new BufferedInputStream(new ByteArrayInputStream(bytes));
+            sanitizedPath = pathSanitizer.sanitize(fileLocation, bis);
             makeDirectories(sanitizedPath);
-            FileUtils.copyInputStreamToFile(bis, new File(sanitizedPath)); // NOSONAR
-            return sanitizedPath;
-        } catch (final IOException ioException) {
-            log.warn("Failed to write file!", ioException);
-            throw new ContentManagementException(fileName, ioException.getMessage(), ioException);
+            FileUtils.copyInputStreamToFile(clonedInputStream, new File(sanitizedPath)); // NOSONAR
+        } catch (IOException e) {
+            throw new RuntimeException(e);
         }
+
+        return sanitizedPath;
     }
 }

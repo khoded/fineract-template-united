@@ -61,7 +61,7 @@ public class ChargeWorkbookPopulator extends AbstractWorkbookPopulator {
         // CellRangeAddressList dueDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
         // ChargeConstants.CHARGE_DUE_DATE_COL, ChargeConstants.CHARGE_DUE_DATE_COL);
 
-        // DataValidationHelper validationHelper = new HSSFDataValidationHelper((HSSFSheet) workSheet);
+        // DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) workSheet);
 
         // DataValidationConstraint dueDateConstraint = validationHelper
         // .createDateConstraint(DataValidationConstraint.OperatorType.GREATER_OR_EQUAL, "=TODAY()", null, dateFormat);
