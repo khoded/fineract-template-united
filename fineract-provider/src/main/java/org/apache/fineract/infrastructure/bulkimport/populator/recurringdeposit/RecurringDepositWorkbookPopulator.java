@@ -27,8 +27,8 @@ import org.apache.fineract.infrastructure.bulkimport.populator.OfficeSheetPopula
 import org.apache.fineract.infrastructure.bulkimport.populator.PersonnelSheetPopulator;
 import org.apache.fineract.infrastructure.bulkimport.populator.RecurringDepositProductSheetPopulator;
 import org.apache.fineract.portfolio.savings.data.RecurringDepositProductData;
-import org.apache.poi.hssf.usermodel.HSSFDataValidationHelper;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataValidation;
@@ -185,65 +185,65 @@ public class RecurringDepositWorkbookPopulator extends AbstractWorkbookPopulator
     }
 
     private void setRules(Sheet worksheet, String dateFormat) {
-        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.OFFICE_NAME_COL, RecurringDepositConstants.OFFICE_NAME_COL);
-        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.CLIENT_NAME_COL, RecurringDepositConstants.CLIENT_NAME_COL);
-        CellRangeAddressList productNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList productNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.PRODUCT_COL, RecurringDepositConstants.PRODUCT_COL);
-        CellRangeAddressList fieldOfficerRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList fieldOfficerRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.FIELD_OFFICER_NAME_COL, RecurringDepositConstants.FIELD_OFFICER_NAME_COL);
-        CellRangeAddressList submittedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList submittedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.SUBMITTED_ON_DATE_COL, RecurringDepositConstants.SUBMITTED_ON_DATE_COL);
-        CellRangeAddressList approvedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList approvedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.APPROVED_DATE_COL, RecurringDepositConstants.APPROVED_DATE_COL);
-        CellRangeAddressList activationDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList activationDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.ACTIVATION_DATE_COL, RecurringDepositConstants.ACTIVATION_DATE_COL);
-        CellRangeAddressList interestCompudingPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestCompudingPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.INTEREST_COMPOUNDING_PERIOD_COL, RecurringDepositConstants.INTEREST_COMPOUNDING_PERIOD_COL);
-        CellRangeAddressList interestPostingPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestPostingPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.INTEREST_POSTING_PERIOD_COL, RecurringDepositConstants.INTEREST_POSTING_PERIOD_COL);
-        CellRangeAddressList interestCalculationRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestCalculationRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.INTEREST_CALCULATION_COL, RecurringDepositConstants.INTEREST_CALCULATION_COL);
-        CellRangeAddressList interestCalculationDaysInYearRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestCalculationDaysInYearRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL,
                 RecurringDepositConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL);
-        CellRangeAddressList lockinPeriodFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList lockinPeriodFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.LOCKIN_PERIOD_FREQUENCY_COL, RecurringDepositConstants.LOCKIN_PERIOD_FREQUENCY_COL);
-        CellRangeAddressList depositAmountRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList depositAmountRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.RECURRING_DEPOSIT_AMOUNT_COL, RecurringDepositConstants.RECURRING_DEPOSIT_AMOUNT_COL);
-        CellRangeAddressList depositPeriodTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList depositPeriodTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.DEPOSIT_PERIOD_FREQUENCY_COL, RecurringDepositConstants.DEPOSIT_PERIOD_FREQUENCY_COL);
-        CellRangeAddressList depositFrequencyTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList depositFrequencyTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.DEPOSIT_FREQUENCY_TYPE_COL, RecurringDepositConstants.DEPOSIT_FREQUENCY_TYPE_COL);
-        CellRangeAddressList isMandatoryDepositRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList isMandatoryDepositRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.IS_MANDATORY_DEPOSIT_COL, RecurringDepositConstants.IS_MANDATORY_DEPOSIT_COL);
-        CellRangeAddressList allowWithdrawalRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList allowWithdrawalRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.ALLOW_WITHDRAWAL_COL, RecurringDepositConstants.ALLOW_WITHDRAWAL_COL);
-        CellRangeAddressList adjustAdvancePaymentRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList adjustAdvancePaymentRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.ADJUST_ADVANCE_PAYMENTS_COL, RecurringDepositConstants.ADJUST_ADVANCE_PAYMENTS_COL);
-        CellRangeAddressList sameFreqAsGroupRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList sameFreqAsGroupRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.FREQ_SAME_AS_GROUP_CENTER_COL, RecurringDepositConstants.FREQ_SAME_AS_GROUP_CENTER_COL);
-        CellRangeAddressList depositStartDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList depositStartDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.DEPOSIT_START_DATE_COL, RecurringDepositConstants.DEPOSIT_START_DATE_COL);
 
-        DataValidationHelper validationHelper = new HSSFDataValidationHelper((HSSFSheet) worksheet);
+        DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) worksheet);
 
         setNames(worksheet);
 
         DataValidationConstraint officeNameConstraint = validationHelper.createFormulaListConstraint("Office");
         DataValidationConstraint clientNameConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Client_\",$A1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Client_\",$A2))");
         DataValidationConstraint productNameConstraint = validationHelper.createFormulaListConstraint("Products");
         DataValidationConstraint fieldOfficerNameConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$A1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$A2))");
         DataValidationConstraint submittedDateConstraint = validationHelper.createDateConstraint(
                 DataValidationConstraint.OperatorType.BETWEEN,
-                "=VLOOKUP($B1,$AF$2:$AG$" + (clientSheetPopulator.getClientsSize() + 1) + ",2,FALSE)", "=TODAY()", dateFormat);
+                "=VLOOKUP($B2,$AF$2:$AG$" + (clientSheetPopulator.getClientsSize() + 1) + ",2,FALSE)", "=TODAY()", dateFormat);
         DataValidationConstraint approvalDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$E1", "=TODAY()", dateFormat);
+                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$E2", "=TODAY()", dateFormat);
         DataValidationConstraint activationDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$F1", "=TODAY()", dateFormat);
+                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$F2", "=TODAY()", dateFormat);
         DataValidationConstraint interestCompudingPeriodConstraint = validationHelper
                 .createExplicitListConstraint(new String[] { TemplatePopulateImportConstants.INTEREST_COMPOUNDING_PERIOD_DAILY,
                         TemplatePopulateImportConstants.INTEREST_COMPOUNDING_PERIOD_MONTHLY,
@@ -265,10 +265,10 @@ public class RecurringDepositWorkbookPopulator extends AbstractWorkbookPopulator
                 new String[] { TemplatePopulateImportConstants.FREQUENCY_DAYS, TemplatePopulateImportConstants.FREQUENCY_WEEKS,
                         TemplatePopulateImportConstants.FREQUENCY_MONTHS, TemplatePopulateImportConstants.FREQUENCY_YEARS });
         DataValidationConstraint depositConstraint = validationHelper.createDecimalConstraint(
-                DataValidationConstraint.OperatorType.GREATER_OR_EQUAL, "=INDIRECT(CONCATENATE(\"Min_Deposit_\",$C1))", null);
+                DataValidationConstraint.OperatorType.GREATER_OR_EQUAL, "=INDIRECT(CONCATENATE(\"Min_Deposit_\",$C2))", null);
         DataValidationConstraint booleanConstraint = validationHelper.createExplicitListConstraint(new String[] { "True", "False" });
         DataValidationConstraint depositStartDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$G1", "=TODAY()", "dd/mm/yy");
+                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$G2", "=TODAY()", "dd/mm/yy");
 
         DataValidation officeValidation = validationHelper.createValidation(officeNameConstraint, officeNameRange);
         DataValidation clientValidation = validationHelper.createValidation(clientNameConstraint, clientNameRange);

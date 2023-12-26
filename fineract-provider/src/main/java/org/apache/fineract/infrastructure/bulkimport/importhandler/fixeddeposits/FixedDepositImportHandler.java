@@ -236,6 +236,10 @@ public class FixedDepositImportHandler implements ImportHandler {
             }
         }
         String externalId = ImportHandlerUtils.readAsString(FixedDepositConstants.EXTERNAL_ID_COL, row);
+        BigDecimal interestRate = BigDecimal.ZERO;
+        if (ImportHandlerUtils.readAsDouble(FixedDepositConstants.NOMINAL_INTEREST_RATE, row) != null) {
+            interestRate = BigDecimal.valueOf(ImportHandlerUtils.readAsDouble(FixedDepositConstants.NOMINAL_INTEREST_RATE, row));
+        }
         String clientName = ImportHandlerUtils.readAsString(FixedDepositConstants.CLIENT_NAME_COL, row);
 
         List<SavingsAccountChargeData> charges = new ArrayList<SavingsAccountChargeData>();
@@ -267,10 +271,12 @@ public class FixedDepositImportHandler implements ImportHandler {
         String status = ImportHandlerUtils.readAsString(FixedDepositConstants.STATUS_COL, row);
         statuses.add(status);
         Long clientId = ImportHandlerUtils.getIdByName(workbook.getSheet(TemplatePopulateImportConstants.CLIENT_SHEET_NAME), clientName);
-        return FixedDepositAccountData.importInstance(clientId, productId, fieldOfficerId, submittedOnDate,
+        FixedDepositAccountData data = FixedDepositAccountData.importInstance(clientId, productId, fieldOfficerId, submittedOnDate,
                 interestCompoundingPeriodTypeEnum, interestPostingPeriodTypeEnum, interestCalculationTypeEnum,
                 interestCalculationDaysInYearTypeEnum, lockinPeriodFrequency, lockinPeriodFrequencyTypeEnum, depositAmount, depositPeriod,
                 depositPeriodFrequencyId, externalId, charges, row.getRowNum(), locale, dateFormat);
+        data.setNominalAnnualInterestRate(interestRate);
+        return data;
     }
 
     public Count importEntity(String dateFormat) {
@@ -363,6 +369,7 @@ public class FixedDepositImportHandler implements ImportHandler {
         gsonBuilder.registerTypeAdapter(EnumOptionData.class, new EnumOptionDataIdSerializer());
         JsonObject savingsJsonob = gsonBuilder.create().toJsonTree(savings.get(i)).getAsJsonObject();
         savingsJsonob.remove("withdrawalFeeForTransfers");
+        savingsJsonob.remove("addPenaltyOnMissedTargetSavings");
         JsonArray chargesJsonAr = savingsJsonob.getAsJsonArray("charges");
         for (int j = 0; j < chargesJsonAr.size(); j++) {
             JsonElement chargesJsonElement = chargesJsonAr.get(j);

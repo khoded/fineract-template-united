@@ -41,6 +41,7 @@ public final class FixedDepositConstants {
     public static final int DEPOSIT_PERIOD_COL = 14;
     public static final int DEPOSIT_PERIOD_FREQUENCY_COL = 15;
     public static final int EXTERNAL_ID_COL = 16;
+    public static final int NOMINAL_INTEREST_RATE = 17;
     public static final int CHARGE_ID_1 = 18;
     public static final int CHARGE_AMOUNT_1 = 19;
     public static final int CHARGE_DUE_DATE_1 = 20;
