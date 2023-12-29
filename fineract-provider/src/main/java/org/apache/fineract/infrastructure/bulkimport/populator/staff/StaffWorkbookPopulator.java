@@ -24,8 +24,8 @@ import org.apache.fineract.infrastructure.bulkimport.constants.TemplatePopulateI
 import org.apache.fineract.infrastructure.bulkimport.populator.AbstractWorkbookPopulator;
 import org.apache.fineract.infrastructure.bulkimport.populator.OfficeSheetPopulator;
 import org.apache.fineract.organisation.office.data.OfficeData;
-import org.apache.poi.hssf.usermodel.HSSFDataValidationHelper;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
@@ -53,16 +53,16 @@ public class StaffWorkbookPopulator extends AbstractWorkbookPopulator {
     }
 
     private void setRules(Sheet staffSheet, String dateFormat) {
-        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 StaffConstants.OFFICE_NAME_COL, StaffConstants.OFFICE_NAME_COL);
-        CellRangeAddressList isLoanOfficerNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList isLoanOfficerNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 StaffConstants.IS_LOAN_OFFICER, StaffConstants.IS_LOAN_OFFICER);
-        CellRangeAddressList joinedOnNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList joinedOnNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 StaffConstants.JOINED_ON_COL, StaffConstants.JOINED_ON_COL);
-        CellRangeAddressList isActiveNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList isActiveNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 StaffConstants.IS_ACTIVE_COL, StaffConstants.IS_ACTIVE_COL);
 
-        DataValidationHelper validationHelper = new HSSFDataValidationHelper((HSSFSheet) staffSheet);
+        DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) staffSheet);
 
         List<OfficeData> offices = officeSheetPopulator.getOffices();
         setNames(staffSheet, offices);

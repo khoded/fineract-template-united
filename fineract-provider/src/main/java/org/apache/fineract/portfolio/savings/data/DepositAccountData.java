@@ -48,7 +48,7 @@ public class DepositAccountData {
     protected final SavingsAccountStatusEnumData status;
     protected final SavingsAccountApplicationTimelineData timeline;
     protected final CurrencyData currency;
-    protected final BigDecimal nominalAnnualInterestRate;
+    protected BigDecimal nominalAnnualInterestRate;
     protected final EnumOptionData interestCompoundingPeriodType;
     protected final EnumOptionData interestPostingPeriodType;
     protected final EnumOptionData interestCalculationType;
@@ -68,6 +68,7 @@ public class DepositAccountData {
 
     protected final Collection<SavingsAccountChargeData> charges;
     protected final DepositAccountInterestRateChartData accountChart;
+    protected DepositAccountInterestRateChartData charts;
 
     // template
     protected final Collection<DepositProductData> productOptions;

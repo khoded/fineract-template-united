@@ -30,8 +30,8 @@ import org.apache.fineract.infrastructure.bulkimport.populator.OfficeSheetPopula
 import org.apache.fineract.infrastructure.codes.data.CodeValueData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanAccountData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountData;
-import org.apache.poi.hssf.usermodel.HSSFDataValidationHelper;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataValidation;
@@ -156,7 +156,7 @@ public class GuarantorWorkbookPopulator extends AbstractWorkbookPopulator {
             }
             writeString(GuarantorConstants.LOOKUP_CLIENT_NAME_COL, row, loan.getClientName() + "(" + loan.getClientId() + ")");
             writeString(GuarantorConstants.LOOKUP_ACCOUNT_NO_COL, row,
-                    Long.parseLong(loan.getAccountNo()) + "-" + loan.getStatusStringValue());
+                    loan.getAccountNo() + "-" + loan.getStatusStringValue());
         }
     }
 
@@ -181,40 +181,40 @@ public class GuarantorWorkbookPopulator extends AbstractWorkbookPopulator {
 
     private void setRules(Sheet worksheet) {
 
-        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GuarantorConstants.OFFICE_NAME_COL, GuarantorConstants.OFFICE_NAME_COL);
-        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GuarantorConstants.CLIENT_NAME_COL, GuarantorConstants.CLIENT_NAME_COL);
-        CellRangeAddressList entityofficeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList entityofficeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GuarantorConstants.ENTITY_OFFICE_NAME_COL, GuarantorConstants.ENTITY_OFFICE_NAME_COL);
-        CellRangeAddressList entityclientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList entityclientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GuarantorConstants.ENTITY_ID_COL, GuarantorConstants.ENTITY_ID_COL);
-        CellRangeAddressList accountNumberRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList accountNumberRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GuarantorConstants.LOAN_ACCOUNT_NO_COL, GuarantorConstants.LOAN_ACCOUNT_NO_COL);
-        CellRangeAddressList savingsaccountNumberRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList savingsaccountNumberRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GuarantorConstants.SAVINGS_ID_COL, GuarantorConstants.SAVINGS_ID_COL);
-        CellRangeAddressList guranterTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList guranterTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GuarantorConstants.GUARANTO_TYPE_COL, GuarantorConstants.GUARANTO_TYPE_COL);
-        CellRangeAddressList guranterRelationshipTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList guranterRelationshipTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 GuarantorConstants.CLIENT_RELATIONSHIP_TYPE_COL, GuarantorConstants.CLIENT_RELATIONSHIP_TYPE_COL);
 
-        DataValidationHelper validationHelper = new HSSFDataValidationHelper((HSSFSheet) worksheet);
+        DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) worksheet);
 
         setNames(worksheet);
 
         DataValidationConstraint officeNameConstraint = validationHelper.createFormulaListConstraint("Office");
         DataValidationConstraint clientNameConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Client_\",$A1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Client_\",$A2))");
         DataValidationConstraint accountNumberConstraint = validationHelper.createFormulaListConstraint(
-                "INDIRECT(CONCATENATE(\"Account_\",SUBSTITUTE(SUBSTITUTE(SUBSTITUTE($B1,\" \",\"_\"),\"(\",\"_\"),\")\",\"_\")))");
+                "INDIRECT(CONCATENATE(\"Account_\",SUBSTITUTE(SUBSTITUTE(SUBSTITUTE($B2,\" \",\"_\"),\"(\",\"_\"),\")\",\"_\")))");
         DataValidationConstraint savingsaccountNumberConstraint = validationHelper.createFormulaListConstraint(
-                "INDIRECT(CONCATENATE(\"SavingsAccount_\",SUBSTITUTE(SUBSTITUTE(SUBSTITUTE($G1,\" \",\"_\"),\"(\",\"_\"),\")\",\"_\")))");
+                "INDIRECT(CONCATENATE(\"SavingsAccount_\",SUBSTITUTE(SUBSTITUTE(SUBSTITUTE($G2,\" \",\"_\"),\"(\",\"_\"),\")\",\"_\")))");
         DataValidationConstraint guranterTypeConstraint = validationHelper.createExplicitListConstraint(
                 new String[] { TemplatePopulateImportConstants.GUARANTOR_INTERNAL, TemplatePopulateImportConstants.GUARANTOR_EXTERNAL });
         DataValidationConstraint guarantorRelationshipConstraint = validationHelper.createFormulaListConstraint("GuarantorRelationship");
         DataValidationConstraint entityofficeNameConstraint = validationHelper.createFormulaListConstraint("Office");
         DataValidationConstraint entityclientNameConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Client_\",$F1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Client_\",$F2))");
 
         DataValidation officeValidation = validationHelper.createValidation(officeNameConstraint, officeNameRange);
         DataValidation clientValidation = validationHelper.createValidation(clientNameConstraint, clientNameRange);

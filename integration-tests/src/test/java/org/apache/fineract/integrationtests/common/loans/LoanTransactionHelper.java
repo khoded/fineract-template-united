@@ -38,7 +38,7 @@ import javax.ws.rs.core.HttpHeaders;
 import javax.ws.rs.core.MediaType;
 import org.apache.fineract.integrationtests.common.CommonConstants;
 import org.apache.fineract.integrationtests.common.Utils;
-import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -950,7 +950,7 @@ public class LoanTransactionHelper {
         byte[] byteArray = Utils.performGetBinaryResponse(requestSpec, responseSpec,
                 LOAN_ACCOUNT_URL + "/downloadtemplate" + "?" + Utils.TENANT_IDENTIFIER + "&dateFormat=" + dateFormat);
         InputStream inputStream = new ByteArrayInputStream(byteArray);
-        Workbook workbook = new HSSFWorkbook(inputStream);
+        Workbook workbook = new XSSFWorkbook(inputStream);
         return workbook;
     }
 

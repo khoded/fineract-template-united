@@ -31,8 +31,8 @@ import org.apache.fineract.infrastructure.bulkimport.populator.OfficeSheetPopula
 import org.apache.fineract.infrastructure.bulkimport.populator.PersonnelSheetPopulator;
 import org.apache.fineract.portfolio.charge.data.ChargeData;
 import org.apache.fineract.portfolio.loanproduct.data.LoanProductData;
-import org.apache.poi.hssf.usermodel.HSSFDataValidationHelper;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.BorderStyle;
 import org.apache.poi.ss.usermodel.Cell;
@@ -88,70 +88,70 @@ public class LoanWorkbookPopulator extends AbstractWorkbookPopulator {
     }
 
     private void setRules(Sheet worksheet, String dateFormat) {
-        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.OFFICE_NAME_COL, LoanConstants.OFFICE_NAME_COL);
-        CellRangeAddressList loanTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList loanTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.LOAN_TYPE_COL, LoanConstants.LOAN_TYPE_COL);
-        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.CLIENT_NAME_COL, LoanConstants.CLIENT_NAME_COL);
-        CellRangeAddressList productNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList productNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.PRODUCT_COL, LoanConstants.PRODUCT_COL);
-        CellRangeAddressList loanOfficerRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList loanOfficerRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.LOAN_OFFICER_NAME_COL, LoanConstants.LOAN_OFFICER_NAME_COL);
-        CellRangeAddressList submittedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList submittedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.SUBMITTED_ON_DATE_COL, LoanConstants.SUBMITTED_ON_DATE_COL);
-        CellRangeAddressList fundNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList fundNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.FUND_NAME_COL, LoanConstants.FUND_NAME_COL);
-        CellRangeAddressList principalRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList principalRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.PRINCIPAL_COL, LoanConstants.PRINCIPAL_COL);
-        CellRangeAddressList noOfRepaymentsRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList noOfRepaymentsRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.NO_OF_REPAYMENTS_COL, LoanConstants.NO_OF_REPAYMENTS_COL);
-        CellRangeAddressList repaidFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList repaidFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.REPAID_EVERY_FREQUENCY_COL, LoanConstants.REPAID_EVERY_FREQUENCY_COL);
-        CellRangeAddressList loanTermRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList loanTermRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.LOAN_TERM_COL, LoanConstants.LOAN_TERM_COL);
-        CellRangeAddressList loanTermFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList loanTermFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.LOAN_TERM_FREQUENCY_COL, LoanConstants.LOAN_TERM_FREQUENCY_COL);
-        CellRangeAddressList interestFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.NOMINAL_INTEREST_RATE_FREQUENCY_COL, LoanConstants.NOMINAL_INTEREST_RATE_FREQUENCY_COL);
-        CellRangeAddressList interestRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.NOMINAL_INTEREST_RATE_COL, LoanConstants.NOMINAL_INTEREST_RATE_COL);
-        CellRangeAddressList amortizationRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList amortizationRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.AMORTIZATION_COL, LoanConstants.AMORTIZATION_COL);
-        CellRangeAddressList interestMethodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestMethodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.INTEREST_METHOD_COL, LoanConstants.INTEREST_METHOD_COL);
-        CellRangeAddressList intrestCalculationPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList intrestCalculationPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.INTEREST_CALCULATION_PERIOD_COL, LoanConstants.INTEREST_CALCULATION_PERIOD_COL);
-        CellRangeAddressList repaymentStrategyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList repaymentStrategyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.REPAYMENT_STRATEGY_COL, LoanConstants.REPAYMENT_STRATEGY_COL);
-        CellRangeAddressList arrearsToleranceRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList arrearsToleranceRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.ARREARS_TOLERANCE_COL, LoanConstants.ARREARS_TOLERANCE_COL);
-        CellRangeAddressList graceOnPrincipalPaymentRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList graceOnPrincipalPaymentRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.GRACE_ON_PRINCIPAL_PAYMENT_COL, LoanConstants.GRACE_ON_PRINCIPAL_PAYMENT_COL);
-        CellRangeAddressList graceOnInterestPaymentRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList graceOnInterestPaymentRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.GRACE_ON_INTEREST_PAYMENT_COL, LoanConstants.GRACE_ON_INTEREST_PAYMENT_COL);
-        CellRangeAddressList graceOnInterestChargedRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList graceOnInterestChargedRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.GRACE_ON_INTEREST_CHARGED_COL, LoanConstants.GRACE_ON_INTEREST_CHARGED_COL);
-        CellRangeAddressList approvedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList approvedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.APPROVED_DATE_COL, LoanConstants.APPROVED_DATE_COL);
-        CellRangeAddressList disbursedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList disbursedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.DISBURSED_DATE_COL, LoanConstants.DISBURSED_DATE_COL);
-        CellRangeAddressList paymentTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList paymentTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.DISBURSED_PAYMENT_TYPE_COL, LoanConstants.DISBURSED_PAYMENT_TYPE_COL);
-        CellRangeAddressList repaymentTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList repaymentTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.REPAYMENT_TYPE_COL, LoanConstants.REPAYMENT_TYPE_COL);
-        CellRangeAddressList lastrepaymentDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList lastrepaymentDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.LAST_REPAYMENT_DATE_COL, LoanConstants.LAST_REPAYMENT_DATE_COL);
-        DataValidationHelper validationHelper = new HSSFDataValidationHelper((HSSFSheet) worksheet);
+        DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) worksheet);
 
-        CellRangeAddressList chargeOneNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList chargeOneNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.CHARGE_NAME_1, LoanConstants.CHARGE_NAME_1);
-        CellRangeAddressList chargeOneAmountTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList chargeOneAmountTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.CHARGE_AMOUNT_TYPE_1, LoanConstants.CHARGE_AMOUNT_TYPE_1);
 
-        CellRangeAddressList chargeTwoNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList chargeTwoNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.CHARGE_NAME_2, LoanConstants.CHARGE_NAME_2);
-        CellRangeAddressList chargeTwoAmountTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList chargeTwoAmountTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 LoanConstants.CHARGE_AMOUNT_TYPE_2, LoanConstants.CHARGE_AMOUNT_TYPE_2);
 
         setNames(worksheet);
@@ -160,29 +160,29 @@ public class LoanWorkbookPopulator extends AbstractWorkbookPopulator {
         DataValidationConstraint loanTypeConstraint = validationHelper.createExplicitListConstraint(
                 new String[] { LoanConstants.LOAN_TYPE_INDIVIDUAL, LoanConstants.LOAN_TYPE_GROUP, LoanConstants.LOAN_TYPE_JLG });
         DataValidationConstraint clientNameConstraint = validationHelper.createFormulaListConstraint(
-                "IF($B1=\"Group\",INDIRECT(CONCATENATE(\"Group_\",$A1)),INDIRECT(CONCATENATE(\"Client_\",$A1)))");
+                "IF($B2=\"Group\",INDIRECT(CONCATENATE(\"Group_\",$A2)),INDIRECT(CONCATENATE(\"Client_\",$A2)))");
         DataValidationConstraint productNameConstraint = validationHelper.createFormulaListConstraint("Products");
         DataValidationConstraint loanOfficerNameConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$A1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$A2))");
         DataValidationConstraint submittedDateConstraint = validationHelper.createDateConstraint(
                 DataValidationConstraint.OperatorType.BETWEEN,
-                "=IF(INDIRECT(CONCATENATE(\"START_DATE_\",$E1))>VLOOKUP($C1,$AR$2:$AT$"
+                "=IF(INDIRECT(CONCATENATE(\"START_DATE_\",$E2))>VLOOKUP($C2,$AR$2:$AT$"
                         + (clientSheetPopulator.getClientsSize() + groupSheetPopulator.getGroupsSize() + 1)
-                        + ",3,FALSE),INDIRECT(CONCATENATE(\"START_DATE_\",$E1)),VLOOKUP($C1,$AR$2:$AT$"
+                        + ",3,FALSE),INDIRECT(CONCATENATE(\"START_DATE_\",$E2)),VLOOKUP($C2,$AR$2:$AT$"
                         + (clientSheetPopulator.getClientsSize() + groupSheetPopulator.getGroupsSize() + 1) + ",3,FALSE))",
                 "=TODAY()", dateFormat);
         DataValidationConstraint approvalDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$G1", "=TODAY()", dateFormat);
+                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$G2", "=TODAY()", dateFormat);
         DataValidationConstraint disbursedDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$H1", "=TODAY()", dateFormat);
+                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$H2", "=TODAY()", dateFormat);
         DataValidationConstraint paymentTypeConstraint = validationHelper.createFormulaListConstraint("PaymentTypes");
         DataValidationConstraint fundNameConstraint = validationHelper.createFormulaListConstraint("Funds");
         DataValidationConstraint principalConstraint = validationHelper.createDecimalConstraint(
-                DataValidationConstraint.OperatorType.BETWEEN, "=INDIRECT(CONCATENATE(\"MIN_PRINCIPAL_\",$E1))",
-                "=INDIRECT(CONCATENATE(\"MAX_PRINCIPAL_\",$E1))");
+                DataValidationConstraint.OperatorType.BETWEEN, "=INDIRECT(CONCATENATE(\"MIN_PRINCIPAL_\",$E2))",
+                "=INDIRECT(CONCATENATE(\"MAX_PRINCIPAL_\",$E2))");
         DataValidationConstraint noOfRepaymentsConstraint = validationHelper.createIntegerConstraint(
-                DataValidationConstraint.OperatorType.BETWEEN, "=INDIRECT(CONCATENATE(\"MIN_REPAYMENT_\",$E1))",
-                "=INDIRECT(CONCATENATE(\"MAX_REPAYMENT_\",$E1))");
+                DataValidationConstraint.OperatorType.BETWEEN, "=INDIRECT(CONCATENATE(\"MIN_REPAYMENT_\",$E2))",
+                "=INDIRECT(CONCATENATE(\"MAX_REPAYMENT_\",$E2))");
         DataValidationConstraint frequencyConstraint = validationHelper
                 .createExplicitListConstraint(new String[] { "Days", "Weeks", "Months", "Semi Month" });
         DataValidationConstraint loanTermFrequencyConstraint = validationHelper
@@ -190,10 +190,10 @@ public class LoanWorkbookPopulator extends AbstractWorkbookPopulator {
         DataValidationConstraint loanTermConstraint = validationHelper
                 .createIntegerConstraint(DataValidationConstraint.OperatorType.GREATER_OR_EQUAL, "=$M1/$N1", "=$M1*$N1");
         DataValidationConstraint interestFrequencyConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"INTEREST_FREQUENCY_\",$E1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"INTEREST_FREQUENCY_\",$E2))");
         DataValidationConstraint interestConstraint = validationHelper.createDecimalConstraint(
-                DataValidationConstraint.OperatorType.BETWEEN, "=INDIRECT(CONCATENATE(\"MIN_INTEREST_\",$E1))",
-                "=INDIRECT(CONCATENATE(\"MAX_INTEREST_\",$E1))");
+                DataValidationConstraint.OperatorType.BETWEEN, "=INDIRECT(CONCATENATE(\"MIN_INTEREST_\",$E2))",
+                "=INDIRECT(CONCATENATE(\"MAX_INTEREST_\",$E2))");
         DataValidationConstraint amortizationConstraint = validationHelper
                 .createExplicitListConstraint(new String[] { "Equal principal payments", "Equal installments" });
         DataValidationConstraint interestMethodConstraint = validationHelper
@@ -212,7 +212,7 @@ public class LoanWorkbookPopulator extends AbstractWorkbookPopulator {
         DataValidationConstraint graceOnInterestChargedConstraint = validationHelper
                 .createIntegerConstraint(DataValidationConstraint.OperatorType.GREATER_OR_EQUAL, "0", null);
         DataValidationConstraint lastRepaymentDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$I1", "=TODAY()", dateFormat);
+                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$I2", "=TODAY()", dateFormat);
 
         DataValidationConstraint chargeOneNameConstraint = validationHelper.createFormulaListConstraint("Charges");
         DataValidationConstraint chargeOneAmountTypeConstraint = validationHelper
@@ -521,7 +521,7 @@ public class LoanWorkbookPopulator extends AbstractWorkbookPopulator {
             Name chargeAmount = loanWorkbook.createName();
             Name chargeAmountType = loanWorkbook.createName();
 
-            String chargeName = charges.get(i).getName().trim().replaceAll("[ )(]", "_");
+            String chargeName = charges.get(i).getName().trim().replaceAll("[\\[\\] )($%!@#^&*~,-?;'\"]", "_");
 
             chargeColName.setNameName("CHARGE_NAME_" + chargeName);
             chargeColName.setRefersToFormula(TemplatePopulateImportConstants.CHARGE_SHEET_NAME + "!$B$" + (i + 2));

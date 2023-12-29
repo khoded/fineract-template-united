@@ -28,8 +28,8 @@ import org.apache.fineract.infrastructure.bulkimport.populator.OfficeSheetPopula
 import org.apache.fineract.infrastructure.bulkimport.populator.PersonnelSheetPopulator;
 import org.apache.fineract.infrastructure.bulkimport.populator.SavingsProductSheetPopulator;
 import org.apache.fineract.portfolio.savings.data.SavingsProductData;
-import org.apache.poi.hssf.usermodel.HSSFDataValidationHelper;
-import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataValidation;
@@ -190,38 +190,38 @@ public class SavingsWorkbookPopulator extends AbstractWorkbookPopulator {
     }
 
     private void setRules(Sheet worksheet, String dateFormat) {
-        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList officeNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.OFFICE_NAME_COL, SavingsConstants.OFFICE_NAME_COL);
-        CellRangeAddressList savingsTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList savingsTypeRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.SAVINGS_TYPE_COL, SavingsConstants.SAVINGS_TYPE_COL);
-        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList clientNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.CLIENT_NAME_COL, SavingsConstants.CLIENT_NAME_COL);
-        CellRangeAddressList productNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList productNameRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.PRODUCT_COL, SavingsConstants.PRODUCT_COL);
-        CellRangeAddressList fieldOfficerRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList fieldOfficerRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.FIELD_OFFICER_NAME_COL, SavingsConstants.FIELD_OFFICER_NAME_COL);
-        CellRangeAddressList submittedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList submittedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.SUBMITTED_ON_DATE_COL, SavingsConstants.SUBMITTED_ON_DATE_COL);
-        CellRangeAddressList approvedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList approvedDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.APPROVED_DATE_COL, SavingsConstants.APPROVED_DATE_COL);
-        CellRangeAddressList activationDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList activationDateRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.ACTIVATION_DATE_COL, SavingsConstants.ACTIVATION_DATE_COL);
-        CellRangeAddressList interestCompudingPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestCompudingPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.INTEREST_COMPOUNDING_PERIOD_COL, SavingsConstants.INTEREST_COMPOUNDING_PERIOD_COL);
-        CellRangeAddressList interestPostingPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestPostingPeriodRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.INTEREST_POSTING_PERIOD_COL, SavingsConstants.INTEREST_POSTING_PERIOD_COL);
-        CellRangeAddressList interestCalculationRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestCalculationRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.INTEREST_CALCULATION_COL, SavingsConstants.INTEREST_CALCULATION_COL);
-        CellRangeAddressList interestCalculationDaysInYearRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList interestCalculationDaysInYearRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL, SavingsConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL);
-        CellRangeAddressList lockinPeriodFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList lockinPeriodFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.LOCKIN_PERIOD_FREQUENCY_COL, SavingsConstants.LOCKIN_PERIOD_FREQUENCY_COL);
-        CellRangeAddressList applyWithdrawalFeeForTransfersRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList applyWithdrawalFeeForTransfersRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.APPLY_WITHDRAWAL_FEE_FOR_TRANSFERS, SavingsConstants.APPLY_WITHDRAWAL_FEE_FOR_TRANSFERS);
-        CellRangeAddressList allowOverdraftRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL97.getLastRowIndex(),
+        CellRangeAddressList allowOverdraftRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.ALLOW_OVER_DRAFT_COL, SavingsConstants.ALLOW_OVER_DRAFT_COL);
 
-        DataValidationHelper validationHelper = new HSSFDataValidationHelper((HSSFSheet) worksheet);
+        DataValidationHelper validationHelper = new XSSFDataValidationHelper((XSSFSheet) worksheet);
 
         setNames(worksheet);
 
@@ -229,18 +229,18 @@ public class SavingsWorkbookPopulator extends AbstractWorkbookPopulator {
         DataValidationConstraint savingsTypeConstraint = validationHelper
                 .createExplicitListConstraint(new String[] { "Individual", "Group" });
         DataValidationConstraint clientNameConstraint = validationHelper.createFormulaListConstraint(
-                "IF($B1=\"Individual\",INDIRECT(CONCATENATE(\"Client_\",$A1)),INDIRECT(CONCATENATE(\"Group_\",$A1)))");
+                "IF($B2=\"Individual\",INDIRECT(CONCATENATE(\"Client_\",$A2)),INDIRECT(CONCATENATE(\"Group_\",$A2)))");
         DataValidationConstraint productNameConstraint = validationHelper.createFormulaListConstraint("Products");
         DataValidationConstraint fieldOfficerNameConstraint = validationHelper
-                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$A1))");
+                .createFormulaListConstraint("INDIRECT(CONCATENATE(\"Staff_\",$A2))");
         DataValidationConstraint submittedDateConstraint = validationHelper.createDateConstraint(
                 DataValidationConstraint.OperatorType.BETWEEN,
-                "=VLOOKUP($C1,$AF$2:$AG$" + (clientSheetPopulator.getClientsSize() + groupSheetPopulator.getGroupsSize() + 1) + ",2,FALSE)",
+                "=VLOOKUP($C2,$AF$2:$AG$" + (clientSheetPopulator.getClientsSize() + groupSheetPopulator.getGroupsSize() + 1) + ",2,FALSE)",
                 "=TODAY()", dateFormat);
         DataValidationConstraint approvalDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$F1", "=TODAY()", dateFormat);
+                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$F2", "=TODAY()", dateFormat);
         DataValidationConstraint activationDateConstraint = validationHelper
-                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$G1", "=TODAY()", dateFormat);
+                .createDateConstraint(DataValidationConstraint.OperatorType.BETWEEN, "=$G2", "=TODAY()", dateFormat);
         DataValidationConstraint interestCompudingPeriodConstraint = validationHelper
                 .createExplicitListConstraint(new String[] { TemplatePopulateImportConstants.INTEREST_COMPOUNDING_PERIOD_DAILY,
                         TemplatePopulateImportConstants.INTEREST_COMPOUNDING_PERIOD_MONTHLY,

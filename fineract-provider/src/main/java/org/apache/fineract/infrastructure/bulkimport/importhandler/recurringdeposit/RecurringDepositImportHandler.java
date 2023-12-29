@@ -66,7 +66,6 @@ public class RecurringDepositImportHandler implements ImportHandler {
     @Autowired
     public RecurringDepositImportHandler(final PortfolioCommandSourceWritePlatformService commandsSourceWritePlatformService) {
         this.commandsSourceWritePlatformService = commandsSourceWritePlatformService;
-
     }
 
     @Override
@@ -236,6 +235,12 @@ public class RecurringDepositImportHandler implements ImportHandler {
         Boolean adjustAdvancePayments = ImportHandlerUtils.readAsBoolean(RecurringDepositConstants.ADJUST_ADVANCE_PAYMENTS_COL, row);
         String clientName = ImportHandlerUtils.readAsString(RecurringDepositConstants.CLIENT_NAME_COL, row);
         String externalId = ImportHandlerUtils.readAsString(RecurringDepositConstants.EXTERNAL_ID_COL, row);
+        BigDecimal nominalAnnualInterestRate = null;
+        if (ImportHandlerUtils.readAsDouble(RecurringDepositConstants.NOMINAL_ANNUAL_INTEREST_RATE, row) != null) {
+            nominalAnnualInterestRate = BigDecimal
+                    .valueOf(ImportHandlerUtils.readAsDouble(RecurringDepositConstants.NOMINAL_ANNUAL_INTEREST_RATE, row));
+        }
+
         List<SavingsAccountChargeData> charges = new ArrayList<>();
 
         String charge1 = ImportHandlerUtils.readAsString(RecurringDepositConstants.CHARGE_ID_1, row);
@@ -262,14 +267,21 @@ public class RecurringDepositImportHandler implements ImportHandler {
                         ImportHandlerUtils.readAsDate(RecurringDepositConstants.CHARGE_DUE_DATE_2, row)));
             }
         }
+
         String status = ImportHandlerUtils.readAsString(RecurringDepositConstants.STATUS_COL, row);
         statuses.add(status);
         Long clientId = ImportHandlerUtils.getIdByName(workbook.getSheet(TemplatePopulateImportConstants.CLIENT_SHEET_NAME), clientName);
-        return RecurringDepositAccountData.importInstance(clientId, productId, fieldOfficerId, submittedOnDate,
+        RecurringDepositAccountData data =  RecurringDepositAccountData.importInstance(clientId, productId, fieldOfficerId, submittedOnDate,
                 interestCompoundingPeriodTypeEnum, interestPostingPeriodTypeEnum, interestCalculationTypeEnum,
                 interestCalculationDaysInYearTypeEnum, lockinPeriodFrequency, lockinPeriodFrequencyTypeEnum, depositAmount, depositPeriod,
                 depositPeriodFrequencyId, depositStartDate, recurringFrequency, recurringFrequencyTypeEnum, inheritCalendar,
                 isMandatoryDeposit, allowWithdrawal, adjustAdvancePayments, externalId, charges, row.getRowNum(), locale, dateFormat);
+//        data.setNominalAnnualInterestRate(nominalAnnualInterestRate);
+//        final InterestRateChartData chart = this.chartReadPlatformService.retrieveActiveChartWithTemplate(productId);
+//        DepositAccountInterestRateChartData accountChart = DepositAccountInterestRateChartData.from(chart);
+//        data.setChart(accountChart);
+
+        return data;
     }
 
     public Count importEntity(String dateFormat) {
@@ -379,6 +391,8 @@ public class RecurringDepositImportHandler implements ImportHandler {
         gsonBuilder.registerTypeAdapter(EnumOptionData.class, new EnumOptionDataIdSerializer());
         JsonObject savingsJsonob = gsonBuilder.create().toJsonTree(savings.get(i)).getAsJsonObject();
         savingsJsonob.remove("withdrawalFeeForTransfers");
+        savingsJsonob.remove("addPenaltyOnMissedTargetSavings");
+
         String payload = savingsJsonob.toString();
         final CommandWrapper commandRequest = new CommandWrapperBuilder() //
                 .createRecurringDepositAccount() //
