@@ -46,20 +46,20 @@ services:
       - node_id=1
       - SUB_PROTOCOL=mysql:thin
       - fineract_tenants_driver=org.drizzle.jdbc.DrizzleDriver
-      - fineract_tenants_url=jdbc:mysql:thin://fineractmysql:3306/fineract_tenants
-      - fineract_tenants_uid=root
-      - fineract_tenants_pwd=skdcnwauicn2ucnaecasdsajdnizucawencascdca
-      - FINERACT_DEFAULT_TENANTDB_HOSTNAME=fineractmysql
+      - fineract_tenants_url=jdbc:mysql:thin://ucap.mysql.database.azure.com:3306/fineract_tenants
+      - fineract_tenants_uid=ucap
+      - fineract_tenants_pwd=@Maneater
+      - FINERACT_DEFAULT_TENANTDB_HOSTNAME=ucap.mysql.database.azure.com
       - FINERACT_DEFAULT_TENANTDB_PORT=3306
-      - FINERACT_DEFAULT_TENANTDB_UID=root
-      - FINERACT_DEFAULT_TENANTDB_PWD=skdcnwauicn2ucnaecasdsajdnizucawencascdca
+      - FINERACT_DEFAULT_TENANTDB_UID=upcap
+      - FINERACT_DEFAULT_TENANTDB_PWD=@Maneater
       - FINERACT_DEFAULT_TENANTDB_CONN_PARAMS=
       - FINERACT_TENANT_URL_PROTOCOL=jdbc
       - FINERACT_TENANT_URL_SUB_PROTOCOL=mariadb
       # NOTE: env vars to select which authentication mode. It is exclusive option
       - FINERACT_SECURITY_BASICAUTH_ENABLED=false
       - FINERACT_SECURITY_OAUTH_ENABLED=true
-      - FINERACT_JWT_ISSUER_URL=http://10.2.3.21:8083/auth/realms/master
+      - FINERACT_JWT_ISSUER_URL=http://10.2.3.21:8083/auth/realms/corebanking
 
   # Frontend service
   community-app:

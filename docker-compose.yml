@@ -94,4 +94,4 @@ services:
       # NOTE: env vars to select which authentication mode. It is exclusive option
       - FINERACT_SECURITY_BASICAUTH_ENABLED=false
       - FINERACT_SECURITY_OAUTH_ENABLED=true
-      - FINERACT_JWT_ISSUER_URL=http://10.2.3.21:8083/auth/realms/master      
+      - FINERACT_JWT_ISSUER_URL=http://10.2.3.21:8083/auth/realms/corebanking      
