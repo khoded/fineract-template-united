@@ -27,7 +27,6 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-
 import org.apache.fineract.accounting.common.AccountingDropdownReadPlatformService;
 import org.apache.fineract.accounting.common.AccountingEnumerations;
 import org.apache.fineract.accounting.glaccount.data.GLAccountData;
@@ -70,7 +69,7 @@ public class TaxReadPlatformServiceImpl implements TaxReadPlatformService {
     @Override
     public TaxComponentData retrieveTaxComponentData(final Long id) {
         String sql = "select " + this.taxComponentMapper.getSchema() + " where tc.id=?";
-        //return this.jdbcTemplate.queryForObject(sql, this.taxComponentMapper, new Object[] { id }); // NOSONAR
+        // return this.jdbcTemplate.queryForObject(sql, this.taxComponentMapper, new Object[] { id }); // NOSONAR
         List<TaxComponentData> taxComponentDataList = this.jdbcTemplate.query(getScrollSensitiveQuery(sql, id), this.taxComponentMapper);
         if (!taxComponentDataList.isEmpty()) {
             return taxComponentDataList.get(0);
@@ -93,7 +92,7 @@ public class TaxReadPlatformServiceImpl implements TaxReadPlatformService {
     @Override
     public TaxGroupData retrieveTaxGroupData(final Long id) {
         String sql = "select " + this.taxGroupMapper.getSchema() + " where tg.id=?";
-        //return this.jdbcTemplate.queryForObject(sql, this.taxGroupMapper, new Object[] { id }); // NOSONAR
+        // return this.jdbcTemplate.queryForObject(sql, this.taxGroupMapper, new Object[] { id }); // NOSONAR
         List<TaxGroupData> taxGroupDataList = this.jdbcTemplate.query(getScrollSensitiveQuery(sql, id), this.taxGroupMapper);
         if (!taxGroupDataList.isEmpty()) {
             return taxGroupDataList.get(0);

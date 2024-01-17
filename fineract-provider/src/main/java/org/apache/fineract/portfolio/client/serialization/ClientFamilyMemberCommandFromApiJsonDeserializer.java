@@ -216,9 +216,9 @@ public final class ClientFamilyMemberCommandFromApiJsonDeserializer {
             baseDataValidator.reset().parameter("maritalStatusId").value(maritalStatusId).notBlank().longGreaterThanZero();
 
         } else {
-        baseDataValidator.reset().parameter("relationshipId").value(this.fromApiJsonHelper.extractLongNamed("relationshipId", element))
-                .notBlank().longGreaterThanZero();
-    }
+            baseDataValidator.reset().parameter("relationshipId").value(this.fromApiJsonHelper.extractLongNamed("relationshipId", element))
+                    .notBlank().longGreaterThanZero();
+        }
 
         if (this.fromApiJsonHelper.extractLongNamed("genderId", element) != null) {
             final long genderId = this.fromApiJsonHelper.extractLongNamed("genderId", element);
