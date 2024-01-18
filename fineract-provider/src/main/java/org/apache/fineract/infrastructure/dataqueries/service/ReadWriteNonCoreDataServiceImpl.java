@@ -1960,9 +1960,9 @@ public class ReadWriteNonCoreDataServiceImpl implements ReadWriteNonCoreDataServ
             final BigDecimal count = this.jdbcTemplate.queryForObject(sqlString, BigDecimal.class); // NOSONAR
             return count;
         } catch (EmptyResultDataAccessException e) {
-        LOG.info("no data in fx rate");
-        return null;
-    }
+            LOG.info("no data in fx rate");
+            return null;
+        }
 
     }
 

@@ -27,8 +27,6 @@ import org.apache.fineract.infrastructure.bulkimport.populator.FixedDepositProdu
 import org.apache.fineract.infrastructure.bulkimport.populator.OfficeSheetPopulator;
 import org.apache.fineract.infrastructure.bulkimport.populator.PersonnelSheetPopulator;
 import org.apache.fineract.portfolio.savings.data.FixedDepositProductData;
-import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataValidation;
@@ -39,6 +37,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -94,8 +94,9 @@ public class FixedDepositWorkbookPopulator extends AbstractWorkbookPopulator {
                 FixedDepositConstants.INTEREST_POSTING_PERIOD_COL, FixedDepositConstants.INTEREST_POSTING_PERIOD_COL);
         CellRangeAddressList interestCalculationRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.INTEREST_CALCULATION_COL, FixedDepositConstants.INTEREST_CALCULATION_COL);
-        CellRangeAddressList interestCalculationDaysInYearRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
-                FixedDepositConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL, FixedDepositConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL);
+        CellRangeAddressList interestCalculationDaysInYearRange = new CellRangeAddressList(1,
+                SpreadsheetVersion.EXCEL2007.getLastRowIndex(), FixedDepositConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL,
+                FixedDepositConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL);
         CellRangeAddressList lockinPeriodFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 FixedDepositConstants.LOCKIN_PERIOD_FREQUENCY_COL, FixedDepositConstants.LOCKIN_PERIOD_FREQUENCY_COL);
         CellRangeAddressList depositAmountRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),

@@ -30,8 +30,6 @@ import org.apache.fineract.infrastructure.bulkimport.populator.OfficeSheetPopula
 import org.apache.fineract.infrastructure.codes.data.CodeValueData;
 import org.apache.fineract.portfolio.loanaccount.data.LoanAccountData;
 import org.apache.fineract.portfolio.savings.data.SavingsAccountData;
-import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataValidation;
@@ -42,6 +40,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 public class GuarantorWorkbookPopulator extends AbstractWorkbookPopulator {
 
@@ -155,8 +155,7 @@ public class GuarantorWorkbookPopulator extends AbstractWorkbookPopulator {
                 row = addGuarantorSheet.getRow(rowIndex++);
             }
             writeString(GuarantorConstants.LOOKUP_CLIENT_NAME_COL, row, loan.getClientName() + "(" + loan.getClientId() + ")");
-            writeString(GuarantorConstants.LOOKUP_ACCOUNT_NO_COL, row,
-                    loan.getAccountNo() + "-" + loan.getStatusStringValue());
+            writeString(GuarantorConstants.LOOKUP_ACCOUNT_NO_COL, row, loan.getAccountNo() + "-" + loan.getStatusStringValue());
         }
     }
 
