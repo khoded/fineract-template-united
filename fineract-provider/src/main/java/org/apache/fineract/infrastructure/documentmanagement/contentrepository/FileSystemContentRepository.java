@@ -19,7 +19,6 @@
 package org.apache.fineract.infrastructure.documentmanagement.contentrepository;
 
 import com.google.common.io.Files;
-
 import java.io.BufferedInputStream;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;

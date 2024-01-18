@@ -449,21 +449,21 @@ public class ClientsApiResource {
     @Consumes({ MediaType.APPLICATION_JSON })
     @Produces({ MediaType.APPLICATION_JSON })
     public String retrieveAllSummary(@Context final UriInfo uriInfo, @QueryParam("sqlSearch") final String sqlSearch,
-                                     @QueryParam("officeId") final Long officeId, @QueryParam("externalId") final String externalId,
-                                     @QueryParam("displayName") final String displayName, @QueryParam("firstName") final String firstname,
-                                     @QueryParam("lastName") final String lastname, @QueryParam("status") @Parameter(description = "status") final String status,
-                                     @QueryParam("underHierarchy") final String hierarchy, @QueryParam("offset") final Integer offset,
-                                     @QueryParam("limit") final Integer limit, @QueryParam("orderBy") final String orderBy,
-                                     @QueryParam("sortOrder") final String sortOrder, @QueryParam("orphansOnly") final Boolean orphansOnly) {
+            @QueryParam("officeId") final Long officeId, @QueryParam("externalId") final String externalId,
+            @QueryParam("displayName") final String displayName, @QueryParam("firstName") final String firstname,
+            @QueryParam("lastName") final String lastname, @QueryParam("status") @Parameter(description = "status") final String status,
+            @QueryParam("underHierarchy") final String hierarchy, @QueryParam("offset") final Integer offset,
+            @QueryParam("limit") final Integer limit, @QueryParam("orderBy") final String orderBy,
+            @QueryParam("sortOrder") final String sortOrder, @QueryParam("orphansOnly") final Boolean orphansOnly) {
 
         return this.retrieveAllSummary(uriInfo, sqlSearch, officeId, externalId, displayName, firstname, lastname, status, hierarchy,
                 offset, limit, orderBy, sortOrder, orphansOnly, false);
     }
 
     private String retrieveAllSummary(final UriInfo uriInfo, final String sqlSearch, final Long officeId, final String externalId,
-                                      final String displayName, final String firstname, final String lastname, final String status, final String hierarchy,
-                                      final Integer offset, final Integer limit, final String orderBy, final String sortOrder, final Boolean orphansOnly,
-                                      final boolean isSelfUser) {
+            final String displayName, final String firstname, final String lastname, final String status, final String hierarchy,
+            final Integer offset, final Integer limit, final String orderBy, final String sortOrder, final Boolean orphansOnly,
+            final boolean isSelfUser) {
 
         this.context.authenticatedUser().validateHasReadPermission(ClientApiConstants.CLIENT_RESOURCE_NAME);
 

@@ -28,8 +28,6 @@ import org.apache.fineract.infrastructure.bulkimport.populator.OfficeSheetPopula
 import org.apache.fineract.infrastructure.bulkimport.populator.PersonnelSheetPopulator;
 import org.apache.fineract.infrastructure.bulkimport.populator.SavingsProductSheetPopulator;
 import org.apache.fineract.portfolio.savings.data.SavingsProductData;
-import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataValidation;
@@ -40,6 +38,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 public class SavingsWorkbookPopulator extends AbstractWorkbookPopulator {
 
@@ -212,12 +212,14 @@ public class SavingsWorkbookPopulator extends AbstractWorkbookPopulator {
                 SavingsConstants.INTEREST_POSTING_PERIOD_COL, SavingsConstants.INTEREST_POSTING_PERIOD_COL);
         CellRangeAddressList interestCalculationRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.INTEREST_CALCULATION_COL, SavingsConstants.INTEREST_CALCULATION_COL);
-        CellRangeAddressList interestCalculationDaysInYearRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
-                SavingsConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL, SavingsConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL);
+        CellRangeAddressList interestCalculationDaysInYearRange = new CellRangeAddressList(1,
+                SpreadsheetVersion.EXCEL2007.getLastRowIndex(), SavingsConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL,
+                SavingsConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL);
         CellRangeAddressList lockinPeriodFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.LOCKIN_PERIOD_FREQUENCY_COL, SavingsConstants.LOCKIN_PERIOD_FREQUENCY_COL);
-        CellRangeAddressList applyWithdrawalFeeForTransfersRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
-                SavingsConstants.APPLY_WITHDRAWAL_FEE_FOR_TRANSFERS, SavingsConstants.APPLY_WITHDRAWAL_FEE_FOR_TRANSFERS);
+        CellRangeAddressList applyWithdrawalFeeForTransfersRange = new CellRangeAddressList(1,
+                SpreadsheetVersion.EXCEL2007.getLastRowIndex(), SavingsConstants.APPLY_WITHDRAWAL_FEE_FOR_TRANSFERS,
+                SavingsConstants.APPLY_WITHDRAWAL_FEE_FOR_TRANSFERS);
         CellRangeAddressList allowOverdraftRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 SavingsConstants.ALLOW_OVER_DRAFT_COL, SavingsConstants.ALLOW_OVER_DRAFT_COL);
 

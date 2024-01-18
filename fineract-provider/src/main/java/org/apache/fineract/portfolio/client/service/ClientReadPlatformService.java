@@ -60,5 +60,6 @@ public interface ClientReadPlatformService {
     LocalDate retrieveClientTransferProposalDate(Long clientId);
 
     void validateClient(Long clientId);
+
     public Page<ClientData> retrieveAllSummary(final SearchParameters searchParameters);
 }

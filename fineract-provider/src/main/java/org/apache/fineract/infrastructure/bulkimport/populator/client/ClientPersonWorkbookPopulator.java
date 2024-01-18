@@ -26,8 +26,6 @@ import org.apache.fineract.infrastructure.bulkimport.populator.OfficeSheetPopula
 import org.apache.fineract.infrastructure.bulkimport.populator.PersonnelSheetPopulator;
 import org.apache.fineract.infrastructure.codes.data.CodeValueData;
 import org.apache.fineract.organisation.office.data.OfficeData;
-import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.DataValidation;
 import org.apache.poi.ss.usermodel.DataValidationConstraint;
@@ -265,8 +263,10 @@ public class ClientPersonWorkbookPopulator extends AbstractWorkbookPopulator {
 
         DataValidation officeValidation = validationHelper.createValidation(officeNameConstraint, officeNameRange);
         DataValidation staffValidation = validationHelper.createValidation(staffNameConstraint, staffNameRange);
-        //DataValidation submittedOnDateValidation = validationHelper.createValidation(submittedOnDateConstraint, submittedOnDateRange);
-        //DataValidation activationDateValidation = validationHelper.createValidation(activationDateConstraint, activationDateRange);
+        // DataValidation submittedOnDateValidation = validationHelper.createValidation(submittedOnDateConstraint,
+        // submittedOnDateRange);
+        // DataValidation activationDateValidation = validationHelper.createValidation(activationDateConstraint,
+        // activationDateRange);
         DataValidation dobDateValidation = validationHelper.createValidation(dobDateConstraint, dobRange);
         DataValidation activeValidation = validationHelper.createValidation(activeConstraint, activeRange);
         DataValidation clientTypeValidation = validationHelper.createValidation(clientTypesConstraint, clientTypeRange);
@@ -283,8 +283,8 @@ public class ClientPersonWorkbookPopulator extends AbstractWorkbookPopulator {
         worksheet.addValidationData(activeValidation);
         worksheet.addValidationData(officeValidation);
         worksheet.addValidationData(staffValidation);
-        //worksheet.addValidationData(activationDateValidation);
-      //  worksheet.addValidationData(submittedOnDateValidation);
+        // worksheet.addValidationData(activationDateValidation);
+        // worksheet.addValidationData(submittedOnDateValidation);
         worksheet.addValidationData(dobDateValidation);
         worksheet.addValidationData(clientTypeValidation);
         worksheet.addValidationData(isStaffValidation);
