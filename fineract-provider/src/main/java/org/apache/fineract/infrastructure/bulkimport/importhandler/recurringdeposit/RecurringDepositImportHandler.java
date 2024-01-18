@@ -271,15 +271,15 @@ public class RecurringDepositImportHandler implements ImportHandler {
         String status = ImportHandlerUtils.readAsString(RecurringDepositConstants.STATUS_COL, row);
         statuses.add(status);
         Long clientId = ImportHandlerUtils.getIdByName(workbook.getSheet(TemplatePopulateImportConstants.CLIENT_SHEET_NAME), clientName);
-        RecurringDepositAccountData data =  RecurringDepositAccountData.importInstance(clientId, productId, fieldOfficerId, submittedOnDate,
+        RecurringDepositAccountData data = RecurringDepositAccountData.importInstance(clientId, productId, fieldOfficerId, submittedOnDate,
                 interestCompoundingPeriodTypeEnum, interestPostingPeriodTypeEnum, interestCalculationTypeEnum,
                 interestCalculationDaysInYearTypeEnum, lockinPeriodFrequency, lockinPeriodFrequencyTypeEnum, depositAmount, depositPeriod,
                 depositPeriodFrequencyId, depositStartDate, recurringFrequency, recurringFrequencyTypeEnum, inheritCalendar,
                 isMandatoryDeposit, allowWithdrawal, adjustAdvancePayments, externalId, charges, row.getRowNum(), locale, dateFormat);
-//        data.setNominalAnnualInterestRate(nominalAnnualInterestRate);
-//        final InterestRateChartData chart = this.chartReadPlatformService.retrieveActiveChartWithTemplate(productId);
-//        DepositAccountInterestRateChartData accountChart = DepositAccountInterestRateChartData.from(chart);
-//        data.setChart(accountChart);
+        // data.setNominalAnnualInterestRate(nominalAnnualInterestRate);
+        // final InterestRateChartData chart = this.chartReadPlatformService.retrieveActiveChartWithTemplate(productId);
+        // DepositAccountInterestRateChartData accountChart = DepositAccountInterestRateChartData.from(chart);
+        // data.setChart(accountChart);
 
         return data;
     }

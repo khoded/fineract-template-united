@@ -201,7 +201,8 @@ public class LoanRepaymentScheduleProcessingWrapper {
                         && (loanCharge.isDueForCollectionFromAndUpToAndIncluding(periodStart, periodEnd)
                                 || loanCharge.isDueForCollectionForDisburseToSavingsAndIncluding(periodStart))
                         && loanCharge.getChargeCalculation().isPercentageBased()) {
-                    if (Objects.equals(loanCharge.getOverdueInstallmentCharge().getInstallment().getInstallmentNumber(), period.getInstallmentNumber())) {
+                    if (Objects.equals(loanCharge.getOverdueInstallmentCharge().getInstallment().getInstallmentNumber(),
+                            period.getInstallmentNumber())) {
                         cumulative = cumulative.plus(loanCharge.chargeAmount());
                     }
                 } else if ((loanCharge.isDueForCollectionFromAndUpToAndIncluding(periodStart, periodEnd)

@@ -965,8 +965,7 @@ public class ClientReadPlatformServiceImpl implements ClientReadPlatformService 
                 }
             }
         }
-        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlBuilder.toString(), paramList.toArray(),
-                this.clientSummaryMapper);
+        return this.paginationHelper.fetchPage(this.jdbcTemplate, sqlBuilder.toString(), paramList.toArray(), this.clientSummaryMapper);
     }
 
     private static final class ClientSummaryMapper implements RowMapper<ClientData> {

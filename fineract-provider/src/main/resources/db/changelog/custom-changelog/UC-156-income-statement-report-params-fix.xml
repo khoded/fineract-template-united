@@ -20,24 +20,24 @@
 
 -->
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-	<changeSet author="faheem@fiter.io" id="UC-156-income-statement-report-params-fix">
-		<update tableName="stretchy_report_parameter">
-			<column name="report_parameter_name" value="endDate"/>
-			<where>parameter_id = (select id from stretchy_parameter where parameter_name = 'endDateSelect')
-				and report_id = (select id from stretchy_report where report_name = 'Income Statement')
-			</where>
-	    	</update>
-		<update tableName="stretchy_report_parameter">
-			<column name="report_parameter_name" value="startDate"/>
-			<where>parameter_id = (select id from stretchy_parameter where parameter_name = 'startDateSelect')
-				and report_id = (select id from stretchy_report where report_name = 'Income Statement')
-			</where>
-	    	</update>
-		<update tableName="stretchy_report_parameter">
-			<column name="report_parameter_name" value="officeId"/>
-			<where>parameter_id = (select id from stretchy_parameter where parameter_name = 'OfficeIdSelectOne')
-				and report_id = (select id from stretchy_report where report_name = 'Income Statement')
-			</where>
-	    	</update>
-	</changeSet>
+    <changeSet author="faheem@fiter.io" id="UC-156-income-statement-report-params-fix">
+        <update tableName="stretchy_report_parameter">
+            <column name="report_parameter_name" value="endDate"/>
+            <where>parameter_id = (select id from stretchy_parameter where parameter_name = 'endDateSelect')
+                and report_id = (select id from stretchy_report where report_name = 'Income Statement')
+            </where>
+            </update>
+        <update tableName="stretchy_report_parameter">
+            <column name="report_parameter_name" value="startDate"/>
+            <where>parameter_id = (select id from stretchy_parameter where parameter_name = 'startDateSelect')
+                and report_id = (select id from stretchy_report where report_name = 'Income Statement')
+            </where>
+            </update>
+        <update tableName="stretchy_report_parameter">
+            <column name="report_parameter_name" value="officeId"/>
+            <where>parameter_id = (select id from stretchy_parameter where parameter_name = 'OfficeIdSelectOne')
+                and report_id = (select id from stretchy_report where report_name = 'Income Statement')
+            </where>
+            </update>
+    </changeSet>
 </databaseChangeLog>
