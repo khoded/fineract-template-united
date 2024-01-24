@@ -22,48 +22,48 @@
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
                    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
                    xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-	<changeSet author="faheem@fiter.io" id="UC-60-reports-with-hyphen-in-name-failing">
-		<update tableName="stretchy_report">
-			<column name="report_name" value="Active Loans Summary"/>
-				<where>report_name = 'Active Loans - Summary'
-					and report_type != 'Pentaho'
-				</where>
-		</update>
-		<update tableName="stretchy_report">
-			<column name="report_name" value="Active Loans Details"/>
-				<where>report_name = 'Active Loans - Details'
-					and report_type != 'Pentaho'
-				</where>
-		</update>
-		<update tableName="stretchy_report">
-			<column name="report_name" value="Written Off Loans"/>
-				<where>report_name = 'Written-Off Loans'
-					and report_type != 'Pentaho'
-				</where>
-		</update>
-		<update tableName="stretchy_report">
-			<column name="report_name" value="Expected Payments By Date Basic"/>
-				<where>report_name = 'Expected Payments By Date - Basic'
-					and report_type != 'Pentaho'
-				</where>
-		</update>
-		<update tableName="stretchy_report">
-			<column name="report_name" value="Loan Approved Email"/>
-				<where>report_name = 'Loan Approved - Email'
-					and report_type != 'Pentaho'
-				</where>
-		</update>
-		<update tableName="stretchy_report">
-			<column name="report_name" value="Loan Rejected Email"/>
-				<where>report_name = 'Loan Rejected - Email'
-					and report_type != 'Pentaho'
-				</where>
-		</update>
-		<update tableName="stretchy_report">
-			<column name="report_name" value="Loan Repayment Email"/>
-				<where>report_name = 'Loan Repayment - Email'
-					and report_type != 'Pentaho'
-				</where>
-		</update>
-	</changeSet>
+    <changeSet author="faheem@fiter.io" id="UC-60-reports-with-hyphen-in-name-failing">
+        <update tableName="stretchy_report">
+            <column name="report_name" value="Active Loans Summary"/>
+                <where>report_name = 'Active Loans - Summary'
+                    and report_type != 'Pentaho'
+                </where>
+        </update>
+        <update tableName="stretchy_report">
+            <column name="report_name" value="Active Loans Details"/>
+                <where>report_name = 'Active Loans - Details'
+                    and report_type != 'Pentaho'
+                </where>
+        </update>
+        <update tableName="stretchy_report">
+            <column name="report_name" value="Written Off Loans"/>
+                <where>report_name = 'Written-Off Loans'
+                    and report_type != 'Pentaho'
+                </where>
+        </update>
+        <update tableName="stretchy_report">
+            <column name="report_name" value="Expected Payments By Date Basic"/>
+                <where>report_name = 'Expected Payments By Date - Basic'
+                    and report_type != 'Pentaho'
+                </where>
+        </update>
+        <update tableName="stretchy_report">
+            <column name="report_name" value="Loan Approved Email"/>
+                <where>report_name = 'Loan Approved - Email'
+                    and report_type != 'Pentaho'
+                </where>
+        </update>
+        <update tableName="stretchy_report">
+            <column name="report_name" value="Loan Rejected Email"/>
+                <where>report_name = 'Loan Rejected - Email'
+                    and report_type != 'Pentaho'
+                </where>
+        </update>
+        <update tableName="stretchy_report">
+            <column name="report_name" value="Loan Repayment Email"/>
+                <where>report_name = 'Loan Repayment - Email'
+                    and report_type != 'Pentaho'
+                </where>
+        </update>
+    </changeSet>
 </databaseChangeLog>

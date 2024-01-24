@@ -27,8 +27,6 @@ import org.apache.fineract.infrastructure.bulkimport.populator.OfficeSheetPopula
 import org.apache.fineract.infrastructure.bulkimport.populator.PersonnelSheetPopulator;
 import org.apache.fineract.infrastructure.bulkimport.populator.RecurringDepositProductSheetPopulator;
 import org.apache.fineract.portfolio.savings.data.RecurringDepositProductData;
-import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
-import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.ss.SpreadsheetVersion;
 import org.apache.poi.ss.usermodel.CellStyle;
 import org.apache.poi.ss.usermodel.DataValidation;
@@ -39,6 +37,8 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.util.CellRangeAddressList;
+import org.apache.poi.xssf.usermodel.XSSFDataValidationHelper;
+import org.apache.poi.xssf.usermodel.XSSFSheet;
 
 public class RecurringDepositWorkbookPopulator extends AbstractWorkbookPopulator {
 
@@ -205,8 +205,8 @@ public class RecurringDepositWorkbookPopulator extends AbstractWorkbookPopulator
                 RecurringDepositConstants.INTEREST_POSTING_PERIOD_COL, RecurringDepositConstants.INTEREST_POSTING_PERIOD_COL);
         CellRangeAddressList interestCalculationRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.INTEREST_CALCULATION_COL, RecurringDepositConstants.INTEREST_CALCULATION_COL);
-        CellRangeAddressList interestCalculationDaysInYearRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
-                RecurringDepositConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL,
+        CellRangeAddressList interestCalculationDaysInYearRange = new CellRangeAddressList(1,
+                SpreadsheetVersion.EXCEL2007.getLastRowIndex(), RecurringDepositConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL,
                 RecurringDepositConstants.INTEREST_CALCULATION_DAYS_IN_YEAR_COL);
         CellRangeAddressList lockinPeriodFrequencyRange = new CellRangeAddressList(1, SpreadsheetVersion.EXCEL2007.getLastRowIndex(),
                 RecurringDepositConstants.LOCKIN_PERIOD_FREQUENCY_COL, RecurringDepositConstants.LOCKIN_PERIOD_FREQUENCY_COL);

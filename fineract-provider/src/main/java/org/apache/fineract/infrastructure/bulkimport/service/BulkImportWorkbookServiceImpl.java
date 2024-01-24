@@ -47,8 +47,8 @@ import org.apache.fineract.infrastructure.documentmanagement.domain.DocumentRepo
 import org.apache.fineract.infrastructure.documentmanagement.service.DocumentWritePlatformService;
 import org.apache.fineract.infrastructure.documentmanagement.service.DocumentWritePlatformServiceJpaRepositoryImpl;
 import org.apache.fineract.infrastructure.security.service.PlatformSecurityContext;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.apache.tika.Tika;
 import org.apache.tika.io.TikaInputStream;
 import org.glassfish.jersey.media.multipart.FormDataContentDisposition;
@@ -96,8 +96,8 @@ public class BulkImportWorkbookServiceImpl implements BulkImportWorkbookService 
                 final Tika tika = new Tika();
                 final TikaInputStream tikaInputStream = TikaInputStream.get(bis);
                 final String fileType = tika.detect(tikaInputStream);
-                if ((!fileType.contains("msoffice") && !fileType.contains("application/vnd.ms-excel")) &&
-                        !fileType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet") ) {
+                if ((!fileType.contains("msoffice") && !fileType.contains("application/vnd.ms-excel"))
+                        && !fileType.equalsIgnoreCase("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")) {
                     // We had a problem where we tried to upload the downloaded
                     // file from the import options, it was somehow changed the
                     // extension we use this fix.

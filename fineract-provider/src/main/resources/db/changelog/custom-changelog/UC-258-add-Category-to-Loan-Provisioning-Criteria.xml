@@ -20,10 +20,10 @@
 
 -->
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-	<changeSet author="faheem@fiter.io" id="UC-258-add-Category-to-Loan-Provisioning-Criteria">
-		<insert tableName="m_provision_category">
-		    <column name="category_name" value="PASS AND WATCH" />
-		    <column name="description" value="Pass and Watch" />
-       		</insert>
-	</changeSet>
+    <changeSet author="faheem@fiter.io" id="UC-258-add-Category-to-Loan-Provisioning-Criteria">
+        <insert tableName="m_provision_category">
+            <column name="category_name" value="PASS AND WATCH" />
+            <column name="description" value="Pass and Watch" />
+               </insert>
+    </changeSet>
 </databaseChangeLog>

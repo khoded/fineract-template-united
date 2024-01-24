@@ -871,12 +871,12 @@ public class DepositApplicationProcessWritePlatformServiceJpaRepositoryImpl impl
             AccountNumberFormat accountNumberFormat = this.accountNumberFormatRepository.findByAccountType(EntityAccountType.CLIENT);
             account.updateAccountNo(this.accountNumberGenerator.generate(account, accountNumberFormat));
             String serialNumber = account.getAccountNumber();
-            String nubanAccountNumber = this.nubanAccountService.generateNubanAccountNumber(serialNumber, "1");
+            String nubanAccountNumber = this.nubanAccountService.generateNubanAccountNumber(serialNumber, "21");
             SavingsAccount existingAccount = this.savingAccountRepository.findByAccountNumber(nubanAccountNumber);
 
             while (existingAccount != null) {
                 serialNumber = this.nubanAccountService.generateNextSerialNumber(serialNumber);
-                nubanAccountNumber = this.nubanAccountService.generateNubanAccountNumber(serialNumber, "1");
+                nubanAccountNumber = this.nubanAccountService.generateNubanAccountNumber(serialNumber, "21");
                 existingAccount = this.savingAccountRepository.findByAccountNumber(nubanAccountNumber);
             }
             account.updateAccountNo(nubanAccountNumber);

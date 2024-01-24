@@ -20,18 +20,18 @@
 
 -->
 <databaseChangeLog xmlns="http://www.liquibase.org/xml/ns/dbchangelog" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.1.xsd">
-	<changeSet author="faheem@fiter.io" id="UC-134-Include-External-id-column-to-loan-report-for-renamed-active-detail-report">
-		<update tableName="stretchy_report">
-			<column name="report_sql" 
-			value="select concat(repeat(&quot;..&quot;,   
+    <changeSet author="faheem@fiter.io" id="UC-134-Include-External-id-column-to-loan-report-for-renamed-active-detail-report">
+        <update tableName="stretchy_report">
+            <column name="report_sql"
+            value="select concat(repeat(&quot;..&quot;,
    ((LENGTH(ounder.`hierarchy`) - LENGTH(REPLACE(ounder.`hierarchy`, '.', '')) - 1))), ounder.`name`) as &quot;Office/Branch&quot;,
 ifnull(cur.display_symbol, l.currency_code) as Currency,
-lo.display_name as &quot;Loan Officer&quot;, 
-c.display_name as &quot;Client&quot;, l.external_id as &quot;External Id&quot;, l.account_no as &quot;Loan Account No.&quot;, pl.`name` as &quot;Product&quot;, 
-f.`name` as Fund,  
-l.principal_amount as &quot;Loan Amount&quot;, 
-l.annual_nominal_interest_rate as &quot; Annual Nominal Interest Rate&quot;, 
-date(l.disbursedon_date) as &quot;Disbursed Date&quot;, 
+lo.display_name as &quot;Loan Officer&quot;,
+c.display_name as &quot;Client&quot;, l.external_id as &quot;External Id&quot;, l.account_no as &quot;Loan Account No.&quot;, pl.`name` as &quot;Product&quot;,
+f.`name` as Fund,
+l.principal_amount as &quot;Loan Amount&quot;,
+l.annual_nominal_interest_rate as &quot; Annual Nominal Interest Rate&quot;,
+date(l.disbursedon_date) as &quot;Disbursed Date&quot;,
 date(l.expected_maturedon_date) as &quot;Expected Matured On&quot;,
 
 l.principal_repaid_derived as &quot;Principal Repaid&quot;,
@@ -50,7 +50,7 @@ l.penalty_charges_repaid_derived as &quot;Penalties Repaid&quot;,
 l.penalty_charges_outstanding_derived as &quot;Penalties Outstanding&quot;,
 penalty_charges_overdue_derived as &quot;Penalties Overdue&quot;
 
-from m_office o 
+from m_office o
 join m_office ounder on ounder.hierarchy like concat(o.hierarchy, '%')
 and ounder.hierarchy like concat('${currentUserHierarchy}', '%')
 join m_client c on c.office_id = ounder.id
@@ -69,8 +69,8 @@ and (ifnull(l.loanpurpose_cv_id, -10) = ${loanPurposeId} or -1 = ${loanPurposeId
 and l.loan_status_id = 300
 group by l.id
 order by ounder.hierarchy, l.currency_code, c.account_no, l.account_no"/>
-			<where>report_name = 'Active Loans Details'
-			</where>
-	    	</update>
-	</changeSet>
+            <where>report_name = 'Active Loans Details'
+            </where>
+            </update>
+    </changeSet>
 </databaseChangeLog>
