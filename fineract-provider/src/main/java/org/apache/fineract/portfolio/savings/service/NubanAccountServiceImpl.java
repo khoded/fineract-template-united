@@ -44,7 +44,8 @@ public class NubanAccountServiceImpl implements NubanAccountService {
      * NUBAN serial number of 000021457 in VFD Group The check digit would be computed as follows: Step 1:
      * 5*3+6*7+6*3+0*3+0*7+0*3+0*3+2*7+1*3+4*3+5*7+7*3 = 160 Step 2: Modulo 10 of 160 is 0 i.e. 0 is the remainder when
      * you divide 160 by 10 Step 3: Subtract 0 from 10 to get 10 Step 4: So the check digit is 0 (if the result is 10
-     * use 0 as the check digit) Therefore, the NUBAN code for this illustration is 000021457-0.
+     * use 0 as the check digit) Therefore, the NUBAN code for this illustration is 000021457-0. Serial number is 9
+     * digits, prefix is 21 and Nuban Code for UC = 51340 So we substring to 2 to have 7 digits serial number
      *
      * @param serialNumber
      *            Serial number
@@ -54,9 +55,12 @@ public class NubanAccountServiceImpl implements NubanAccountService {
      */
     @Override
     public String generateNubanAccountNumber(String serialNumber, String prefix) {
-        int[] nubanMultipliers = new int[] { 3, 7, 3, 3, 7, 3, 3, 7, 3, 3, 7, 3 };
-        serialNumber = prefix + serialNumber.substring(1);
-        String extendSerialNumber = this.env.getProperty("fineract.configuration.nubanCode") + serialNumber;
+        int[] nubanMultipliers = new int[] { 3, 7, 3, 3, 7, 3, 3, 7, 3, 3, 7, 3, 3, 7, 3 };
+        String leadingNumber = "9";
+        String bankCode = this.env.getProperty("fineract.configuration.nubanCode");
+        serialNumber = serialNumber.substring(2); // generated seriNumber is 9 character ensure serialNumber trim is 7
+                                                  // digits
+        String extendSerialNumber = leadingNumber + bankCode + prefix + serialNumber;
         // Step1
         int digit = 0;
         for (int i = 0; i < nubanMultipliers.length; i++) {
@@ -66,6 +70,6 @@ public class NubanAccountServiceImpl implements NubanAccountService {
         // Step2 & 3
         digit = 10 - (digit % 10);
         if (digit == 10) digit = 0;
-        return serialNumber + digit;
+        return prefix + serialNumber + digit;
     }
 }
