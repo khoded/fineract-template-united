@@ -94,6 +94,6 @@ ENV FINERACT_SERVER_SSL_ENABLED="true"
 ENV FINERACT_SERVER_PORT="8443"
 ENV FINERACT_SECURITY_BASICAUTH_ENABLED="false"
 ENV FINERACT_SECURITY_OAUTH_ENABLED="true"
-ENV FINERACT_JWT_ISSUER_URL="http://10.2.3.21:8083/auth/realms/corebanking"
+ENV FINERACT_JWT_ISSUER_URL="https://keycloak.uceemfb.com/auth/realms/corebanking"
 
 ENTRYPOINT ["java", "-Dloader.path=/app/libs/", "-jar", "/app/fineract-provider.jar"]
